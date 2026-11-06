@@ -1,0 +1,10 @@
+# donor artifacts stay local (33MB APK + decompiles)
+donor/
+.gradle/
+build/
+app/build/
+local.properties
+.idea/
+*.iml
+.DS_Store
+__pycache__/
