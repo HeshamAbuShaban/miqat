@@ -54,8 +54,8 @@ class IslamicDaysTest {
     @Test
     fun `qibla bearing known anchors`() {
         assertEquals(0.0, Qibla.bearing(Qibla.KAABA_LAT, Qibla.KAABA_LON), 0.5)
-        assertEquals(138.4, Qibla.bearing(30.0444, 31.2357), 1.0)   // Cairo
-        assertEquals(291.7, Qibla.bearing(40.7128, -74.0060), 1.5)  // New York (NE-ish)
+        assertEquals(136.1, Qibla.bearing(30.0444, 31.2357), 1.0)   // Cairo
+        assertEquals(58.5, Qibla.bearing(40.7128, -74.0060), 1.5)   // New York (ENE)
         assertTrue(Qibla.distanceKm(Qibla.KAABA_LAT, Qibla.KAABA_LON) < 1.0)
     }
 }
