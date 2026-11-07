@@ -1,4 +1,4 @@
-package app.salatukplus
+package app.miqat
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -14,9 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import app.salatukplus.core.Location
-import app.salatukplus.core.MethodTable
-import app.salatukplus.core.PrayerTimes
+import app.miqat.core.Location
+import app.miqat.core.MethodTable
+import app.miqat.core.PrayerTimes
 import java.util.Calendar
 import java.util.TimeZone
 

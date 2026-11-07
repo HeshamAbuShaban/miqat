@@ -1,4 +1,4 @@
-package app.salatukplus.core
+package app.miqat.core
 
 /**
  * Prayer calculation method table — data-driven, mirroring the donor's string-keyed

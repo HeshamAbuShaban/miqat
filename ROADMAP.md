@@ -95,3 +95,28 @@ Every step cites its donor lead (teardown §).
 
 - [ ] F-Droid-friendly build (no nonfree deps at all), signing, changelog
 - [ ] Store-free install path (ADB/sideload — sideload sovereignty, see lab L15)
+
+## S9 — Islamic-calendar expansion (Hesham's vision, 2026-11-07 — handed to next session)
+
+His words: the starter is core on the RE, then expand to **other timings really needed
+in the Islamic calendar — computed smartly, no internet, like Salatuk does** — plus
+reminders that **spike the user into action**. Concretely:
+
+- [ ] **Islamic-day engine** (build on donor `day_events` corpus, teardown §3):
+      Eid al-Fitr / Eid al-Adha, day of Arafah, Ashura, white days (أيام البيض
+      13/14/15), Ramadan boundaries, Hajj season markers — all precomputed offline
+      per year + location, no server.
+- [ ] **Night-based times** beyond the 6 prayers: أثلاث الليل (last third of the
+      night — Isha-to-Fajr interval math is already in the engine), middle of the
+      night, Duha/الضحى time (sunrise-based, standard fiqh offsets), sunrise/sunset
+      fast boundaries (imsak vs fajr toggle).
+- [ ] **Voluntary-fasting reminder layer** (the engagement spike he wants): Mon/Thu
+      (الاثنين والخميس), white days, Arafah (non-pilgrim), Ashura, six of Shawwal,
+      Muharram — each push phrased as encouragement with the virtue, one-tap
+      "I'm fasting today" acknowledgment that mutes further nudges that day.
+- [ ] **Salah reminders with teeth**: the donor's reminder system (AddReminder
+      + per-prayer messages in `prayer_events`) as the floor; add escalating
+      "gateway" nudges (e.g. wudu prompt, azkar-after-prayer follow-up) — but no
+      guilt-trip spam; user-tunable frequency is a hard requirement.
+- [ ] Design note: all of this rides on the SAME offline engine + data layer (S2) —
+      no new permissions, no network. Keep the donor's zero-telemetry stance.

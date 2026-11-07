@@ -1,4 +1,4 @@
-package app.salatukplus.core
+package app.miqat.core
 
 import kotlin.math.abs
 import kotlin.math.acos

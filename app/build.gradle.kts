@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "app.salatukplus"
+    namespace = "app.miqat"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "app.salatukplus"
+        applicationId = "app.miqat"
         minSdk = 24
         targetSdk = 35
         versionCode = 1

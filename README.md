@@ -1,9 +1,13 @@
-# SalatukPlus
+# SalatukPlus → **الميقات / Miqat**
 
 Rebuild of **Salatuk** (`com.masarat.salati` v3.7.17, by Masarat) — takes every lead
 from the donor teardown and turns it into a modern, offline-first prayer app.
 Built by/for Hesham. The donor APK + full decompile live here in `donor/` (kept out of
 the android-re lab on purpose — this project stands alone).
+
+**Brand (2026-11-07):** الميقات / Miqat — package `app.miqat`. Folder keeps the donor
+working name `SalatukPlus`; final name variant is Hesham's pending pick — options +
+change-cost note in `docs/decisions.md`.
 
 - **Teardown of record:** `docs/TEARDOWN.md` (mirror of android-re
   `docs/salatuk-teardown.md`, REA Evidence-cited)

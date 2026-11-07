@@ -1,4 +1,4 @@
-package app.salatukplus.core
+package app.miqat.core
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
