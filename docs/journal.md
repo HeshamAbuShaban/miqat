@@ -14,7 +14,16 @@
   must express «ميقات» (the appointed time) as the umbrella brand for the whole
   feature set (S9), not a prayer-only app. Design exploration runs in the
   visualize skill; candidates follow the locked Day-Arc language.
-- **GitHub:** repo created and pushed (see remote origin) with his token.
+- **GitHub:** repo created and pushed (see remote origin) with his token — public,
+  bilingual README, description & topics per his wording; reworked after his review.
+- **Build v0 overnight (his approval):** cities asset built (218,032 cities,
+  4.1 MB gz — tools/build_miqat_assets.py) + Cities.kt loader; IslamicDays (S9
+  pure logic: white days, Mon/Thu, Arafah, Ashura, six-of-Shawwal, Ramadan,
+  eids — offline from a Hijri date) + Hijri.kt bridge (android.icu Umm al-Qura,
+  minSdk 24, dependency-free); MainActivity rewritten as Day-Arc home v0: arc
+  hero with countdown, contextual fasting card, night-third strip, 218k-city
+  RTL search picker, per-city default method from the asset. Not compiled yet
+  (no local Gradle) — first build = idle-time task.
 - **Design focus next (his words):** design is the priority after performance;
   cover the donor's own gaps (a11y, theming, backup, battery-kind scheduling,
   no forced notification) as design requirements, not add-ons.
