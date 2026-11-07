@@ -2,6 +2,21 @@
 
 > One line per decision; newest first. `applicationId` `app.miqat` freezes at release.
 
+## 2026-11-07 (3) — Engine naming scheme locked (Hesham: "التسمية مهمة")
+
+- Kotlin engine entities named for the donor-adjacent domain, future-proof for
+  S2/S9: `CalcMethod` (donor `calcMethod`, not the generic "Method"),
+  `Margins`, `SeasonalCorrections` (donor `qibla` columns fm/sm/dm/am/mm/im →
+  readable prayer names), `HighLatitudeRule` (donor x5.c enum names),
+  `LocalPrayerTimes` (the old `PrayerTimesUtc` name was factually wrong —
+  values are fractional LOCAL hours), `Location`, `asrShadow` (1/2).
+- Data-tier decision: live `MethodTable` = donor-live y5.g params (+ live
+  seasonal rows for emirates/birmingham); corpus-fitted tables stay a harness
+  artifact (several are degenerate by design — they encode the corpus's own
+  per-calendar-source offsets). Port-parity test fixtures are donor-mode.
+- Folder stays `SalatukPlus` for now (brand ≠ folder precedent); rename to
+  `Miqat` deferred to a session boundary — see journal 2026-11-07 (3).
+
 ## 2026-11-07 (2) — NAME LOCKED + design direction locked
 
 - **Name FINAL: الميقات / Miqat** (Hesham's decision after a counsel session). The

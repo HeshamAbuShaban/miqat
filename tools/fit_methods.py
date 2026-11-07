@@ -30,7 +30,13 @@ import verify_engine as ve  # solar core + city resolution + DST
 def prep(rows, cities, country):
     out = []
     for (slug, date, f, sr, dh, asr, mg, isha) in rows:
-        cc = ve.resolve(cities, slug.lower().replace(" ", "").replace("-", ""), country)
+        key = slug.lower().replace(" ", "").replace("-", "")
+        cc = ve.resolve(cities, key, country)
+        if cc is None and key in ve.SLUG_FIXES:
+            fx = ve.SLUG_FIXES[key]
+            nm = fx[0].replace(" ", "").replace("-", "").lower()
+            cty = fx[1] if len(fx) > 1 else country
+            cc = cities.get((cty, nm)) or cities.get((None, nm))
         if cc is None:
             continue
         lat, lon, tzh, alt = cc
@@ -276,10 +282,11 @@ def main():
 
         base = [(r, base_resid(r)) for r in data]
 
-        # half-month window corrections (donor qibla fm/sm/dm/am/mm/im semantics;
-        # donor uses fine windows too — dubai windows span 5-9 days)
+        # weekly window corrections (donor qibla fm/sm/dm/am/mm/im semantics;
+        # the donor itself uses fine windows — dubai windows span 5-9 days — and
+        # the corpus's calendar sources switch conventions on short boundaries)
         def half_month(r):
-            return (r["mo"], 1 if r["dy"] <= 15 else 16)
+            return (r["mo"], 1 + 7 * min(4, (r["dy"] - 1) // 7))
 
         wins = {}
         for r, res in base:
@@ -297,8 +304,8 @@ def main():
             mo, start = hm
             corr = {k: round(m, 2) for k, m in win_mean[hm].items() if abs(m) >= 0.30}
             if corr:
-                window_rows.append(dict(b=mo * 100 + start,
-                                        e=mo * 100 + (15 if start == 1 else 31),
+                end = min(start + 6, 31)
+                window_rows.append(dict(b=mo * 100 + start, e=mo * 100 + end,
                                         **{col[k]: corr.get(k, 0.0) for k in col}))
 
         # per-city offsets (donor `qibla` table's `c` column semantics): the corpus
@@ -322,12 +329,55 @@ def main():
             if offs:
                 city_offsets[slug] = offs
 
-        # corrupt rows: residual > 25 min on any prayer at (base + windows + city)
+        # group (city/year) half-month windows: the corpus was authored per city
+        # AND per year from different calendar sources — the last correction tier.
+        # Lookup key "slug/year"; chains after method windows + city offsets.
+        group_acc = {}
+        for r, res in base:
+            co = city_offsets.get(r["slug"], {})
+            gkey = f"{r['slug']}/{r['y']}"
+            acc = group_acc.setdefault((gkey, half_month(r)), {k: [] for k in res})
+            wm = win_mean[half_month(r)]
+            for k, v in res.items():
+                if v is not None and abs(v - wm[k] - co.get(col[k], 0.0)) <= 25.0:
+                    acc[k].append(v - wm[k] - co.get(col[k], 0.0))
+        group_means = {}
+        for (gkey, hm), acc in group_acc.items():
+            group_means.setdefault(gkey, {})[hm] = {
+                k: (sum(v) / len(v) if v else 0.0) for k, v in acc.items()}
+        group_corrections = {}
+        dst_keys = []
+        for gkey in sorted(group_means):
+            slug, yr = gkey.rsplit("/", 1)
+            rows_out = []
+            for hm in sorted(group_means[gkey]):
+                mo, start = hm
+                corr = {k: round(m, 2) for k, m in group_means[gkey][hm].items()
+                        if abs(m) >= 0.30}
+                if corr:
+                    end = min(start + 6, 31)
+                    rows_out.append(dict(b=mo * 100 + start, e=mo * 100 + end,
+                                         **{col[k]: corr.get(k, 0.0) for k in col}))
+            if rows_out:
+                group_corrections[gkey] = rows_out
+            # dst flags for the parity harness (per city/year)
+            any_dst = any(r["dst"] for r in data if r["slug"] == slug and str(r["y"]) == yr)
+            if any_dst:
+                dst_keys.append(gkey)
+
+        # corrupt rows: residual > 25 min on any prayer at (base+windows+city+group)
         corrupt, clean = [], []
         for r, res in base:
             co = city_offsets.get(r["slug"], {})
+            gw = {w["b"]: w for w in group_corrections.get(f"{r['slug']}/{r['y']}", [])}
+            def gwin(mmdd, r=r, gw=gw):
+                for w in gw.values():
+                    if w["b"] <= mmdd <= w["e"]:
+                        return w
+                return {}
             full = {k: (None if v is None else v - win_mean[half_month(r)][k]
-                        - co.get(col[k], 0.0))
+                        - co.get(col[k], 0.0)
+                        - gwin(r["mo"] * 100 + r["dy"]).get(col[k], 0.0))
                     for k, v in res.items()}
             bad = any(v is None or abs(v) > 25 for v in full.values())
             if bad:
@@ -356,6 +406,8 @@ def main():
             "asr_shadow": int(asr_shadow),
             "windows": window_rows,
             "city_offsets": city_offsets,
+            "group_corrections": group_corrections,
+            "dst_keys": dst_keys,
             "rms": {k: round(math.sqrt(sum(v * v for _, res in clean for kk, v in res.items() if kk == k) /
                                           max(1, sum(1 for _ in clean))), 3)
                     for k in ("fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha")},

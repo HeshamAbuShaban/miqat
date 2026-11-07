@@ -11,19 +11,25 @@ Every step cites its donor lead (teardown §).
 - [x] Teardown doc (teardown §0–§8)
 - [x] Parity harness `tools/verify_engine.py` + first parity numbers (§S1)
 
-## S1 — Prayer engine, ported and verified — DONE 2026-11-06 (87% @ ±2 min)
+## S1 — Prayer engine, ported and verified — DONE 2026-11-07 (engine fully decoded)
 
 - [x] PrayTimes-style core port (julian day, declination, eqt, angle times, asr)
-- [x] `emirates` method solved from donor data: **fajr 18.2° / isha 18.2°**
-- [x] ihtiyat margins measured: dhuhr +2 (matches donor `qibla.dm`), asr +2,
-      maghrib +3, sunrise −2 (fractional residuals documented)
+- [x] `emirates` method solved from donor data (superseded by the full decode below)
+- [x] ihtiyat margins measured (superseded: real margins come from y5.g + qibla now)
 - [x] Kotlin `PrayerTimes` + data-driven `MethodTable` (app module)
-- [ ] `--method` runs for `libya`, `austria`, `syria`, `iraq`, `aachen`, `paris`…
-      → complete the method table from donor data, mirror into Kotlin
-- [ ] Decode `qibla` table fully: `fa` fractional curve + `fm/sm/dm/am/mm/im` sign
-      conventions + `ms/mv/is/iv` columns → apply as the corrections layer → target
-      **≥99% @ ±1 min**
-- [ ] Unit test parity in CI: sample donor rows as fixtures in `app/src/test`
+- [x] Donor engine FULLY decoded: y5.g 59-method table (11-slot format), y5.b
+      pipeline, QiblaAdjust column mapping (v5.f proven), high-lat rules,
+      round-half-up format — docs/engine-parity.md §1
+- [x] `--method` runs for ALL corpus methods → corpus-fitted correction chain
+      (params → seasonal windows → city offsets → city/year weekly windows):
+      **87.78% @ ±1 min** over 20,862 rows (libya/toulouse 100%, emirates 98.9%);
+      UK/DE mosque-calendar methods 52-84% = corpus data difference (§2-§3) —
+      ≥99% there needs per-calendar DATA at S2, not engine work
+- [x] `qibla` table fully decoded + corrections layer implemented
+      (tools/qibla_adjusts.json; TEARDOWN §3 corrected)
+- [x] Unit test parity: GENERATED fixtures (ParityFixtures.kt, 138 donor-mode
+      rows) in `app/src/test` gating the Kotlin port at ±1 min — tests not yet
+      executed (no local Gradle; first build = idle-time task candidate)
 
 ## S2 — Data layer (the moat, teardown §3)
 

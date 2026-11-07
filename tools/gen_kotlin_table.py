@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
-"""Generate app/src/main/java/app/miqat/core/MethodTable.kt from the fitted
-corpus tables (tools/fitted_methods.json) plus the donor's live method table
-(y5/g.java, encoded in tools/verify_engine.py METHOD_PARAMS).
+"""Generate app/src/main/java/app/miqat/core/MethodTable.kt from the donor's
+LIVE method table (y5/g.java, encoded in tools/verify_engine.py METHOD_PARAMS)
+plus the donor's live seasonal-correction rows (tools/qibla_adjusts.json == the
+DB `qibla` table, applied only to the y5.f gate methods).
 
-- methods present in fitted_methods.json → parity-certified (donor corpus)
-- the rest of y5.g → donor-live parameters, marked not-corpus-verified
+The corpus-fitted tables (tools/fitted_methods.json) stay a harness-side
+artifact: they reproduce the donor's shipped 2014-2019 fallback corpus for the
+parity measurement (docs/engine-parity.md) but several are degenerate for live
+use (they encode per-calendar-source offsets of that corpus). Live computation
+mirrors what the donor app computes today.
 
-Regenerate after every fit:  python3 -I tools/gen_kotlin_table.py
+Regenerate:  python3 -I tools/gen_kotlin_table.py
 """
 import json
 import sys
@@ -19,71 +23,55 @@ RULE_MID = {"uoif", "moscow"}
 
 
 def num(x):
-    """Compact double literal for generated Kotlin."""
     if x == int(x):
         return f"{int(x)}.0"
     return repr(round(float(x), 4))
 
 
-def margins_call(m, w):
+def margins_call(m):
     parts = []
-    for k, attr in (("fajr", "fajr"), ("sunrise", "sunrise"), ("dhuhr", "dhuhr"),
-                    ("asr", "asr"), ("maghrib", "maghrib"), ("isha", "isha")):
-        v = round(m + w.get({"fajr": "fm", "sunrise": "sm", "dhuhr": "dm",
-                             "asr": "am", "maghrib": "mm", "isha": "im"}[k], 0.0), 2)
+    for attr, key in (("fajr", 5), ("sunrise", 6), ("dhuhr", 7),
+                      ("asr", 8), ("maghrib", 9), ("isha", 10)):
+        v = round(m[key], 2)
         if v != 0.0:
             parts.append(f"{attr} = {num(v)}")
     return "Margins(" + ", ".join(parts) + ")"
 
 
-def emit_fitted(mid, entry):
-    s = entry["params"]
-    windows = entry.get("windows", [])
-    lines = [f'        "{mid}" to CalcMethod(']
-    lines.append(f'            id = "{mid}",')
-    lines.append(f"            fajrAngle = {num(s[0])},")
-    lines.append(f"            maghribMinutesMode = {'true' if s[1] == 1.0 else 'false'},")
-    lines.append(f"            maghribValue = {num(s[2])},")
-    lines.append(f"            ishaMinutesMode = {'true' if s[3] == 1.0 else 'false'},")
-    lines.append(f"            ishaValue = {num(s[4])},")
-    base_m = {"fajr": s[5], "sunrise": s[6], "dhuhr": s[7], "asr": s[8],
-              "maghrib": s[9], "isha": s[10]}
-    lines.append(f"            margins = {margins_call(base_m, {})},")
-    lines.append(f"            asrShadow = {entry.get('asr_shadow', 1)},")
-    if mid in RULE_MID:
-        lines.append("            highLatRule = HighLatitudeRule.MID_NIGHT,")
-    if windows:
-        lines.append("            seasonal = listOf(")
-        for w in windows:
-            cols = ", ".join(f"{k} = {num(w[k])}" for k in
-                             ("fm", "sm", "dm", "am", "mm", "im") if w.get(k))
-            lines.append(f"                SeasonalCorrections({w['b']}, {w['e']}, {cols}),")
-        lines.append("            ),")
-    lines.append("        ),")
-    return lines
-
-
-def emit_donor(mid):
+def emit(mid):
     s = ve.METHOD_PARAMS[mid]
+    rows = ([r for r in ve.QIBLA_ROWS if r["mn"] == mid]
+            if mid in ve.SEASONAL_METHODS else [])
     lines = [f'        "{mid}" to CalcMethod(',
              f'            id = "{mid}",',
              f"            fajrAngle = {num(s[0])},",
              f"            maghribMinutesMode = {'true' if s[1] == 1.0 else 'false'},",
              f"            maghribValue = {num(s[2])},",
              f"            ishaMinutesMode = {'true' if s[3] == 1.0 else 'false'},",
-             f"            ishaValue = {num(s[4])},"]
-    m = {"fajr": s[5], "sunrise": s[6], "dhuhr": s[7], "asr": s[8],
-         "maghrib": s[9], "isha": s[10]}
-    lines.append(f"            margins = {margins_call(m, {})},")
+             f"            ishaValue = {num(s[4])},",
+             f"            margins = {margins_call(s)},"]
     if mid in RULE_MID:
         lines.append("            highLatRule = HighLatitudeRule.MID_NIGHT,")
-    lines.append("        ),  // donor-live y5.g, not corpus-verified")
+    if rows:
+        lines.append("            seasonal = listOf(")
+        for r in rows:
+            cols = []
+            if r.get("fa"):
+                cols.append(f"fajrAngle = {num(r['fa'])}")
+            if r.get("iv"):
+                cols.append(f"ishaAngle = {num(r['iv'])}")
+            for k, attr in (("fm", "fajr"), ("sm", "sunrise"), ("dm", "dhuhr"),
+                            ("am", "asr"), ("mm", "maghrib"), ("im", "isha")):
+                if r.get(k):
+                    cols.append(f"{attr} = {num(r[k])}")
+            lines.append(f"                SeasonalCorrections({r['b']}, {r['e']}, "
+                         + ", ".join(cols) + "),")
+        lines.append("            ),")
+    lines.append("        ),")
     return lines
 
 
 def main():
-    fitted = json.load(open("tools/fitted_methods.json"))
-    donor_ids = [k for k in ve.METHOD_PARAMS if k not in fitted]
     out = []
     out.append("""package app.miqat.core
 
@@ -91,24 +79,28 @@ def main():
  * Prayer calculation methods — GENERATED file, do not hand-edit.
  * Regenerate with: python3 -I tools/gen_kotlin_table.py
  *
- * Two provenance tiers:
- *  - corpus-fitted: parameters solved from the donor's shipped timetable corpus
- *    (`staticprayertimes`, 57 cities, 2014-2019) — parity-certified at
- *    docs/engine-parity.md (≥99% @ ±1 min target, S1 ladder)
- *  - donor-live: the donor app's own method table (decompiled y5/g.java) for
- *    methods the corpus does not cover — same pipeline, not corpus-verified
+ * Source: the donor app's LIVE method table (decompiled y5/g.java, 59 methods,
+ * slot semantics decoded in docs/engine-parity.md) + its live seasonal
+ * correction rows (tools/qibla_adjusts.json == the DB `qibla` table; the donor
+ * applies them only to methods in its y5.f gate list — emirates/birmingham get
+ * rows, dubai rows exist but are gated out at runtime and are not shipped).
  *
- * Slot semantics (donor y5.g 11-element array, decoded in engine-parity.md):
+ * Slot semantics (the donor's 11-element array):
  *  fajrAngle            — sun depression degrees for fajr
  *  maghribMinutesMode   — false: maghribValue = depression degrees (angle mode)
  *                         true:  maghribValue = minutes after sunset
  *  ishaMinutesMode      — false: ishaValue = depression degrees
  *                         true:  ishaValue = minutes after maghrib (makkah = 90)
  *  Margins              — ihtiyat minutes per prayer (fajr..isha)
- *  SeasonalCorrections  — per-window minute corrections (donor `qibla` layer,
- *                         columns fm/sm/dm/am/mm/im → fajr/sunrise/dhuhr/asr/
- *                         maghrib/isha), first window with fromMMdd <= MMDD <=
- *                         toMMdd wins
+ *  SeasonalCorrections  — per-window corrections (donor `qibla` layer):
+ *                         fa → fajr ANGLE delta, iv → isha ANGLE delta,
+ *                         fm/sm/dm/am/mm/im → per-prayer minute margins;
+ *                         first window with fromMMdd <= MMDD <= toMMdd wins.
+ *
+ * The donor's shipped 2014-2019 timetable corpus does not match these live
+ * parameters exactly (it was authored per calendar source); the measured drift
+ * and the corpus-fitted tables live in tools/fitted_methods.json and
+ * docs/engine-parity.md.
  */
 enum class HighLatitudeRule(val fraction: (Double) -> Double) {
     NONE({ _ -> 0.0 }),
@@ -118,12 +110,14 @@ enum class HighLatitudeRule(val fraction: (Double) -> Double) {
 }
 
 /**
- * Per-window seasonal minute corrections — the decoded donor `qibla` table
- * (v5.f "QiblaAdjust" / tools/qibla_adjusts.json).
+ * Per-window seasonal corrections — the decoded donor `qibla` table
+ * (v5.f "QiblaAdjust" / tools/qibla_adjusts.json). Angle deltas are degrees.
  */
 data class SeasonalCorrections(
     val fromMMdd: Int,
     val toMMdd: Int,
+    val fajrAngle: Double = 0.0,
+    val ishaAngle: Double = 0.0,
     val fajr: Double = 0.0,
     val sunrise: Double = 0.0,
     val dhuhr: Double = 0.0,
@@ -154,35 +148,33 @@ data class CalcMethod(
     val highLatRule: HighLatitudeRule = HighLatitudeRule.ANGLE_NIGHT,
     val seasonal: List<SeasonalCorrections> = emptyList(),
 ) {
-    /** y5.b.a(): add the first matching seasonal window to the margins. */
+    /** y5.b.a(): fold the first matching seasonal window into the parameters. */
     fun withSeasonalCorrections(mmdd: Int): CalcMethod {
         val w = seasonal.firstOrNull { it.fromMMdd <= mmdd && mmdd <= it.toMMdd }
             ?: return this
-        return copy(margins = Margins(
-            fajr = margins.fajr + w.fajr,
-            sunrise = margins.sunrise + w.sunrise,
-            dhuhr = margins.dhuhr + w.dhuhr,
-            asr = margins.asr + w.asr,
-            maghrib = margins.maghrib + w.maghrib,
-            isha = margins.isha + w.isha,
-        ))
+        return copy(
+            fajrAngle = fajrAngle + w.fajrAngle,
+            ishaValue = if (ishaMinutesMode) ishaValue else ishaValue + w.ishaAngle,
+            margins = Margins(
+                fajr = margins.fajr + w.fajr,
+                sunrise = margins.sunrise + w.sunrise,
+                dhuhr = margins.dhuhr + w.dhuhr,
+                asr = margins.asr + w.asr,
+                maghrib = margins.maghrib + w.maghrib,
+                isha = margins.isha + w.isha,
+            ),
+        )
     }
 }
 
 object MethodTable {
+    private val table = mapOf(
 """)
-    out.append("    // --- parity-certified: fitted from the donor corpus ---\n")
-    out.append("    private val fitted = mapOf(\n")
-    for mid in sorted(fitted):
-        out.extend(emit_fitted(mid, fitted[mid]))
-    out.append("    )\n\n")
-    out.append("    // --- donor-live parameters (y5/g.java), no corpus coverage ---\n")
-    out.append("    private val donorLive = mapOf(\n")
-    for mid in sorted(donor_ids):
-        out.extend(emit_donor(mid))
-    out.append("    )\n\n")
-    out.append("""    private val table: Map<String, CalcMethod> = fitted + donorLive
+    for mid in sorted(ve.METHOD_PARAMS):
+        out.extend(emit(mid))
+    out.append("""    )
 
+    /** Unknown id falls back to the donor default (`makkah`, per t5.a). */
     operator fun get(id: String): CalcMethod =
         table[id] ?: table.getValue("makkah")
 
@@ -190,7 +182,10 @@ object MethodTable {
 }
 """)
     open(OUT, "w").write("\n".join(out))
-    print(f"wrote {OUT}: {len(fitted)} fitted + {len(donor_ids)} donor-live methods")
+    n_seasonal = sum(1 for m in ve.SEASONAL_METHODS
+                     if any(r["mn"] == m for r in ve.QIBLA_ROWS))
+    print(f"wrote {OUT}: {len(ve.METHOD_PARAMS)} methods, "
+          f"{n_seasonal} with live seasonal rows")
 
 
 if __name__ == "__main__":

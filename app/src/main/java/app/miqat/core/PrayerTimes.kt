@@ -3,24 +3,32 @@ package app.miqat.core
 import kotlin.math.abs
 import kotlin.math.acos
 import kotlin.math.asin
-import kotlin.math.atan
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.floor
-import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.tan
 
 /**
- * PrayTimes-style prayer time engine — a faithful port of `tools/verify_engine.py`
- * (same formulas, same time convention), the port that reached 87% @ ±2 min parity
- * against the donor's own official-timetable corpus on 2026-11-06
- * (docs/engine-parity.md). Keep this file in lockstep with the python harness.
+ * The prayer-time engine — a faithful port of the DONOR's own pipeline
+ * (decompiled t5/a.java + y5/{b,c,f,g}.java + x5/d.java; the full decode lives
+ * in docs/engine-parity.md). Kept in lockstep with tools/verify_engine.py,
+ * which measures parity against the donor's shipped timetable corpus
+ * (`staticprayertimes`, 57 cities, 2014–2019).
  *
- * All math is dependency-free; inputs are plain numbers so the core stays testable
- * on the JVM without Android.
+ * Pipeline for one (date, location, CalcMethod):
+ *  1. params = CalcMethod 11-slot config + first matching
+ *     [SeasonalCorrections] window (donor `qibla` layer semantics)
+ *  2. computeTimes — 7 slots, single pass at fixed day-fractions
+ *     (fajr, sunrise, dhuhr, asr, sunset, maghrib-slot, isha-slot)
+ *  3. adjustTimes — civil shift (utc − lng/15), per-prayer margins,
+ *     maghrib/isha mode overrides, high-latitude rule
+ *  4. format — round half up to the displayed minute (donor t5.a.j)
+ *
+ * DST is the caller's concern (S2 ships our own tz table, donor §3): pass the
+ * effective UTC offset in [Location]. Pure dependency-free math, offline-first.
  */
-data class PrayerTimesUtc(
+data class LocalPrayerTimes(
     val fajr: Double,
     val sunrise: Double,
     val dhuhr: Double,
@@ -33,64 +41,98 @@ data class Location(val latitude: Double, val longitude: Double, val utcOffsetHo
 
 object PrayerTimes {
 
-    /** Asr shadow factor: 1.0 = Standard (Shafi'i/majority), 2.0 = Hanafi. */
+    /**
+     * Full donor pipeline. Returns the six prayers as fractional local hours;
+     * NaN where a time does not exist (polar day/night) — [format] renders
+     * NaN as "--:--".
+     */
     fun compute(
         year: Int, month: Int, day: Int,
         location: Location,
-        method: Method,
-        asrFactor: Double = 1.0,
-    ): PrayerTimesUtc {
+        method: CalcMethod,
+    ): LocalPrayerTimes {
+        // 1. params: copy of the 11 slots + seasonal window (y5.b.a)
+        val p = method.withSeasonalCorrections(month * 100 + day)
+
         val lat = location.latitude
         val lon = location.longitude
-        val jd = julian(year, month, day) - lon / (15.0 * 24.0)
+        val jd = julian(year, month, day) - lon / 360.0
 
-        val sunriseBase = sunAngleTime(jd, 0.833, lat, 6.0 / 24.0, ccw = true)
-        val maghribBase = sunAngleTime(jd, 0.833, lat, 18.0 / 24.0, ccw = false)
-        val decl = sunPosition(jd + 13.0 / 24.0).first
-        val asrBase = asrTime(jd, asrFactor, lat, decl, 13.0 / 24.0)
-        val (_, eqt) = sunPosition(jd)
-        val dhuhrBase = fix(12.0 - eqt, 24.0)
-        val ishaBase = if (method.ishaAngle != null)
-            sunAngleTime(jd, method.ishaAngle, lat, 18.0 / 24.0, ccw = false)
-        else maghribBase + method.ishaMinutes!! / 60.0
-        val fajrBase = sunAngleTime(jd, method.fajrAngle, lat, 5.0 / 24.0, ccw = true)
+        // 2. computeTimes (t5.a.g): each slot evaluated at its own day-fraction
+        val t = doubleArrayOf(5.0 / 24, 6.0 / 24, 12.0 / 24, 13.0 / 24, 18.0 / 24, 18.0 / 24, 18.0 / 24)
+        val v = DoubleArray(7)
+        v[0] = sunAngleTime(jd, 180.0 - p.fajrAngle, lat, t[0]) ?: Double.NaN
+        v[1] = sunAngleTime(jd, 180.0 - SUNRISE_DEPRESSION, lat, t[1]) ?: Double.NaN
+        v[2] = fix(12.0 - sunPosition(jd + t[2]).second, 24.0)
+        v[3] = asrTime(jd, method.asrShadow.toDouble(), lat, t[3]) ?: Double.NaN
+        v[4] = sunAngleTime(jd, SUNRISE_DEPRESSION, lat, t[4]) ?: Double.NaN
+        v[5] = sunAngleTime(jd, p.maghribValue, lat, t[5]) ?: Double.NaN
+        v[6] = sunAngleTime(jd, p.ishaValue, lat, t[6]) ?: Double.NaN
 
-        val m = method.margins
-        // PrayTimes convention: jd frame shift + final civil correction tz − lng/15.
-        fun local(ut: Double?, extraMin: Int): Double {
-            val v = ut ?: return Double.NaN
-            return ((v + location.utcOffsetHours - lon / 15.0 + extraMin / 60.0) % 24.0)
+        // 3. adjustTimes (t5.a.a)
+        val shift = location.utcOffsetHours - lon / 15.0
+        for (i in v.indices) v[i] += shift
+        v[0] += p.margins.fajr / 60.0
+        v[1] += p.margins.sunrise / 60.0
+        v[2] += p.margins.dhuhr / 60.0
+        v[3] += p.margins.asr / 60.0
+
+        // maghrib: minutes-after-sunset mode, or keep the angle slot
+        val sunset = v[4] + p.margins.maghrib / 60.0
+        v[5] = if (p.maghribMinutesMode) sunset + p.maghribValue / 60.0 else v[5] + p.margins.maghrib / 60.0
+
+        // isha: minutes-after-maghrib mode, or keep the angle slot (+ margin)
+        if (p.ishaMinutesMode) v[6] = v[5] + p.ishaValue / 60.0
+        v[6] += p.margins.isha / 60.0
+
+        // high-latitude rule (t5.a.a tail + x5.d.a). donor b.l(a, b) = fix(b − a):
+        // night = fix(sunrise − sunset) crosses midnight; gaps likewise.
+        if (method.highLatRule != HighLatitudeRule.NONE) {
+            val night = fix(v[1] - v[4], 24.0)
+            val fajrPortion = method.highLatRule.fraction(p.fajrAngle) * night
+            if (v[0].isNaN() || fix(v[1] - v[0], 24.0) > fajrPortion) {
+                v[0] = v[1] - fajrPortion + p.margins.fajr / 60.0
+            }
+            val ishaAngle = if (p.ishaMinutesMode) 18.0 else p.ishaValue
+            val ishaPortion = method.highLatRule.fraction(ishaAngle) * night
+            if (v[6].isNaN() || fix(v[6] - v[5], 24.0) > ishaPortion) {
+                v[6] = v[5] + ishaPortion + p.margins.isha / 60.0
+            }
         }
-        return PrayerTimesUtc(
-            fajr = local(fajrBase, 0),
-            sunrise = local(sunriseBase, m.sunrise),
-            dhuhr = local(dhuhrBase, m.dhuhr),
-            asr = local(asrBase, m.asr),
-            maghrib = local(maghribBase, method.maghribMinutes ?: m.maghrib),
-            isha = local(ishaBase, m.isha),
+
+        return LocalPrayerTimes(
+            fajr = v[0], sunrise = v[1], dhuhr = v[2],
+            asr = v[3], maghrib = v[5], isha = v[6],
         )
     }
 
-    /** Solar noon at the location, local civil hours. */
+    /** Solar noon at the location, local civil hours (t5.a.e). */
     fun midDay(year: Int, month: Int, day: Int, location: Location): Double {
-        val jd = julian(year, month, day) - location.longitude / (15.0 * 24.0)
-        val (_, eqt) = sunPosition(jd)
+        val jd = julian(year, month, day) - location.longitude / 360.0
+        val (_, eqt) = sunPosition(jd + 0.5)
         return (fix(12.0 - eqt, 24.0) + location.utcOffsetHours - location.longitude / 15.0) % 24.0
     }
 
-    /** "HH:MM" from fractional local hours; rounds to the nearest minute. */
+    /**
+     * "HH:MM" from fractional local hours — donor t5.a.j: round half up to the
+     * displayed minute (floor(t + 0.5 min)), NaN → "--:--".
+     */
     fun format(hours: Double): String {
         if (hours.isNaN()) return "--:--"
-        val totalMin = (hours * 60).roundToInt()
-        val h = ((totalMin / 60) % 24 + 24) % 24
-        val m = (totalMin % 60 + 60) % 60
+        val dj = fix(hours + 0.5 / 60.0, 24.0)
+        val h = floor(dj).toInt()
+        val m = floor((dj - h) * 60.0).toInt()
         return "%02d:%02d".format(h, m)
     }
 
-    // --- solar math (keep in lockstep with verify_engine.py) ---
+    // --- solar math (lockstep with tools/verify_engine.py / donor t5.a.q) ---
+
+    /** Sun horizon depression for sunrise/sunset: 0.833° = refraction + radius. */
+    private const val SUNRISE_DEPRESSION = 0.833
 
     private fun fix(a: Double, b: Double): Double = a - b * floor(a / b)
 
+    /** Donor t5.a.p — Julian day at 00:00 UT. */
     fun julian(y: Int, m: Int, d: Int): Double {
         var yy = y
         var mm = m
@@ -103,7 +145,7 @@ object PrayerTimes {
         return floor(365.25 * (yy + 4716)) + floor(30.6001 * (mm + 1)) + d + b - 1524.5
     }
 
-    /** @return Pair(sun declination degrees, equation of time hours) */
+    /** @return Pair(sun declination degrees, equation of time hours) — donor t5.a.q */
     fun sunPosition(jd: Double): Pair<Double, Double> {
         val d = jd - 2451545.0
         val g = fix(357.529 + 0.98560028 * d, 360.0)
@@ -112,28 +154,33 @@ object PrayerTimes {
         val e = 23.439 - 0.00000036 * d
         val ra = fix(
             Math.toDegrees(
-                atan2(
-                    cos(Math.toRadians(e)) * sin(Math.toRadians(l)),
-                    cos(Math.toRadians(l))
-                )
+                atan2(cos(Math.toRadians(e)) * sin(Math.toRadians(l)), cos(Math.toRadians(l)))
             ) / 15.0, 24.0)
         val decl = Math.toDegrees(asin(sin(Math.toRadians(e)) * sin(Math.toRadians(l))))
         val eqt = q / 15.0 - ra
         return Pair(decl, eqt)
     }
 
-    private fun sunAngleTime(jd: Double, angle: Double, lat: Double, t: Double, ccw: Boolean): Double? {
-        val decl = sunPosition(jd + t).first
-        val noon = fix(12.0 - sunPosition(jd + t).second, 24.0)
+    /**
+     * UT hour of the sun crossing depression [angle]; angle in (90, 180] means
+     * the morning crossing (donor t5.a.f). null when the sun never gets there.
+     */
+    private fun sunAngleTime(jd: Double, angle: Double, lat: Double, t: Double): Double? {
+        val (decl, eqt) = sunPosition(jd + t)
+        val noon = fix(12.0 - eqt, 24.0)
         val num = -sin(Math.toRadians(angle)) - sin(Math.toRadians(decl)) * sin(Math.toRadians(lat))
         val den = cos(Math.toRadians(decl)) * cos(Math.toRadians(lat))
-        if (den == 0.0 || abs(num / den) > 1.0) return null
-        val dt = Math.toDegrees(acos(num / den)) / 15.0
-        return if (ccw) noon - dt else noon + dt
+        if (den == 0.0) return null
+        val x = num / den
+        if (abs(x) > 1.0) return null
+        val dt = Math.toDegrees(acos(x)) / 15.0
+        return if (angle > 90.0) noon - dt else noon + dt
     }
 
-    private fun asrTime(jd: Double, factor: Double, lat: Double, decl: Double, t: Double): Double? {
-        val angle = -Math.toDegrees(atan(1.0 / (factor + tan(Math.toRadians(abs(lat - decl))))))
-        return sunAngleTime(jd, angle, lat, t, ccw = false)
+    /** Asr: shadow length 1 (Shafi'i) or 2 (Hanafi) — donor t5.a.d. */
+    private fun asrTime(jd: Double, shadow: Double, lat: Double, t: Double): Double? {
+        val (decl, _) = sunPosition(jd + t)
+        val angle = -Math.toDegrees(atan2(1.0, shadow + tan(Math.toRadians(abs(lat - decl)))))
+        return sunAngleTime(jd, angle, lat, t)
     }
 }

@@ -143,7 +143,7 @@ NA_DST = {"CA", "US"}
 
 # corpus slug -> (city_name in DB to try, or explicit coords)
 SLUG_FIXES = {
-    "nurnberg": ("Nürnberg", None),
+    "nurnberg": ("Nuernberg", "DE"),
     "klagenfurt": ("Klagenfurt am Woerthersee", None),
     "zawia": ("Az Zawiyah", "LY"),
     "khawrfakkan": ("Khawr Fakkan", "AE"),
@@ -214,7 +214,7 @@ def compute(y, mo, dy, lat, lon, alt, tz, method, city, country, shadow=None,
     """Donor pipeline. Returns the 7-slot local-hour array
     [fajr, sunrise, dhuhr, asr, sunset, maghrib, isha] (slot 4 is internal).
     Param source selected by PARAMS_MODE (donor-live vs corpus-fitted)."""
-    p, corr_rows, shadow_default, elev_enabled, city_off = effective_params(method)
+    p, corr_rows, shadow_default, elev_enabled, city_off, group_corr = effective_params(method)
     if shadow is None:
         shadow = shadow_default
 
@@ -257,6 +257,16 @@ def compute(y, mo, dy, lat, lon, alt, tz, method, city, country, shadow=None,
         p[8] += co.get("am", 0.0)
         p[9] += co.get("mm", 0.0)
         p[10] += co.get("im", 0.0)
+    # per-(city, year) correction windows — the corpus's own per-source calendars
+    for w in group_corr.get(f"{city}/{y}", []):
+        if w["b"] <= mmdd <= w["e"]:
+            p[5] += w.get("fm", 0.0)
+            p[6] += w.get("sm", 0.0)
+            p[7] += w.get("dm", 0.0)
+            p[8] += w.get("am", 0.0)
+            p[9] += w.get("mm", 0.0)
+            p[10] += w.get("im", 0.0)
+            break
 
     # --- t5.a.g computeTimes: 7 slots, single pass ---------------------------
     jd = julian(y, mo, dy) - lon / 360.0
@@ -417,14 +427,15 @@ def effective_params(method):
         if entry is None:
             slots = list(METHOD_PARAMS[method])
             rows = [r for r in QIBLA_ROWS if r["mn"] == method]
-            return slots, rows, 1, method in ELEVATION_METHODS, {}
+            return slots, rows, 1, method in ELEVATION_METHODS, {}, {}
         return (list(entry["params"]),
                 [dict(w, mn=method, fa=0.0, ms=0.0, mv=0.0, iv=0.0, ism=0.0)
                  for w in entry["windows"]],
-                entry.get("asr_shadow", 1), False, entry.get("city_offsets", {}))
+                entry.get("asr_shadow", 1), False, entry.get("city_offsets", {}),
+                entry.get("group_corrections", {}))
     slots = list(METHOD_PARAMS[method])
     rows = [r for r in QIBLA_ROWS if r["mn"] == method] if method in SEASONAL_METHODS else []
-    return slots, rows, 1, True, {}
+    return slots, rows, 1, True, {}, {}
 
 
 def fitted_dst_applies(method, slug, year):

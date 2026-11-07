@@ -20,21 +20,20 @@ SAMPLE_DATES = []  # filled below: 6 dates spread over the year
 
 
 def sample_dates():
-    # fixed deterministic picks (15th of each other month + solstice-ish days)
-    return [(2014, m, d) for m, d in ((1, 1), (2, 15), (4, 15), (6, 21), (9, 15), (11, 15))]
+    # fixed deterministic picks across the year (day-of-month 1/15/21)
+    return [(m, d) for m, d in ((1, 1), (2, 15), (4, 15), (6, 21), (9, 15), (11, 15))]
 
 
 def main():
-    ve.PARAMS_MODE = "fitted"
+    ve.PARAMS_MODE = "donor"  # port-parity: expected values = the donor's live pipeline
     con = sqlite3.connect("file:" + ve.DB + "?mode=ro", uri=True)
     cities = ve.load_cities(con)
     fitted = ve.fitted_table()
     dates = sample_dates()
 
     fixtures = []
-    skipped = 0
-    for method, entry in sorted(fitted.items()):
-        country = entry.get("country") or ve.METHOD_COUNTRY.get(method)
+    for method in sorted(ve.METHOD_COUNTRY):
+        country = ve.METHOD_COUNTRY[method]
         by_city = {}
         for (slug, date, f, sr, dh, asr, mg, isha) in con.execute(
                 "SELECT city, date, fajr, sunrise, dhuhr, asr, maghrib, isha"
@@ -61,29 +60,14 @@ def main():
                     break
                 want = by_city[slug][date]
                 y, mo, dy = int(date[:4]), int(date[4:6]), int(date[6:8])
-                try:
-                    values = [ve.parse_hhmm(x) for x in want]
-                except ValueError:
-                    skipped += 1
-                    continue
-                tz = tzh + (ve.dst_hours(y, mo, dy, country)
-                            if ve.fitted_dst_applies(method, slug.lower(), y) else 0.0)
+                tz = tzh + ve.dst_hours(y, mo, dy, country)
                 v = ve.compute(y, mo, dy, lat, lon, 0.0, tz, method,
                                slug.lower().replace(" ", "").replace("-", ""), country)
                 slots = (v[0], v[1], v[2], v[3], v[5], v[6])
-                ok = True
-                exp = []
-                for got_h, w in zip(slots, want):
-                    if got_h is None or got_h != got_h:
-                        ok = False
-                        break
-                    g = ve.fmt(got_h)
-                    gmin = int(g[:2]) * 60 + int(g[3:])
-                    if abs(gmin - w) > 1:
-                        ok = False
-                        break
-                    exp.append(g)
-                if not ok:
+                # port-parity: expected = the python engine itself (donor mode);
+                # a NaN slot or a day-edge rounding flip makes the row unusable
+                exp = [ve.fmt(h) for h in slots]
+                if any(h is None or h != h or g is None for h, g in zip(slots, exp)):
                     continue
                 fixtures.append((method, slug, date, lat, lon, tz, exp))
                 chosen += 1
@@ -95,11 +79,12 @@ def main():
  * GENERATED parity fixtures — do not hand-edit.
  * Regenerate with: python3 -I tools/gen_parity_fixtures.py
  *
- * Rows sampled from the donor's shipped timetable corpus (staticprayertimes,
- * SalatukDB.db) across the fitted methods and the year; every row is reproduced
- * by the python engine (tools/verify_engine.py, fitted mode) within ±1 min.
- * `utcOffset` is the effective offset (DST baked, per the corpus's own convention
- * documented in docs/engine-parity.md).
+ * Inputs (city/date/coords/offset) sampled from the donor's shipped timetable
+ * corpus across methods and the year; `expected` values are the REFERENCE
+ * PYTHON ENGINE's own output in donor-live mode (tools/verify_engine.py,
+ * --params donor) — this certifies the Kotlin port reproduces the donor's
+ * pipeline exactly. The engine must NOT be tuned to these; regenerate after
+ * any engine change. `utcOffset` has DST baked (EU/NA rules, donor convention).
  */
 object ParityFixtures {
 
@@ -132,7 +117,7 @@ object ParityFixtures {
 }
 """)
     open(OUT, "w").write("\n".join(lines))
-    print(f"wrote {OUT}: {len(fixtures)} fixture rows (skipped {skipped} malformed)")
+    print(f"wrote {OUT}: {len(fixtures)} fixture rows")
 
 
 def resolve_fixed(cities, fx):
