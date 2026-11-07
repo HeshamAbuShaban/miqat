@@ -12,8 +12,12 @@ object Hijri {
 
     /** Today's IslamicDay (Umm al-Qura) for the device default timezone. */
     fun today(nowMillis: Long = System.currentTimeMillis()): IslamicDay {
-        val cal = android.icu.util.IslamicCalendar(nowMillis)
-        cal.calculationType = android.icu.util.IslamicCalendar.CalculationType.ISLAMIC_UMALQURA
+        // Umm al-Qura selected via the ICU locale keyword (stable across API levels;
+        // Android's bundled IslamicCalendar exposes no CalculationType API)
+        val cal = android.icu.util.IslamicCalendar(
+            android.icu.util.ULocale("en@calendar=islamic-umalqura"),
+        )
+        cal.setTimeInMillis(nowMillis)
         val g = GregorianCalendar().apply { timeInMillis = nowMillis }
         return IslamicDay(
             hYear = cal.get(android.icu.util.IslamicCalendar.YEAR),

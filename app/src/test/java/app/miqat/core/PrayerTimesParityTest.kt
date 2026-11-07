@@ -61,7 +61,7 @@ class PrayerTimesParityTest {
             }
         }
         assertEquals(true, checked > 0)
-        assertEquals("worst deviation at $worstAt", 1, kotlin.math.min(worst, 1))
+        assertTrue("worst deviation $worst at $worstAt", worst <= 1)
     }
 
     @Test
@@ -80,7 +80,7 @@ class PrayerTimesParityTest {
         val method = MethodTable["emirates"]
         val win = method.seasonal.first { it.fromMMdd <= 101 && 101 <= it.toMMdd }
         val inWindow = method.withSeasonalCorrections(101)
-        val outside = method.withSeasonalCorrections(501)
+        val outside = method.withSeasonalCorrections(431) // 431-500 = no window
         assertEquals(method.fajrAngle + win.fajrAngle, inWindow.fajrAngle, 1e-9)
         assertEquals(method.margins.fajr + win.fajr, inWindow.margins.fajr, 1e-9)
         assertEquals(method.margins.asr + win.asr, inWindow.margins.asr, 1e-9)

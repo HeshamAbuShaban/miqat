@@ -43,7 +43,7 @@ class IslamicDaysTest {
         assertTrue(IslamicDays.isEidAlFitr(d(10, 1)))
         assertTrue(IslamicDays.isEidAlAdha(d(12, 11)))
         assertEquals("عيد الفطر المبارك", IslamicDays.todayCard(d(10, 2))?.first)
-        assertNull(IslamicDays.todayCard(d(7, 3))) // plain day → quiet home
+        assertNull(IslamicDays.todayCard(d(7, 3, wd = 3))) // plain Tuesday → quiet home
     }
 
     @Test

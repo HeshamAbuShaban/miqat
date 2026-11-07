@@ -18,9 +18,10 @@ object Qibla {
     /** Initial great-circle bearing (degrees from true north, 0..360). */
     fun bearing(lat: Double, lon: Double): Double {
         val dLon = Math.toRadians(KAABA_LON - lon)
-        val y = sin(dLon) * cos(Math.toRadians(KAABA_LAT))
-        val x = cos(Math.toRadians(lat)) * Math.toRadians(KAABA_LAT) -
-            sin(Math.toRadians(lat)) * cos(Math.toRadians(KAABA_LAT)) * cos(dLon)
+        val p1 = Math.toRadians(lat)
+        val p2 = Math.toRadians(KAABA_LAT)
+        val y = sin(dLon) * cos(p2)
+        val x = cos(p1) * sin(p2) - sin(p1) * cos(p2) * cos(dLon)
         val brng = Math.toDegrees(atan2(y, x))
         return (brng + 360.0) % 360.0
     }
