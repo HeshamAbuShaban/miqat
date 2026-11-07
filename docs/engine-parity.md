@@ -4,7 +4,7 @@ This document is the single source of truth for the prayer-time engine decode.
 Reproduce any number:
 
 ```bash
-cd ~/WorkingOn/SalatukPlus
+cd ~/WorkingOn/Miqat
 python3 -I tools/verify_engine.py --tolerance 1                # fitted mode (corpus reproduction)
 python3 -I tools/verify_engine.py --params donor --tolerance 1 # donor-live mode
 python3 -I tools/fit_methods.py                                # refit fitted tables

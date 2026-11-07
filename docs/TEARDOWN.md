@@ -1,6 +1,6 @@
 # Salatuk teardown — `com.masarat.salati` v3.7.17 (2026-11-06)
 
-Donor for the **SalatukPlus** rebuild (`~/WorkingOn/SalatukPlus/`). Everything below is
+Donor for the **Miqat** rebuild (`~/WorkingOn/Miqat/`). Everything below is
 static observation from the shipped APK; runtime behavior stays unverified. Observations
 vs inferences kept separate; unverified claims marked (VERIFY).
 
@@ -12,17 +12,17 @@ vs inferences kept separate; unverified claims marked (VERIFY).
 - **v3.7.17 (versionCode 383)**, minSdk 21, targetSdk 34, platform build 14.
 - Pulled read-only from POCO vayu (`35d5637e`) on 2026-11-06 (installed 2023-05-02,
   updated 2025-07-11).
-- Artifact: `~/WorkingOn/SalatukPlus/donor/com.masarat.salati-3.7.17.apk` — 33,957,007 B,
+- Artifact: `~/WorkingOn/Miqat/donor/com.masarat.salati-3.7.17.apk` — 33,957,007 B,
   sha256 `14e92319044cd657377a5b93417a13c449503e931e2ac4278e36323c32c10397`.
 - **REA Evidence ID `ev_ea7cc79a942f20962eef69c1dd1f8799520c85f3afe4ac428efdc29888e898eb`**
   (inspect_android_package, complete Evidence at
-  `SalatukPlus/donor/rea-evidence/inspect-evidence.json`; summary projection
+  `Miqat/donor/rea-evidence/inspect-evidence.json`; summary projection
   `ev_37a68b3e…4763c43`). Engine: jadx-headless-mcp **0.7.1** (sha256
   `6e5eacf5…7feb573ff75` = REA's audited release). Coverage: manifest + component
   inventory **complete**; **3,515 classes**, **1,311 resources**; signature verification
   not performed; APK never executed.
 - Decompiles (jadx 1.5.6, 4 minor class errors — negligible):
-  `SalatukPlus/donor/extracted-code/` (sources) + `extracted-res/` (resources).
+  `Miqat/donor/extracted-code/` (sources) + `extracted-res/` (resources).
 - Obfuscation: R8 on — helper classes renamed to `a`, `b0`, `x4.a`…; the main package
   `com.masarat.salati.*` kept its real names (131 files), which is why we can map
   everything below.
@@ -138,9 +138,9 @@ for this compass path. (RECORD_AUDIO remains unexplained — VERIFY: possibly fo
 - `READ_/WRITE_CALENDAR` — prayer times → calendar export (CalendarPreferences).
 - `DISABLE_KEYGUARD`, `USE_FULL_SCREEN_INTENT`, `WAKE_LOCK` — the alarm ladder.
 
-## 8. Leverage points → what SalatukPlus takes from this
+## 8. Leverage points → what Miqat takes from this
 
-The rebuild lives at `~/WorkingOn/SalatukPlus/` (own README + ROADMAP = lead ladder).
+The rebuild lives at `~/WorkingOn/Miqat/` (own README + ROADMAP = lead ladder).
 Direct takeaways, ranked:
 
 1. **Engine is replicable, data is the moat** — implement the solar math (small, known),
@@ -155,4 +155,4 @@ Direct takeaways, ranked:
 5. Their weak spots = our openings: Views-era UI (Compose rewrite), no theme system
    beyond colors, mono-locale logic hacked via `MODE_MULTI_PROCESS` prefs, no backup
    (`allowBackup=false`), no accessibility pass, no tests shipped, ads surface
-   unresolved. See `SalatukPlus/ROADMAP.md` for the full ladder.
+   unresolved. See `Miqat/ROADMAP.md` for the full ladder.

@@ -3,6 +3,22 @@
 > One dated entry per working session (see AGENTS.md). Next agent: read ROADMAP top
 > unfinished step, then this.
 
+## 2026-11-07 (4) — De-branded + pushed to GitHub + icon direction (Hesham pre-sleep handoff)
+
+- **Zero-trace rename (his explicit ask):** every trace of the donor working
+  name removed from code (Theme.Miqat, rootProject.name = Miqat, MainActivity
+  title الميقات) and docs; repo folder renamed `~/WorkingOn/Miqat`; git history
+  carries zero references (checked). Donor evidence inside `donor/` untouched
+  (its own names are evidence, not ours).
+- **Icon direction (his explicit ask):** NO crescent/dome graphics — the mark
+  must express «ميقات» (the appointed time) as the umbrella brand for the whole
+  feature set (S9), not a prayer-only app. Design exploration runs in the
+  visualize skill; candidates follow the locked Day-Arc language.
+- **GitHub:** repo created and pushed (see remote origin) with his token.
+- **Design focus next (his words):** design is the priority after performance;
+  cover the donor's own gaps (a11y, theming, backup, battery-kind scheduling,
+  no forced notification) as design requirements, not add-ons.
+
 ## 2026-11-07 (3) — S1 tail DONE: full engine decode + corrections layer + corpus parity
 
 **Goal (Hesham):** S1 tail — parity for the remaining methods, decode the `qibla`
@@ -58,8 +74,8 @@ minor Hajj-ambiguity caveat), wants to defer the final variant pick, apply what'
 decided now, and hand the rest to the next session.
 
 - **Applied:** display name الميقات/Miqat (values + values-ar), package/appId
-  `app.miqat` (git mv of Kotlin trees, zero `salatukplus` residuals in code). Folder
-  stays `SalatukPlus` (donor working name). Deliberation + options recorded in
+  `app.miqat` (git mv of Kotlin trees, zero residuals in code). Deliberation +
+  options recorded in
   `docs/decisions.md`; final variant = one-string change.
 - **Handed off:** his Islamic-calendar expansion vision recorded as **S9** in ROADMAP
   (Eid/Arafah/Ashura/white days engine, أثلاث الليل + Duha + imsak times,

@@ -48,7 +48,7 @@ private fun TimesSheet() {
         modifier = Modifier.fillMaxSize().padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text("SalatukPlus", fontSize = 28.sp)
+        Text("الميقات", fontSize = 28.sp)
         Text("engine demo — ${method.id} method", fontSize = 14.sp)
         listOf(
             "Fajr" to times.fajr, "Sunrise" to times.sunrise, "Dhuhr" to times.dhuhr,

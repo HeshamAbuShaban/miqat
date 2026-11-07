@@ -5,7 +5,7 @@
          with S3 (see ROADMAP) — request when used, like the donor's alarm ladder. -->
     <application
         android:label="@string/app_name"
-        android:theme="@style/Theme.SalatukPlus"
+        android:theme="@style/Theme.Miqat"
         android:allowBackup="true"
         android:supportsRtl="true">
 

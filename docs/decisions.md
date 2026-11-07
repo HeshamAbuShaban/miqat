@@ -14,8 +14,8 @@
   seasonal rows for emirates/birmingham); corpus-fitted tables stay a harness
   artifact (several are degenerate by design — they encode the corpus's own
   per-calendar-source offsets). Port-parity test fixtures are donor-mode.
-- Folder stays `SalatukPlus` for now (brand ≠ folder precedent); rename to
-  `Miqat` deferred to a session boundary — see journal 2026-11-07 (3).
+- Folder/repo renamed to `Miqat` (2026-11-07 (4), Hesham's explicit ask: zero
+  traces of the working name anywhere); brand = folder = package now.
 
 ## 2026-11-07 (2) — NAME LOCKED + design direction locked
 
@@ -39,6 +39,6 @@
   time of worship — Quranic basis {الصلاة كانت على المؤمنين كتاباً موقوتاً}; concern:
   bare "الميقات" may first evoke Hajj/Umrah ihram miqats.
 - Applied: display name الميقات / Miqat, package + applicationId `app.miqat`
-  (folder stays `SalatukPlus` = donor working name; brand ≠ folder, precedent
+  (folder stays `Miqat` = donor working name; brand ≠ folder, precedent
   BigProjectBank/NexaBank). Options evaluated: ميقات الصلاة / مواقيت / موقوتاً /
   المُعلِم / حافظوا — superseded by the lock above.

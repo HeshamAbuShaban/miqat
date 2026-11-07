@@ -1,4 +1,4 @@
-# AGENTS.md — SalatukPlus agent contract
+# AGENTS.md — Miqat agent contract
 
 Whatever model/agent you are: read `ROADMAP.md`, work the top unfinished step, leave the
 ladder + journal better than you found it. Donor facts live in `docs/TEARDOWN.md` — never
