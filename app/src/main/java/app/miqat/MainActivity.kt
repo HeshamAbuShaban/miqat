@@ -51,6 +51,7 @@ import app.miqat.core.IslamicDays
 import app.miqat.core.Location
 import app.miqat.core.MethodTable
 import app.miqat.core.PrayerTimes
+import app.miqat.core.Qibla
 import java.util.Calendar
 
 /* Day-Arc palette (design-brief.md §2) — hardcoded v0 until the S5 theme system. */
@@ -273,6 +274,13 @@ private fun ContextCards(city: City) {
         MiniCard("التالي", nextLabel, Modifier.weight(1f), accent = Amber)
         MiniCard("ثلث الليل الأخير", hhmmAr(third), Modifier.weight(1f), accent = Blue)
     }
+    Spacer(Modifier.height(10.dp))
+    val q = Qibla.bearing(city.lat, city.lon)
+    MiniCard(
+        "القبلة — ${"%.1f".format(q)}° من الشمال",
+        "على بعد ${"%,.0f".format(Qibla.distanceKm(city.lat, city.lon))} كم",
+        Modifier.fillMaxWidth(), accent = Gold,
+    )
 }
 
 @Composable

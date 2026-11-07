@@ -33,9 +33,10 @@ Every step cites its donor lead (teardown §).
 
 ## S2 — Data layer (the moat, teardown §3)
 
-- [ ] City database design: Room + on-disk `cities` (218k EN/AR names, lat/lon,
-      tz, per-city default method) — decide: bundle subset by country, full DB on
-      first-run download (offline-first: bundle full, compressed)
+- [x] Cities bundled offline: `assets/cities.tsv.gz` — 218,032 cities (EN/AR,
+      lat/lon/tz, per-city default method, 4.1 MB) + `Cities.kt` search loader
+      (v0 linear scan; Room/indexing decision below)
+- [ ] Room/indexed storage migration (v0 loader is whole-file lazy + scan)
 - [ ] Own tz table (donor `timezone`/`zone` design) instead of trusting ICU —
       keeps old-device correctness
 - [ ] Seasonal corrections table (schema mirroring donor `qibla`, cleaner columns)
@@ -61,6 +62,9 @@ Every step cites its donor lead (teardown §).
 
 ## S4 — Qibla (teardown §5)
 
+- [x] Great-circle bearing/distance math (`Qibla.kt`, JVM-testable) + home
+      mini-section showing bearing & distance per city
+
 - [ ] Compass: accel+magnet fusion, low-pass, `GeomagneticField` declination,
       ±3° alignment lock (donor's exact recipe)
 - [ ] Improvements: true-north toggle, sun-shadow qibla method (no magnetometer
@@ -76,8 +80,10 @@ Every step cites its donor lead (teardown §).
 - [ ] Compose + Material 3, dark/light/dynamic; Pixel-stock benchmark
 - [ ] RTL-first (Arabic typography: Cairo display type — donor bundles it), full
       a11y pass (donor has none)
-- [ ] **Mock first**: home / alarm / widget as interactive HTML (ZCode visualize),
-      reviewed with Hesham before any Compose
+- [x] **Mock first**: home as interactive HTML, reviewed with Hesham (icons v2
+      gold wordmark direction pending his pick; alarm/widget next)
+- [x] Compose home v0: Day-Arc hero + countdown + contextual cards + city picker
+      (MainActivity; palette hardcoded until the theme system lands)
 - [ ] Widgets re-imagined (Glance; donor's 3 widgets + analog clock = parity bar)
 - [ ] Calendar: Gregorian + Hijri month views (Compose-native)
 - [ ] Settings tree mirroring donor completeness (per-prayer adjusts, DST,
@@ -115,6 +121,9 @@ His words: the starter is core on the RE, then expand to **other timings really 
 in the Islamic calendar — computed smartly, no internet, like Salatuk does** — plus
 reminders that **spike the user into action**. Concretely:
 
+- [x] Islamic-day engine v0: `IslamicDays.kt` (white days, Mon/Thu, Arafah,
+      Ashura, six-of-Shawwal, Ramadan, eids — pure logic) + `Hijri.kt`
+      (android.icu Umm al-Qura bridge, minSdk 24, dependency-free) + unit gates
 - [ ] **Islamic-day engine** (build on donor `day_events` corpus, teardown §3):
       Eid al-Fitr / Eid al-Adha, day of Arafah, Ashura, white days (أيام البيض
       13/14/15), Ramadan boundaries, Hajj season markers — all precomputed offline
