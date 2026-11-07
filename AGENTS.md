@@ -8,6 +8,7 @@ section instead).
 ## Session protocol
 
 1. Read `ROADMAP.md` (top unfinished) + last entries in `docs/journal.md` if present.
+   For which ZCode capability fits which stage, see `docs/zcode-playbook.md`.
 2. Do not re-pull the APK from the phone; `donor/` is the frozen donor. Read-only
    artifact — never modified, never re-decompiled without need.
 3. Engine changes MUST pass `python3 -I tools/verify_engine.py` parity state or improve

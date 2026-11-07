@@ -1,20 +1,29 @@
-# Decisions log — Miqat (working)
+# Decisions log — Miqat
 
-> One line per decision; newest first. Names/brands here are cheap to change until
-> first release — applicationId `app.miqat` must freeze at release.
+> One line per decision; newest first. `applicationId` `app.miqat` freezes at release.
+
+## 2026-11-07 (2) — NAME LOCKED + design direction locked
+
+- **Name FINAL: الميقات / Miqat** (Hesham's decision after a counsel session). The
+  broader word deliberately matches the broader product (S9: prayer, fasting, night
+  thirds, seasons, Hajj markers) — "ميقات الصلاة" would cap it. Hajj-ambiguity caveat
+  neutralized by the official tagline: **«مواقيت الصلاة والصيام»** (store listing +
+  launcher subtitle at S8). Package `app.miqat` already applied — no further changes.
+- **S5 design direction FINAL: قوس اليوم (Day Arc):** Material 3 + palette that follows
+  the prayer of the moment (Fajr cool night blue → Duha bright → Asr amber → Maghrib
+  sunset → Isha deep navy). Principles: ONE hero (next-prayer countdown), new features
+  (S9) appear as contextual cards on the same home — never new screens; Cairo for
+  Arabic display type (donor precedent), dark-first, deliberate color restraint
+  (Pixel-stock benchmark).
+- Process rule for S5: mock the three key screens (home / alarm / widget) as
+  interactive HTML first (ZCode visualize), review with Hesham, THEN write Compose.
 
 ## 2026-11-07 — Product name: الميقات / Miqat (working brand)
 
 - Hesham researched "ميقات" (Gemini pass, 2026-11-07): sharia-sound word for the fixed
   time of worship — Quranic basis {الصلاة كانت على المؤمنين كتاباً موقوتاً}; concern:
   bare "الميقات" may first evoke Hajj/Umrah ihram miqats.
-- **Applied now:** display name الميقات / Miqat, package + applicationId `app.miqat`
+- Applied: display name الميقات / Miqat, package + applicationId `app.miqat`
   (folder stays `SalatukPlus` = donor working name; brand ≠ folder, precedent
-  BigProjectBank/NexaBank).
-- **Final variant still Hesham's pick** (one-string change until release):
-  1. الميقات (current default — his researched candidate)
-  2. ميقات الصلاة / مواقيت — Gemini's precision picks, kills the Hajj ambiguity
-  3. موقوتاً / في وقتها — deep spiritual picks (from the Ayah / the Hadith)
-  4. المُعلِم / حافظوا — notifier & preservation angles
-- Decision rule agreed: whichever he lands on is a `app_name` string + store listing
-  change; nothing structural depends on it.
+  BigProjectBank/NexaBank). Options evaluated: ميقات الصلاة / مواقيت / موقوتاً /
+  المُعلِم / حافظوا — superseded by the lock above.

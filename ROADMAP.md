@@ -60,15 +60,20 @@ Every step cites its donor lead (teardown §).
 - [ ] Improvements: true-north toggle, sun-shadow qibla method (no magnetometer
       needed), haptic tick at alignment
 
-## S5 — UI (the part we replace, teardown §8 weak spots)
+## S5 — UI — direction LOCKED 2026-11-07: «قوس اليوم» (decisions.md)
 
-- [ ] Compose + Material 3, dark/light/dynamic color; Pixel-stock benchmark
-- [ ] RTL-first like donor (Arabic typography: donor bundles Cairo font — keep idea),
-      full a11y pass (donor has none)
-- [ ] Home: next-prayer hero + countdown + day strip; widgets re-imagined
-      (Glance; donor's 3 widgets + analog clock = feature parity bar)
-- [ ] Calendar: Gregorian + Hijri month views (donor vendored MaterialCalendarView;
-      we do Compose-native)
+- [ ] **Day-Arc color system** over Material 3: palette follows the prayer of the
+      moment — Fajr cool night blue → Duha bright → Asr amber → Maghrib sunset →
+      Isha deep navy; dark-first, dynamic color as base, restrained accents
+- [ ] ONE hero: next-prayer countdown; all S9 features land as contextual cards on
+      the same home (fasting today / Arafah / last-third) — never new screens
+- [ ] Compose + Material 3, dark/light/dynamic; Pixel-stock benchmark
+- [ ] RTL-first (Arabic typography: Cairo display type — donor bundles it), full
+      a11y pass (donor has none)
+- [ ] **Mock first**: home / alarm / widget as interactive HTML (ZCode visualize),
+      reviewed with Hesham before any Compose
+- [ ] Widgets re-imagined (Glance; donor's 3 widgets + analog clock = parity bar)
+- [ ] Calendar: Gregorian + Hijri month views (Compose-native)
 - [ ] Settings tree mirroring donor completeness (per-prayer adjusts, DST,
       silent modes, formats) — donor settings coverage is the checklist
 
@@ -93,6 +98,8 @@ Every step cites its donor lead (teardown §).
 
 ## S8 — Release
 
+- [ ] Store listing: name **الميقات / Miqat** + official tagline
+      **«مواقيت الصلاة والصيام»** (decisions.md 2026-11-07 (2))
 - [ ] F-Droid-friendly build (no nonfree deps at all), signing, changelog
 - [ ] Store-free install path (ADB/sideload — sideload sovereignty, see lab L15)
 
