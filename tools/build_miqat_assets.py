@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build the Miqat v1 city asset from the donor cities DB (teardown §3).
 
-Output: app/src/main/assets/cities.tsv.gz
+Output: app/src/main/assets/cities.tsv (plain TSV — aapt renames .gz assets)
   columns (TSV, header included):
     en | ar | cc | lat | lon | utc_offset | calc_method
 Rows: every city with a usable name and coordinates. Names are NFC-normalized,
@@ -9,12 +9,11 @@ pipe-free (| is the separator — replaced inside names).
 
 Usage: python3 -I tools/build_miqat_assets.py
 """
-import gzip
 import sqlite3
 import unicodedata
 
 DB = "donor/cities-db/SalatukDB.db"
-OUT = "app/src/main/assets/cities.tsv.gz"
+OUT = "app/src/main/assets/cities.tsv"
 
 
 def clean(s):
@@ -27,7 +26,7 @@ def clean(s):
 def main():
     con = sqlite3.connect("file:" + DB + "?mode=ro", uri=True)
     n = 0
-    with gzip.open(OUT, "wt", encoding="utf-8", compresslevel=9) as f:
+    with open(OUT, "w", encoding="utf-8") as f:
         f.write("en|ar|cc|lat|lon|tz|method\n")
         for (en, ar, lat, lon, tz, cc, method) in con.execute(
                 "SELECT city_name, city_name_ar, latitude, longitude, utc_offset,"

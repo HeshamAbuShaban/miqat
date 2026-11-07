@@ -3,7 +3,28 @@
 > One dated entry per working session (see AGENTS.md). Next agent: read ROADMAP top
 > unfinished step, then this.
 
-## 2026-11-07 (4) — De-branded + pushed to GitHub + icon direction (Hesham pre-sleep handoff)
+## 2026-11-07 (5) — FIRST BUILD GREEN + app runs on the emulator
+
+- Gradle 8.10.2 installed locally; platform-35 added via sdkmanager; deps from
+  google()/mavenCentral. First build failed only in Hijri.kt: android.jar has
+  no IslamicCalendar(Date, ULocale) ctor and no CalculationType API — fixed
+  with IslamicCalendar(ULocale("en@calendar=islamic-umalqura")) + setTimeInMillis.
+- **10/10 unit tests pass** — including the 138-row donor parity fixtures
+  (worst deviation 0 min — the Kotlin port reproduces the reference engine
+  exactly) and the S9/S4 logic gates.
+- Fixed on the way: Qibla bearing x-term (missing sin of Kaaba latitude —
+  caught by the Cairo/NY anchors), 3 test-authoring bugs (outside-window day,
+  Thursday default in the plain-day test, parity gate asserted worst==1).
+- Asset lesson: aapt strips the .gz suffix from assets — cities ship as plain
+  `assets/cities.tsv` (APK deflate handles it; loader simplified).
+- **The app runs**: emulator install + launch — Day-Arc hero with amber sweep
+  and moment dot, live countdown, Hijri date (Umm al-Qura ✓), next-prayer and
+  night-third cards, qibla mini-card, 6-prayer list with makkah method
+  end-to-end (isha = maghrib+90 ✓). Known v0 nits: title overlaps the status
+  bar (insets), qibla bearing noise at ~0 km distance, first-load pause while
+  parsing the 218k-city TSV (~1 s) — all queued for the S5 polish pass.
+- Note: a physical device (LMQ710MS) was attached to adb — NOT touched, per
+  the explicit-go rule; emulator only.
 
 - **Zero-trace rename (his explicit ask):** every trace of the donor working
   name removed from code (Theme.Miqat, rootProject.name = Miqat, MainActivity

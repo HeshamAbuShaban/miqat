@@ -3,11 +3,11 @@ package app.miqat.core
 import android.content.Context
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.util.zip.GZIPInputStream
 
 /**
- * City rows from the bundled asset `assets/cities.tsv.gz`
- * (built by tools/build_miqat_assets.py from the donor cities DB, 218k rows).
+ * City rows from the bundled asset `assets/cities.tsv`
+ * (built by tools/build_miqat_assets.py from the donor cities DB, 218k rows;
+ * aapt renames .gz assets — we ship plain TSV and let the APK deflate it).
  *
  * v0 loader: whole-file lazy load + linear scan search (~10 ms/query).
  * S2 replaces this with the indexed Room DB; the row contract stays.
@@ -30,8 +30,8 @@ object Cities {
     fun load(context: Context): List<City> {
         cached?.let { return it }
         val rows = ArrayList<City>(220_000)
-        context.assets.open("cities.tsv.gz").use { raw ->
-            BufferedReader(InputStreamReader(GZIPInputStream(raw), Charsets.UTF_8)).use { r ->
+        context.assets.open("cities.tsv").use { raw ->
+            BufferedReader(InputStreamReader(raw, Charsets.UTF_8)).use { r ->
                 r.readLine() // header
                 while (true) {
                     val line = r.readLine() ?: break
