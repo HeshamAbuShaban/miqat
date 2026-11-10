@@ -40,11 +40,15 @@ import app.miqat.core.NotifyKind
 fun LocationSection(state: AppState, fmt: Fmt, onPickCity: () -> Unit) {
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Space.lg)) {
         SettingsScreenTitle("الموقع", "المدينة والإحداثيات والمنطقة الزمنية")
-        NavRow("المدينة", "${state.city.ar.ifBlank { state.city.en }} · ${state.city.countryCode}", onPickCity)
+        NavRow(
+            "المدينة",
+            "${state.city.ar.ifBlank { state.city.en }} · ${state.city.countryCode}",
+            onPickCity,
+        )
         Divider(Modifier.padding(horizontal = Space.lg))
-        InfoRow("خط العرض", "%.4f".format(state.city.lat))
-        InfoRow("خط الطول", "%.4f".format(state.city.lon))
-        InfoRow("إزاحة التوقيت", "UTC+${state.utcOffset}")
+        InfoRow("خط العرض", fmt.decimal(state.city.lat, 4))
+        InfoRow("خط الطول", fmt.decimal(state.city.lon, 4))
+        InfoRow("إزاحة التوقيت", "UTC+${fmt.n(state.utcOffset.toInt())}")
         InfoRow("المنطقة الزمنية", if (state.display.manualUtcOffsetMinutes == null) "تلقائية" else "يدوية")
         Spacer(Modifier.height(Space.sm))
         Text(
