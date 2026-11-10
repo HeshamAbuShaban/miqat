@@ -83,8 +83,14 @@ fun SettingsScreen(
         Divider(Modifier.padding(horizontal = Space.lg))
         NavRow(
             "الأذان لكل صلاة",
-            "${n.directPerPrayer.count { it }} من 6 مفعّلة",
+            "${fmt.n(n.directPerPrayer.count { it })} من ${fmt.n(6)} مفعّلة",
             onClick = { onOpen(SettingsRoute.Notifications) },
+        )
+        Divider(Modifier.padding(horizontal = Space.lg))
+        NavRow(
+            "صوت الأذان",
+            app.miqat.core.AdhanPlayer.PACKS.firstOrNull { it.first == n.adhanPack }?.second ?: "معياري",
+            onClick = { onOpen(SettingsRoute.Adhan) },
         )
         Divider(Modifier.padding(horizontal = Space.lg))
 
@@ -166,7 +172,7 @@ fun methodNameAr(id: String): String = when (id) {
 }
 
 /** The routes the settings tree opens. */
-enum class SettingsRoute { Location, Calculation, Notifications, Awareness, Calendar, Appearance, About }
+enum class SettingsRoute { Location, Calculation, Notifications, Adhan, Awareness, Calendar, Appearance, About }
 
 @Composable
 fun SettingsScreenTitle(text: String, subtitle: String? = null) {

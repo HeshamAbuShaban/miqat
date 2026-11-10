@@ -265,7 +265,30 @@ class AlarmReceiver : BroadcastReceiver() {
         val kind = NotifyKind.valueOf(intent.getStringExtra("kind") ?: NotifyKind.DIRECT.name)
         val label = intent.getStringExtra("label") ?: "الموعد"
         val slot = intent.getIntExtra("slot", -1)
-        NotificationPoster.post(context, kind, label, slot, intent.getBooleanExtra("quiet", false))
+        val quiet = intent.getBooleanExtra("quiet", false)
+        NotificationPoster.post(context, kind, label, slot, quiet)
+        // the adhan itself: a foreground service so it is heard with the phone
+        // in a pocket
+        if (kind == NotifyKind.DIRECT && !quiet) {
+            val prefs = NotificationPrefsStore.load(context)
+            if (prefs.adhanSound) {
+                try {
+                    val svc = Intent(context, AdhanService::class.java).apply {
+                        putExtra("slot", slot)
+                        putExtra("label", label)
+                        putExtra("pack", prefs.adhanPack)
+                        putExtra("version", prefs.adhanVersion)
+                    }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        context.startForegroundService(svc)
+                    } else {
+                        context.startService(svc)
+                    }
+                } catch (e: Exception) {
+                    Log.w("MiqatAlarm", "adhan service failed: ${e.message}")
+                }
+            }
+        }
         // keep the chain alive
         AlarmScheduler.reschedule(context)
     }

@@ -21,7 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import app.miqat.core.MethodTable
-import app.miqat.core.formatHms
 
 /**
  * PRAYER DETAIL — «لماذا هذا الوقت؟» as a full screen (R3): the honest
@@ -68,7 +67,7 @@ fun PrayerDetailScreen(state: AppState, fmt: Fmt, index: Int, onBack: () -> Unit
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
-                        "المحسوب ${formatHms(rawHours)} — العرض مقرّب للدقيقة نصفاً للأعلى",
+                        "المحسوب ${fmt.hmsOf(rawHours)} — العرض مقرّب للدقيقة نصفاً للأعلى",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -93,7 +92,7 @@ fun PrayerDetailScreen(state: AppState, fmt: Fmt, index: Int, onBack: () -> Unit
                             color = MaterialTheme.colorScheme.onTertiaryContainer,
                         )
                         Text(
-                            "بعد تعديلك ${fmt.signed(userAdj)} دقيقة — الحساب الأصلي ${formatHms(rawHours)}.",
+                            "بعد تعديلك ${fmt.signed(userAdj)} دقيقة — الحساب الأصلي ${fmt.hmsOf(rawHours)}.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -128,12 +127,12 @@ fun PrayerDetailScreen(state: AppState, fmt: Fmt, index: Int, onBack: () -> Unit
                 "الفجر" to method.margins.fajr, "الشروق" to method.margins.sunrise,
                 "الظهر" to method.margins.dhuhr, "العصر" to method.margins.asr,
                 "المغرب" to method.margins.maghrib, "العشاء" to method.margins.isha,
-            ).filter { it.second != 0.0 }.joinToString("، ") { "${it.first} +${it.second.toInt()}" }
+            ).filter { it.second != 0.0 }.joinToString("، ") { "${it.first} ${fmt.signed(it.second.toInt())}" }
             if (margins.isNotBlank()) InfoRow("احتياط الحساب", margins)
             if (seasonal != null) {
                 InfoRow(
                     "نافذة تعديل موسمي",
-                    "من ${seasonal.fromMMdd / 100}/${seasonal.fromMMdd % 100} إلى ${seasonal.toMMdd / 100}/${seasonal.toMMdd % 100}",
+                    "من ${fmt.n(seasonal.fromMMdd / 100)}/${fmt.n(seasonal.fromMMdd % 100)} إلى ${fmt.n(seasonal.toMMdd / 100)}/${fmt.n(seasonal.toMMdd % 100)}",
                 )
             }
             InfoRow(

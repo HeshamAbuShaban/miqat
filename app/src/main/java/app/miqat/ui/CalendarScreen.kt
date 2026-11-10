@@ -239,7 +239,7 @@ private val ARABIC_WEEKDAYS = listOf("سبت", "أحد", "إثنين", "ثلاث
 fun DayDetailScreen(state: AppState, fmt: Fmt, year: Int, month: Int, day: Int, onBack: () -> Unit) {
     val times = state.times(year, month, day)
     val hijri = Hijri.at(year, month, day)
-    MiqatScaffold("$day / $month / $year", onBack = onBack) {
+    MiqatScaffold("${fmt.n(day)} / ${fmt.n(month)} / ${fmt.n(year)}", onBack = onBack) {
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = Space.lg),
         ) {

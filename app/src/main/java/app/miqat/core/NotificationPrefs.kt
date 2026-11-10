@@ -37,6 +37,10 @@ data class NotificationPrefs(
     val motivationalStandalone: Boolean = false,
     /** Play the adhan audio (vs. a plain notification). */
     val adhanSound: Boolean = true,
+    /** Which adhan pack to play (standard / maghrebi / haramayn). */
+    val adhanPack: String = "standard",
+    /** Which recording of the pack (each pack ships two). */
+    val adhanVersion: Int = 1,
     /** Vibration on the direct adhan. */
     val vibrate: Boolean = true,
     /** Full-screen lockscreen intent (the alarm experience). */
@@ -62,6 +66,8 @@ data class NotificationPrefs(
 object NotificationPrefsStore {
 
     private const val FILE = "notification_prefs"
+    private const val K_ADHAN_PACK = "adhan_pack"
+    private const val K_ADHAN_VERSION = "adhan_version"
 
     private fun prefs(context: Context): SharedPreferences =
         context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
@@ -79,6 +85,8 @@ object NotificationPrefsStore {
             motivationalAppended = p.getBoolean("mot_appended", defaults.motivationalAppended),
             motivationalStandalone = p.getBoolean("mot_standalone", defaults.motivationalStandalone),
             adhanSound = p.getBoolean("adhan_sound", defaults.adhanSound),
+            adhanPack = p.getString(K_ADHAN_PACK, defaults.adhanPack) ?: defaults.adhanPack,
+            adhanVersion = p.getInt(K_ADHAN_VERSION, defaults.adhanVersion),
             vibrate = p.getBoolean("vibrate", defaults.vibrate),
             fullScreenAlarm = p.getBoolean("fsi", defaults.fullScreenAlarm),
             continuousNotification = p.getBoolean("continuous", defaults.continuousNotification),
@@ -96,6 +104,8 @@ object NotificationPrefsStore {
         e.putBoolean("mot_appended", n.motivationalAppended)
         e.putBoolean("mot_standalone", n.motivationalStandalone)
         e.putBoolean("adhan_sound", n.adhanSound)
+        e.putString(K_ADHAN_PACK, n.adhanPack)
+        e.putInt(K_ADHAN_VERSION, n.adhanVersion)
         e.putBoolean("vibrate", n.vibrate)
         e.putBoolean("fsi", n.fullScreenAlarm)
         e.putBoolean("continuous", n.continuousNotification)

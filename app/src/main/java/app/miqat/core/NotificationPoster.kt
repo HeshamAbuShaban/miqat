@@ -22,6 +22,49 @@ object NotificationPoster {
 
     private const val GROUP_DIRECT = "miqat_direct_group"
 
+    /** The ongoing notification the adhan service owns. */
+    const val ADHAN_NOTIFICATION_ID = 999
+
+    /**
+     * The adhan notification: the lock-screen full-screen intent opens the
+     * alarm screen, and a stop action silences the call.
+     */
+    fun buildAdhanNotification(
+        context: Context,
+        slot: Int,
+        label: String,
+    ): android.app.Notification {
+        NotifyChannels.ensure(context)
+        val prefs = NotificationPrefsStore.load(context)
+        val full = PendingIntent.getActivity(
+            context, slot + 1,
+            Intent(context, app.miqat.ui.AlarmActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra("slot", slot)
+                putExtra("label", label)
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        val stop = PendingIntent.getService(
+            context, slot + 50,
+            Intent(context, AdhanService::class.java).apply { action = "app.miqat.action.STOP_ADHAN" },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        return NotificationCompat.Builder(context, NotifyChannels.DIRECT)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle("حان الآن وقت $label")
+            .setContentText("اضغط لعرض التفاصيل")
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setOngoing(true)
+            .setAutoCancel(false)
+            .setContentIntent(full)
+            .setFullScreenIntent(full, true)
+            .addAction(0, "إيقاف", stop)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .build()
+    }
+
     fun post(context: Context, kind: NotifyKind, label: String, slot: Int, quiet: Boolean = false) {
         val nm = context.getSystemService(NotificationManager::class.java) ?: return
         NotifyChannels.ensure(context)
@@ -41,8 +84,16 @@ object NotificationPoster {
 
         val contentIntent = PendingIntent.getActivity(
             context, slot + 1,
-            Intent(context, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            if (kind == NotifyKind.DIRECT) {
+                Intent(context, app.miqat.ui.AlarmActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    putExtra("slot", slot)
+                    putExtra("label", label)
+                }
+            } else {
+                Intent(context, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                }
             },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )

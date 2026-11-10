@@ -7,6 +7,8 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <!-- Optional: only if the user chooses "موقعي (نظام الموقع)" in the
          settings — the app works fully offline from the bundled city database. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -34,6 +36,23 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- The lock-screen alarm: wakes the screen like an alarm clock. -->
+        <activity
+            android:name=".ui.AlarmActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true"
+            android:showOnLockScreen="true"
+            android:turnScreenOn="true"
+            android:theme="@style/Theme.Miqat" />
+
+        <!-- Plays the adhan in the foreground so it is heard with the phone
+             in a pocket. -->
+        <service
+            android:name=".core.AdhanService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
 
         <receiver
             android:name=".core.AlarmReceiver"

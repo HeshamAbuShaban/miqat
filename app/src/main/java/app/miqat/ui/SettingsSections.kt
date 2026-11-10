@@ -412,6 +412,79 @@ fun NotificationsSection(state: AppState, fmt: Fmt) {
 }
 
 @Composable
+fun AdhanSection(state: AppState, fmt: Fmt) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val n = state.notifications
+    Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Space.lg)) {
+        SettingsScreenTitle("الأذان", "صوت الأذان والتنبيه عند الموعد")
+
+        ToggleRow(
+            "تشغيل الأذان",
+            "يُبثّ الأذان مع إشعار الموعد",
+            n.adhanSound,
+        ) { v -> state.updateNotifications(n.copy(adhanSound = v)) }
+
+        SectionLabel("الأذان", Modifier.padding(horizontal = Space.lg, vertical = Space.xs))
+        app.miqat.core.AdhanPlayer.PACKS.forEach { (id, label) ->
+            val selected = n.adhanPack == id
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clickable { state.updateNotifications(n.copy(adhanPack = id)) }
+                    .padding(vertical = Space.md),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    label,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = if (selected) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurface,
+                )
+                if (selected) {
+                    Text(
+                        "مفعّل",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+            Divider(Modifier.padding(horizontal = Space.lg))
+        }
+
+        Spacer(Modifier.height(Space.sm))
+        NavRow(
+            "التسجيل",
+            if (n.adhanVersion == 2) "التسجيل الثاني" else "التسجيل الأول",
+            onClick = {
+                state.updateNotifications(n.copy(adhanVersion = if (n.adhanVersion == 2) 1 else 2))
+            },
+        )
+        Divider(Modifier.padding(horizontal = Space.lg))
+        NavRow(
+            "استمع إلى الأذان",
+            "معاينة المقطع المختار",
+            onClick = {
+                app.miqat.core.AdhanPlayer.play(context, n.adhanPack, 2, n.adhanVersion) {}
+            },
+        )
+        Divider(Modifier.padding(horizontal = Space.lg))
+        NavRow("إيقاف المعاينة", "إن كان الصوت يعمل", onClick = {
+            app.miqat.core.AdhanPlayer.stop()
+        })
+
+        Divider(Modifier.padding(horizontal = Space.lg, vertical = Space.md))
+        ToggleRow("الاهتزاز", null, n.vibrate) { v -> state.updateNotifications(n.copy(vibrate = v)) }
+        ToggleRow(
+            "إشعار ملء الشاشة",
+            "توقيف الساعة بنقرة عند الموعد",
+            n.fullScreenAlarm,
+        ) { v -> state.updateNotifications(n.copy(fullScreenAlarm = v)) }
+        Spacer(Modifier.height(Space.xl))
+    }
+}
+
+@Composable
 fun AwarenessSection(state: AppState, fmt: Fmt) {
     val d = state.display
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Space.lg)) {

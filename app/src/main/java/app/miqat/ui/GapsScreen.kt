@@ -223,6 +223,7 @@ fun IntervalScreen(state: AppState, fmt: Fmt, onBack: () -> Unit) {
         MomentPickerDialog(
             moments = timeline,
             current = current,
+            fmt = fmt,
             onPick = { picked ->
                 if (picking?.let { it === from } == true) from = picked else to = picked
                 picking = null
@@ -236,6 +237,7 @@ fun IntervalScreen(state: AppState, fmt: Fmt, onBack: () -> Unit) {
 private fun MomentPickerDialog(
     moments: List<Moment>,
     current: Moment?,
+    fmt: Fmt,
     onPick: (Moment) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -268,7 +270,7 @@ private fun MomentPickerDialog(
                                 else MaterialTheme.colorScheme.onSurface,
                             )
                             Text(
-                                "%02d:%02d".format(m.minuteOfDay / 60, m.minuteOfDay % 60),
+                                fmt.hhmm(m.minuteOfDay),
                                 style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = TabularFigures),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
