@@ -3,6 +3,36 @@
 > One dated entry per working session (see AGENTS.md). Next agent: read ROADMAP top
 > unfinished step, then this.
 
+## 2026-11-10 — S2 shipped + icon shipped + research agenda (his «سيئة وفقيرة» brief)
+
+- **Icon DONE, committed (`de919cd`)**: his pick = variant ٢ (gold wordmark + arc
+  point). Pipeline `tools/build_icon.py` (fonttools vendored; Reem Kufi SemiBold;
+  libharfbuzz via ctypes — gotcha: 5-word `hb_glyph_position_t` stride, a 6-word
+  assumption produced garbage). Adaptive + legacy PNGs + monochrome; verified live
+  in the emulator launcher.
+- **S2 cities DONE, committed (`93bbe42`)**: prebuilt indexed SQLite asset
+  `cities-v2.db` (218,032 rows), framework `SQLiteDatabase`, **no Room** (F-Droid
+  clean). `CityStore.kt` wrapper, copy-on-first-open, async first frame via
+  hardcoded Makkah refined from DB. DB-backed search verified on emulator
+  ("cai" → Cair first, ranked). Status-bar insets fixed on the way.
+- **His product brief arrived** («النسخة الحالية سيئة وفقيرة على كافة الأصعدة») —
+  classified into **`docs/research-agenda.md`**: R1 dual clocks + on-demand
+  computation (وضع المدار), R2 rich search, R3 transparency «حتى لا يلبس على
+  الناس» + offline reconciliation, R4 calendar/moon-sighting, R5 «زوائد غابت»
+  (Duha, night portions, الأسحار), R6 notification taxonomy + settings discipline,
+  R7 IA/skills. Guardrail section for «احذر من البدع والضلالات» — sourcing table
+  before any religious text ships.
+- **Donor RE answers fed the agenda** (grep, not memory): moon = manual offset
+  only, donor did NOT solve regional sighting; zero Duha / night-thirds /
+  istighfar strings anywhere — «زوائد غابت» confirmed; 13 preference screens =
+  completeness checklist.
+- Council protocol drafted into the agenda (models checked via
+  `tools.opencode.models`; Claude Sonnet 5.5 / GPT-5.5 Pro / Gemini 3.1 Pro /
+  DeepSeek V4 Pro / Kimi K3 seats, free-tier alternates for batch).
+- ROADMAP: R-stream pointers wired into S2/S3/S5/S9.
+- Commits awaiting push: `de919cd`, `93bbe42`, + this docs commit (needs his PAT
+  in-chat per protocol).
+
 ## 2026-11-07 (5) — FIRST BUILD GREEN + app runs on the emulator
 
 - Gradle 8.10.2 installed locally; platform-35 added via sdkmanager; deps from

@@ -44,7 +44,7 @@ Every step cites its donor lead (teardown §).
       per prayer with priority) — donor corpus already ships the text (AR/EN/FR)
 - [ ] Hijri: keep Umm al-Qura tables concept (donor `util/ummalqura`), add
       adjustable ±0..3 day offset + multiple regional calendars (donor has only
-      Umm al-Qura)
+      Umm al-Qura + manual offset — donor did NOT solve sighting; research-agenda R4)
 
 ## S3 — Alarm & audio machinery (teardown §4)
 
@@ -59,6 +59,8 @@ Every step cites its donor lead (teardown §).
 - [ ] Auto-DND during prayer with restore (donor SilentService), per-prayer granular
 - [ ] Persistent next-prayer countdown notification (donor
       PersistentNotificationService — but optional, off by default; donor forces it)
+- [ ] Notification-kind matrix: تمهيدية/مباشرة/تذكيرية/تحفيزية, channel per kind,
+      per-case sound/vibration, scoped overrides (research-agenda R6)
 
 ## S4 — Qibla (teardown §5)
 
@@ -85,9 +87,18 @@ Every step cites its donor lead (teardown §).
 - [x] Compose home v0: Day-Arc hero + countdown + contextual cards + city picker
       (MainActivity; palette hardcoded until the theme system lands)
 - [ ] Widgets re-imagined (Glance; donor's 3 widgets + analog clock = parity bar)
-- [ ] Calendar: Gregorian + Hijri month views (Compose-native)
+- [ ] Dual clocks everywhere: remaining primary, elapsed secondary, HH:MM:SS;
+      windowed on-demand computation («وضع المدار») for calendar (research-agenda R1)
+- [ ] Rich search rows + ranking disclosure («معلنة ومدللة») over the S2 index
+      (research-agenda R2)
+- [ ] «Why this time» transparency screen + two warning registers (حتى لا يلبس
+      على الناس / توخي وحذر) + offline timetable reconciliation (research-agenda R3)
+- [ ] Calendar: Gregorian + Hijri month views (Compose-native) — v0 calendar
+      rejected by Hesham as «ليس مرضي»; rebuild per R4
 - [ ] Settings tree mirroring donor completeness (per-prayer adjusts, DST,
-      silent modes, formats) — donor settings coverage is the checklist
+      silent modes, formats) — donor's 13 preference screens are the checklist;
+      add «التوابع» discipline: previews, computation warnings, location
+      verification, scoped notification control (research-agenda R6)
 
 ## S6 — Beyond the donor (the "tons of additions")
 
@@ -130,8 +141,10 @@ reminders that **spike the user into action**. Concretely:
       per year + location, no server.
 - [ ] **Night-based times** beyond the 6 prayers: أثلاث الليل (last third of the
       night — Isha-to-Fajr interval math is already in the engine), middle of the
-      night, Duha/الضحى time (sunrise-based, standard fiqh offsets), sunrise/sunset
-      fast boundaries (imsak vs fajr toggle).
+      night, Duha/الضحى time (solar-altitude thresholds, distinct from Shurūq),
+      sunrise/sunset fast boundaries (imsak vs fajr toggle), الأسحار/istighfar
+      window — all first-class with own notification profile + settings
+      (research-agenda R5; donor has NONE of these — «زوائد غابت» verified)
 - [ ] **Voluntary-fasting reminder layer** (the engagement spike he wants): Mon/Thu
       (الاثنين والخميس), white days, Arafah (non-pilgrim), Ashura, six of Shawwal,
       Muharram — each push phrased as encouragement with the virtue, one-tap

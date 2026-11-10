@@ -2,6 +2,15 @@
 
 > One line per decision; newest first. `applicationId` `app.miqat` freezes at release.
 
+## 2026-11-10 (3) — Research agenda opened; entity names proposed, NOT final
+
+- `docs/research-agenda.md` opened per Hesham's «سيئة وفقيرة» brief: streams R1–R7
+  + fiqh guardrail + council protocol. Names proposed there — `DualClock`,
+  `OrbitWindow`, `TimedWorship`, `NightPortion`, `WorshipWindow` — are
+  **provisional**; they lock here only when their stream reaches code (naming
+  discipline). Council seats recorded in the agenda; council verdicts land as
+  dated appendices there, never merged silently.
+
 ## 2026-11-10 (2) — S2 city storage: prebuilt SQLite asset, framework API, no Room
 
 - Cities move from the v0 whole-file TSV scan to `assets/cities.db` (prebuilt by
