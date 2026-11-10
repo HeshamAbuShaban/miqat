@@ -57,9 +57,17 @@ class AppState(context: Context) {
 
     // --- mutations (persist immediately) -----------------------------------
 
+    /**
+     * Picking a city is an explicit choice: it TURNS THE GPS OFF, so the
+     * picked place — not a stale device fix — is what the times are computed
+     * from. (The bug: a device fix and the city's offset were mixed, giving
+     * nonsense times.)
+     */
     fun selectCity(c: City) {
         city = c
+        gpsFix = null
         UserSettings.saveCity(appContext, c)
+        UserSettings.saveGpsFix(appContext, null)
         AlarmScheduler.reschedule(appContext)
     }
 
@@ -98,8 +106,14 @@ class AppState(context: Context) {
     val effectiveZoneId: Int?
         get() = city.zoneId ?: MiqatData.zoneIdFor(appContext, city.zone)
 
+    /**
+     * The UTC offset in force at [epochMillis] — taken from the SAME source as
+     * the coordinates: the device's own zone when the GPS fix is in use, the
+     * city's zone (with its DST rules) when the city is. Never mixed.
+     */
     fun utcOffsetAt(epochMillis: Long): Double {
         display.manualUtcOffsetMinutes?.let { return it / 60.0 }
+        if (gpsFix != null) return deviceOffsetAt(epochMillis)
         val zoneId = effectiveZoneId
         if (zoneId != null) {
             val fromTable = MiqatData.utcOffsetHours(appContext, zoneId, epochMillis)
@@ -107,6 +121,10 @@ class AppState(context: Context) {
         }
         return city.utcOffset
     }
+
+    /** The device's own UTC offset at an instant (the zone of a GPS fix). */
+    private fun deviceOffsetAt(epochMillis: Long): Double =
+        java.util.TimeZone.getDefault().getOffset(epochMillis) / 3_600_000.0
 
     /** The offset right now (the common case). */
     val utcOffset: Double get() = utcOffsetAt(System.currentTimeMillis())
@@ -126,13 +144,25 @@ class AppState(context: Context) {
     val locationFix: app.miqat.core.LocationFix
         get() = gpsFix
             ?: app.miqat.core.LocationFix(
-                city.lat, city.lon, utcOffset, app.miqat.core.LocationSource.MANUAL,
+                city.lat, city.lon, utcOffsetAt(System.currentTimeMillis()),
+                app.miqat.core.LocationSource.MANUAL,
             )
+
+    /** Is the device's own location the source (not the picked city)? */
+    val usingGps: Boolean get() = gpsFix != null
 
     val confidence: app.miqat.core.TimeConfidence get() = locationFix.confidence
 
-    fun location(epochMillis: Long = System.currentTimeMillis()): Location =
-        Location(locationFix.latitude, locationFix.longitude, utcOffsetAt(epochMillis))
+    fun location(epochMillis: Long = System.currentTimeMillis()): Location {
+        // the coordinates AND the offset must come from the same place
+        val effective = app.miqat.core.LocationRules.effective(
+            city = city,
+            cityOffsetHours = utcOffsetAt(epochMillis),
+            gps = gpsFix,
+            deviceOffsetHours = deviceOffsetAt(epochMillis),
+        )
+        return Location(effective.latitude, effective.longitude, effective.offsetHours)
+    }
 
     /** Refresh the device fix (called after the permission is granted). */
     fun refreshGps() {

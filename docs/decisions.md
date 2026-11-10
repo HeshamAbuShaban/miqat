@@ -2,6 +2,20 @@
 
 > One line per decision; newest first. `applicationId` `app.miqat` freezes at release.
 
+## 2026-11-10 (11) — The location rule (bugfix, 2026-11-10)
+
+- `LocationRules.effective(...)` — the coordinates and the UTC offset ALWAYS
+  come from the same source: a GPS fix brings its own coordinates AND the
+  device's zone; a city brings its own coordinates AND its DST-correct offset.
+  Mixing them (which the app did for a while: the emulator's Mountain View fix
+  with the city's +2) produced times that belonged to neither place — Fajr at
+  15:05, a "20 minutes to Fajr" that meant nothing.
+- Picking a city from the list turns the GPS mode OFF: an explicit choice
+  beats a stale device fix.
+- With the GPS in use the home header says «موقعك الحالي — من نظام الموقع»
+  instead of the city's name. The app never shows a place it is not computing
+  from (the same «حتى لا يلبس» rule as the time provenance).
+
 ## 2026-11-10 (10) — The compass, the distance tool, «الطاعة» in full, and the v3 design
 
 Hesham's fifth brief, and the correction that mattered most: «طاعة» means an act

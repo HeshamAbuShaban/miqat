@@ -3,6 +3,27 @@
 > One dated entry per working session (see AGENTS.md). Next agent: read ROADMAP top
 > unfinished step, then this.
 
+## 2026-11-10 (9) — BUGFIX: the location and its timezone were mixed
+
+Hesham: «the app is talking about 20min left for fajir based on makkah, when I
+set it to cairo, I got that its in daytime». Diagnosed on the device:
+
+- The app had been using the DEVICE's GPS fix (the emulator's default fix:
+  37.42, −122.08 — Mountain View, California) while computing the times with
+  the PICKED CITY's UTC offset. The result belonged to neither place: Fajr at
+  15:05, Dhuhr at 21:52, and a countdown that pointed at the wrong hour. The
+  two "now" values even disagreed with each other (the strip said 22:52, the
+  segment said "inside Dhuhr").
+- **The rule now**: the coordinates AND the UTC offset always travel together —
+  a GPS fix brings its own zone, a city brings its own. `LocationRules` makes
+  that a pure, tested function.
+- **Choosing a city wins**: picking a city from the list turns the GPS mode
+  OFF, because an explicit choice must beat a stale device fix.
+- **The app no longer lies**: with the GPS in use the header says «موقعك الحالي
+  — من نظام الموقع» instead of showing the city's name, and the settings show
+  the fix's own coordinates.
+- 40/40 unit tests green (3 new: the location rule).
+
 ## 2026-11-10 (8) — The compass, the distance tool, the day-sky (his 5th brief)
 
 - **The qibla is a direction now, not a number**: `CompassSensor` fuses the

@@ -104,6 +104,10 @@ fun LocationSection(state: AppState, fmt: Fmt, onPickCity: () -> Unit) {
                 }
             },
         )
+        if (gps != null) {
+            InfoRow("إحداثيات الموقع", "${fmt.decimal(gps.latitude, 4)}، ${fmt.decimal(gps.longitude, 4)}")
+            InfoRow("منطقة الموقع", "منطقة الجهاز — تُحسب المواقيت على الإحداثيات نفسها")
+        }
         Divider(Modifier.padding(horizontal = Space.lg))
         NavRow(
             "المدينة المختارة",

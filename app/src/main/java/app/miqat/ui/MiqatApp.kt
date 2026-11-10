@@ -277,11 +277,21 @@ fun HomeScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                state.city.ar.ifBlank { state.city.en },
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    if (state.usingGps) "موقعك الحالي" else state.city.ar.ifBlank { state.city.en },
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                if (state.usingGps) {
+                    // never let the header claim a city the times are NOT from
+                    Text(
+                        "من نظام الموقع",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.tertiary,
+                    )
+                }
+            }
             Text(
                 Hijri.label(Hijri.today(now, state.display.hijriOffsetDays), fmt.ar),
                 style = MaterialTheme.typography.bodyMedium,
