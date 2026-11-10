@@ -5,10 +5,10 @@ import android.content.SharedPreferences
 
 /**
  * User-adjust minutes per slot (donor `adjust_min_*` parity) + persisted
- * selected city — decisions.md 2026-11-10 (5). Plain SharedPreferences
- * (F-Droid clean). Adjusts are a USER OVERRIDE applied in the UI layer after
- * `PrayerTimes.compute`; the engine and its ihtiyat margins stay untouched,
- * and the R3a warning register surfaces the divergence (research-agenda R3).
+ * user preferences — decisions.md 2026-11-10 (5). Plain SharedPreferences
+ * (F-Droid clean, no DataStore). Adjusts are a USER OVERRIDE applied in the UI
+ * layer after `PrayerTimes.compute`; the engine and its ihtiyat margins stay
+ * untouched, and the R3a warning register surfaces the divergence.
  */
 data class PrayerAdjusts(
     val fajr: Int = 0,
@@ -30,11 +30,30 @@ data class PrayerAdjusts(
     val hasAny: Boolean get() = listOf(fajr, sunrise, dhuhr, asr, maghrib, isha).any { it != 0 }
 }
 
+/** Display preferences (R6/R7): theme, digit system, clock, Hijri offset. */
+data class DisplayPrefs(
+    val darkTheme: Boolean = true,
+    val arabicIndicDigits: Boolean = true,
+    val use12h: Boolean = false,
+    val hijriOffsetDays: Int = 0,
+    /** Manual UTC-offset override in minutes (donor `time_utc_offset_mode`). */
+    val manualUtcOffsetMinutes: Int? = null,
+    /** Global calc-method override; null = the city's own default method. */
+    val methodOverride: String? = null,
+)
+
 object UserSettings {
 
     private const val FILE = "user_settings"
     private const val K_CITY = "city_v1"
     private const val K_ADJ = "adjust_min_"
+    private const val K_DARK = "display_dark"
+    private const val K_AR_DIGITS = "display_arabic_digits"
+    private const val K_USE_12H = "display_use_12h"
+    private const val K_HIJRI_OFFSET = "hijri_offset"
+    private const val K_UTC_OFFSET_MODE = "utc_offset_mode"     // "auto" | "manual"
+    private const val K_UTC_OFFSET_MIN = "utc_offset_minutes"
+    private const val K_METHOD_OVERRIDE = "method_override"
 
     private fun prefs(context: Context): SharedPreferences =
         context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
@@ -77,6 +96,33 @@ object UserSettings {
             .putInt(K_ADJ + "fajr", a.fajr).putInt(K_ADJ + "shorook", a.sunrise)
             .putInt(K_ADJ + "duhr", a.dhuhr).putInt(K_ADJ + "asr", a.asr)
             .putInt(K_ADJ + "maghreb", a.maghrib).putInt(K_ADJ + "ichaa", a.isha)
+            .apply()
+    }
+
+    // --- display preferences ------------------------------------------------
+
+    fun display(context: Context): DisplayPrefs {
+        val p = prefs(context)
+        val mode = p.getString(K_UTC_OFFSET_MODE, "auto")
+        return DisplayPrefs(
+            darkTheme = p.getBoolean(K_DARK, true),
+            arabicIndicDigits = p.getBoolean(K_AR_DIGITS, true),
+            use12h = p.getBoolean(K_USE_12H, false),
+            hijriOffsetDays = p.getInt(K_HIJRI_OFFSET, 0),
+            manualUtcOffsetMinutes = if (mode == "manual") p.getInt(K_UTC_OFFSET_MIN, 0) else null,
+            methodOverride = p.getString(K_METHOD_OVERRIDE, null),
+        )
+    }
+
+    fun saveDisplay(context: Context, d: DisplayPrefs) {
+        prefs(context).edit()
+            .putBoolean(K_DARK, d.darkTheme)
+            .putBoolean(K_AR_DIGITS, d.arabicIndicDigits)
+            .putBoolean(K_USE_12H, d.use12h)
+            .putInt(K_HIJRI_OFFSET, d.hijriOffsetDays)
+            .putString(K_UTC_OFFSET_MODE, if (d.manualUtcOffsetMinutes == null) "auto" else "manual")
+            .putInt(K_UTC_OFFSET_MIN, d.manualUtcOffsetMinutes ?: 0)
+            .putString(K_METHOD_OVERRIDE, d.methodOverride)
             .apply()
     }
 }
