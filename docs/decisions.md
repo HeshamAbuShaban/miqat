@@ -2,6 +2,19 @@
 
 > One line per decision; newest first. `applicationId` `app.miqat` freezes at release.
 
+## 2026-11-10 (2) — S2 city storage: prebuilt SQLite asset, framework API, no Room
+
+- Cities move from the v0 whole-file TSV scan to `assets/cities.db` (prebuilt by
+  tools/build_miqat_assets.py from the donor DB, indexed en_lower/ar, `meta`
+  version table; filename carries the asset version, e.g. `cities-v2.db`,
+  copy-on-first-open to filesDir). Kotlin wrapper `CityStore` on framework
+  `SQLiteDatabase` — **no Room** (no ksp/kapt, F-Droid-clean tree). Search =
+  indexed SQL per keystroke; nothing loads 218k rows into memory; first frame
+  no longer blocks on I/O (home renders with a hardcoded Makkah default,
+  refined from the DB async). This `CityStore` is the vehicle the S2 tz /
+  seasonal / day_events tables ride. Engine files untouched (parity state
+  unchanged; 10/10 gates re-run).
+
 ## 2026-11-10 — Icon: geometric candidates dead; gold-wordmark v2 awaits pick
 
 - All geometric icon candidates rejected by Hesham («كلهم سيء»); locked direction

@@ -11,11 +11,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -25,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,7 +48,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.miqat.core.City
-import app.miqat.core.Cities
+import app.miqat.core.CityStore
 import app.miqat.core.Hijri
 import app.miqat.core.IslamicDay
 import app.miqat.core.IslamicDays
@@ -90,17 +94,19 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun Home() {
     val context = LocalContext.current
-    val cities = remember { Cities.load(context) }
-    var selected by remember {
-        mutableStateOf(
-            cities.firstOrNull { it.ar.startsWith("مكة") } ?: cities.first()
-        )
+    var picked by remember { mutableStateOf(false) }
+    var selected by remember { mutableStateOf(CityStore.MAKKAH) }
+    // First frame never blocks: render on the Makkah constant, refine from the
+    // store async; the 218k-row DB is never loaded into memory (CityStore).
+    LaunchedEffect(Unit) {
+        CityStore.makkah(context)?.let { if (!picked) selected = it }
     }
     var pickerOpen by remember { mutableStateOf(false) }
 
     Box(Modifier.fillMaxSize().background(Bg)) {
         Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)
+            Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+                .windowInsetsPadding(WindowInsets.statusBars).padding(16.dp)
         ) {
             Header(selected) { pickerOpen = true }
             Spacer(Modifier.height(14.dp))
@@ -112,7 +118,8 @@ private fun Home() {
             Spacer(Modifier.height(20.dp))
         }
         if (pickerOpen) {
-            CityPicker(cities, onSelect = {
+            CityPicker(onSelect = {
+                picked = true
                 selected = it
                 pickerOpen = false
             }, onDismiss = { pickerOpen = false })
@@ -316,9 +323,15 @@ private fun minsUpTo(times: List<Double>, upto: Int): List<Int> =
     times.subList(0, upto).map { minutesOf(it) }
 
 @Composable
-private fun CityPicker(cities: List<City>, onSelect: (City) -> Unit, onDismiss: () -> Unit) {
+private fun CityPicker(onSelect: (City) -> Unit, onDismiss: () -> Unit) {
+    val context = LocalContext.current
     var query by remember { mutableStateOf("") }
-    val results = remember(query) { Cities.search(cities, query) }
+    var results by remember { mutableStateOf<List<City>>(emptyList()) }
+    // DB-backed search; LaunchedEffect cancels the previous keystroke's query.
+    LaunchedEffect(query) {
+        if (query.isNotBlank()) results = CityStore.search(context, query)
+        else results = emptyList()
+    }
     Box(
         Modifier.fillMaxSize().background(Color(0xCC050810)).clickable { onDismiss() }
     ) {
