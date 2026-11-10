@@ -27,12 +27,16 @@ object Qibla {
     }
 
     /** Great-circle distance to the Kaaba, km. */
-    fun distanceKm(lat: Double, lon: Double): Double {
+    fun distanceKm(lat: Double, lon: Double): Double =
+        distanceKm(lat, lon, KAABA_LAT, KAABA_LON)
+
+    /** Great-circle distance between two points, km (haversine). */
+    fun distanceKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
         val r = 6371.0
-        val p1 = Math.toRadians(lat)
-        val p2 = Math.toRadians(KAABA_LAT)
-        val dp = Math.toRadians(KAABA_LAT - lat)
-        val dl = Math.toRadians(KAABA_LON - lon)
+        val p1 = Math.toRadians(lat1)
+        val p2 = Math.toRadians(lat2)
+        val dp = Math.toRadians(lat2 - lat1)
+        val dl = Math.toRadians(lon2 - lon1)
         val a = sin(dp / 2) * sin(dp / 2) +
             cos(p1) * cos(p2) * sin(dl / 2) * sin(dl / 2)
         return 2 * r * atan2(Math.sqrt(a), Math.sqrt(1 - a))

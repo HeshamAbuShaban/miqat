@@ -267,19 +267,18 @@ smaller feature set. Research questions:
 
 ## Council protocol — «ضع مجلس من الموديلات»
 
-Models available via `tools.opencode.models` (checked 2026-11-10). Proposed
-council, diversity over similarity:
+Models available via `tools.opencode.models` (checked 2026-11-10). Per Hesham's
+direction (2026-11-10): **free models only, council kept light** — one focused
+pass per seat, verdicts appended, no ceremony:
 
-| Seat | Model | Asked for |
+| Seat | Free model (opencode) | Asked for |
 |---|---|---|
-| Chair | GLM-5.3 (this agent) | synthesis, decisions |
-| Engineering | Claude Sonnet 5.5 | R1 computation windows, R6 Android mapping |
-| Product/fiqh-copy | GPT-5.5 Pro | R3 copy registers, R4 preset design |
-| Fresh eyes | Gemini 3.1 Pro / Kimi K3 | R7 IA critique of the screen inventory |
-| Adversarial | DeepSeek V4 Pro | attack R5 sourcing, R4 scope creep |
+| Engineering | `deepseek-v4.1-flash-free` | R1 computation windows, R6 Android mapping |
+| Product/fiqh-copy | `minimax-m3.1-flash-free` | R3 copy registers, R5 sourcing check |
+| Fresh eyes | `qwen3.8-flash` | R7 IA critique of the screen inventory |
 
-Free-tier alternates for batch passes: DeepSeek V4.1 Flash Free, MiniMax M3.1
-Flash Free, Qwen3.8 Flash.
+(Paid models listed originally — Claude Sonnet 5.5 / GPT-5.5 Pro / Gemini 3.1 Pro
+/ DeepSeek V4 Pro / Kimi K3 — remain available if a seat needs escalation.)
 
 Rules:
 

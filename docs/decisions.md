@@ -2,6 +2,25 @@
 
 > One line per decision; newest first. `applicationId` `app.miqat` freezes at release.
 
+## 2026-11-10 (4) — Long-run build session: entity names LOCKED before code
+
+- `DayClock` — dual-clock computation (R1): given a day's appointed times + now,
+  returns `ClockSegment` = current appointment + elapsed + next + remaining,
+  seconds precision, wraparound-safe (before Fajr → current = Isha of yesterday).
+- `Appointment(key, labelAr, hour)` — one appointed-time boundary entry
+  (prayer or worship-window bound). `ClockSegment` — the result row.
+- `WorshipWindows` — R5 computation object: `DuhaWindow` (sunrise+20min →
+  dhuhr−20min, «تقديري» label), `NightInfo` (Maghrib→Fajr majority position:
+  midnight + last-third start; endpoints documented in code), `SaharWindow`
+  (last sixth of night → Fajr, «تقديري»). All NaN-safe (polar).
+- Quran text allowed in UI v1 (certain + cited): وَبِالْأَسْحَارِ هُمْ
+  يَسْتَغْفِرُونَ [الذاريات ١٨]. The Muslim-2702 hadith stays OUT of UI until
+  verified per the guardrail (research-agenda §Guardrail).
+- UI additions: ticking hero (HH:MM:SS + elapsed secondary line), worship cards
+  (Duha / الأسحار / night), `TimeDetailSheet` (R3 v1 provenance: method,
+  angles, seasonal window, margins, raw seconds), rich search rows (local time +
+  distance), qibla "0 km" display fix.
+
 ## 2026-11-10 (3) — Research agenda opened; entity names proposed, NOT final
 
 - `docs/research-agenda.md` opened per Hesham's «سيئة وفقيرة» brief: streams R1–R7

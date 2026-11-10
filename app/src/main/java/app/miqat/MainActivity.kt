@@ -24,11 +24,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,13 +47,13 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.miqat.core.Appointment
 import app.miqat.core.City
 import app.miqat.core.CityStore
+import app.miqat.core.DayClock
 import app.miqat.core.Hijri
 import app.miqat.core.IslamicDay
 import app.miqat.core.IslamicDays
@@ -56,7 +61,10 @@ import app.miqat.core.Location
 import app.miqat.core.MethodTable
 import app.miqat.core.PrayerTimes
 import app.miqat.core.Qibla
+import app.miqat.core.WorshipWindows
+import app.miqat.core.formatHms
 import java.util.Calendar
+import java.util.TimeZone
 
 /* Day-Arc palette (design-brief.md §2) — hardcoded v0 until the S5 theme system. */
 private val Bg = Color(0xFF0B1020)
@@ -72,10 +80,18 @@ private val Blue = Color(0xFF5A74E8)
 private val Sunset = Color(0xFFFF7A59)
 
 private val PRAYER_AR = listOf("الفجر", "الشروق", "الظهر", "العصر", "المغرب", "العشاء")
+private val PRAYER_KEY = listOf("fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha")
+
+/** Fragment of الذاريات ١٨ — the ONLY sharia text on the الأسحار card until
+ *  Muslim 2702 is verified (guardrail, research-agenda.md §Guardrail). */
+private const val AYAH_ASHAR = "﴿…وَبِٱلْأَسْحَارِ هُمْ يَسْتَغْفِرُونَ﴾ — الذاريات ١٨"
+private const val TAQDIRI = "تقديري بحسب الاصطلاح"
 
 /**
- * S5 v0 — Day-Arc home: one hero (next-prayer countdown on the day arc),
- * contextual cards below (S9), city picker over the bundled 218k-city asset.
+ * S5 v1 — Day-Arc home (R1/R5/R3 v0 of research-agenda.md):
+ * one hero with the R1 dual clocks (remaining primary, elapsed secondary,
+ * seconds ticking), worship-window cards (الضحى / الأسحار / الليل), a
+ * "why this time" provenance sheet per prayer row (R3), rich city rows (R2).
  * Offline-only; engine = S1 corpus-certified PrayerTimes.
  */
 class MainActivity : ComponentActivity() {
@@ -91,6 +107,46 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/** R1 ticker: one aligned 1 Hz state at Home scope; LEAVES read [State.value]
+ *  so recomposition is scoped to the ticking texts, not the whole Home. */
+@Composable
+private fun rememberNowState(): State<Long> {
+    val now = remember { mutableStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            val n = System.currentTimeMillis()
+            now.value = n
+            kotlinx.coroutines.delay(1000 - n % 1000)
+        }
+    }
+    return now
+}
+
+/** City wall-clock "now" — the device tz is never trusted for a picked city. */
+private fun cityCalendar(city: City, epochMillis: Long): Calendar {
+    val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+    cal.timeInMillis = epochMillis + (city.utcOffset * 3600_000.0).toLong()
+    return cal // its UTC fields are the city's wall clock
+}
+
+private fun cityHourOfDay(city: City, epochMillis: Long): Double {
+    val c = cityCalendar(city, epochMillis)
+    return c.get(Calendar.HOUR_OF_DAY) + c.get(Calendar.MINUTE) / 60.0 +
+        c.get(Calendar.SECOND) / 3600.0 + c.get(Calendar.MILLISECOND) / 3.6e6
+}
+
+private fun cityDate(city: City, epochMillis: Long): Triple<Int, Int, Int> {
+    val c = cityCalendar(city, epochMillis)
+    return Triple(c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1, c.get(Calendar.DAY_OF_MONTH))
+}
+
+/** (y, m, d) of the day AFTER the given city date. */
+private fun cityTomorrow(city: City, epochMillis: Long): Triple<Int, Int, Int> {
+    val c = cityCalendar(city, epochMillis)
+    c.add(Calendar.DAY_OF_MONTH, 1)
+    return Triple(c.get(Calendar.YEAR), c.get(Calendar.MONTH) + 1, c.get(Calendar.DAY_OF_MONTH))
+}
+
 @Composable
 private fun Home() {
     val context = LocalContext.current
@@ -102,6 +158,8 @@ private fun Home() {
         CityStore.makkah(context)?.let { if (!picked) selected = it }
     }
     var pickerOpen by remember { mutableStateOf(false) }
+    var detailIndex by remember { mutableStateOf<Int?>(null) }
+    val nowState = rememberNowState()
 
     Box(Modifier.fillMaxSize().background(Bg)) {
         Column(
@@ -110,19 +168,22 @@ private fun Home() {
         ) {
             Header(selected) { pickerOpen = true }
             Spacer(Modifier.height(14.dp))
-            DayArcHero(selected)
+            DayArcHero(selected, nowState)
             Spacer(Modifier.height(12.dp))
-            ContextCards(selected)
+            ContextCards(selected, nowState)
             Spacer(Modifier.height(12.dp))
-            TimesList(selected)
+            TimesList(selected, nowState) { detailIndex = it }
             Spacer(Modifier.height(20.dp))
         }
         if (pickerOpen) {
-            CityPicker(onSelect = {
+            CityPicker(fromCity = selected, onSelect = {
                 picked = true
                 selected = it
                 pickerOpen = false
             }, onDismiss = { pickerOpen = false })
+        }
+        detailIndex?.let { idx ->
+            TimeDetailSheet(selected, idx) { detailIndex = null }
         }
     }
 }
@@ -162,23 +223,23 @@ private fun hhmmAr(totalMin: Int): String {
     return "%d:%02d".format(h, m)
 }
 
-@Composable
-private fun DayArcHero(city: City) {
-    val cal = Calendar.getInstance()
-    val nowMin = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
-    val times = timesFor(city, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH))
-    val mins = times.map { minutesOf(it) }
+private fun dayAppointments(times: List<Double>): List<Appointment> =
+    PRAYER_KEY.mapIndexed { i, k -> Appointment(k, PRAYER_AR[i], times[i]) }
 
-    // next prayer = first after now (wraps to fajr tomorrow)
-    var nextIdx = mins.indexOfFirst { it > nowMin }
-    var tomorrow = false
-    if (nextIdx < 0) { nextIdx = 0; tomorrow = true }
-    val remaining = if (tomorrow) mins[0] + 1440 - nowMin else mins[nextIdx] - nowMin
+@Composable
+private fun DayArcHero(city: City, nowState: State<Long>) {
+    val now = nowState.value
+    val (y, m, d) = cityDate(city, now)
+    val times = timesFor(city, y, m, d)
+    val nowHour = cityHourOfDay(city, now)
+
+    val seg = DayClock.position(dayAppointments(times), nowHour)
+    val mins = times.map { minutesOf(it) }
 
     // arc position of "now" between fajr and isha (0..1) for the dot
     val dayStart = mins[0].toDouble()
     val dayEnd = mins[5].toDouble() + if (mins[5] < mins[0]) 1440.0 else 0.0
-    val nowF = if (nowMin < mins[0]) 0.0 else (nowMin - dayStart) / (dayEnd - dayStart)
+    val nowF = if (nowHour * 60 < mins[0]) 0.0 else ((nowHour * 60 - dayStart) / (dayEnd - dayStart)).coerceIn(0.0, 1.0)
 
     Column(
         Modifier.fillMaxWidth().background(
@@ -189,7 +250,6 @@ private fun DayArcHero(city: City) {
             val w = size.width
             val top = 8f
             val bottom = size.height - 12f
-            // the arc: quadratic from left base to right base
             val p0 = Offset(w * 0.06f, bottom)
             val p2 = Offset(w * 0.94f, bottom)
             val p1 = Offset(w * 0.5f, top)
@@ -200,13 +260,11 @@ private fun DayArcHero(city: City) {
                     mt * mt * p0.y + 2 * mt * t * p1.y + t * t * p2.y,
                 )
             }
-            // base arc (dim)
             val path = Path().apply {
                 moveTo(p0.x, p0.y)
                 quadraticBezierTo(p1.x, p1.y, p2.x, p2.y)
             }
             drawPath(path, Color(0xFF232B4A), style = Stroke(7f, cap = StrokeCap.Round))
-            // elapsed sweep in the moment color
             val sweep = Path()
             val tEnd = (0.06 + 0.88 * nowF).toFloat().coerceIn(0f, 1f)
             if (tEnd > 0.02f) {
@@ -218,53 +276,43 @@ private fun DayArcHero(city: City) {
                 }
                 drawPath(sweep, Amber, style = Stroke(7f, cap = StrokeCap.Round))
             }
-            // prayer dots
+            // prayer dots; the NEXT miqat is highlighted (amber)
             val fr = listOf(0f, 0.22f, 0.45f, 0.66f, 0.85f, 1f)
             fr.forEachIndexed { i, f ->
                 val c = pointAt(f)
-                drawCircle(if (i == nextIdx && !tomorrow) Amber else FgDim.copy(alpha = .6f), 7f, c)
+                val isNextDot = seg != null && seg.next.key == PRAYER_KEY[i] &&
+                    !seg.nextIsTomorrow
+                drawCircle(if (isNextDot) Amber else FgDim.copy(alpha = .6f), 7f, c)
             }
-            // now marker
             val nowPt = pointAt(tEnd)
             drawCircle(Cream, 11f, nowPt)
         }
-        Text(
-            if (tomorrow) "المتبقي لميقات الفجر" else "المتبقي لميقات ${PRAYER_AR[nextIdx]}",
-            color = FgDim, fontSize = 12.sp, modifier = Modifier.align(Alignment.CenterHorizontally),
-        )
-        Text(
-            "%d:%02d".format(remaining / 60, remaining % 60),
-            color = Fg, fontSize = 40.sp, fontWeight = FontWeight(500),
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-        )
-        Text(
-            "${PRAYER_AR[nextIdx]} ${hhmmAr(mins[nextIdx])}" + if (tomorrow) " (غداً)" else "",
-            color = FgDim, fontSize = 13.sp, modifier = Modifier.align(Alignment.CenterHorizontally),
-        )
+        if (seg != null) {
+            Text(
+                "المتبقي لميقات ${seg.next.labelAr}" + if (seg.nextIsTomorrow) " (غداً)" else "",
+                color = FgDim, fontSize = 12.sp, modifier = Modifier.align(Alignment.CenterHorizontally),
+            )
+            // PRIMARY clock: remaining, HH:MM:SS ticking
+            Text(
+                "%d:%02d:%02d".format(
+                    seg.remainingSeconds / 3600, seg.remainingSeconds % 3600 / 60, seg.remainingSeconds % 60),
+                color = Fg, fontSize = 40.sp, fontWeight = FontWeight(500),
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            )
+            // SECONDARY clock: elapsed since the current miqat began
+            Text(
+                "منذ ${seg.current.labelAr} %d:%02d:%02d".format(
+                    seg.elapsedSeconds / 3600, seg.elapsedSeconds % 3600 / 60, seg.elapsedSeconds % 60),
+                color = FgDim, fontSize = 13.sp, modifier = Modifier.align(Alignment.CenterHorizontally),
+            )
+        }
     }
 }
 
 @Composable
-private fun ContextCards(city: City) {
+private fun ContextCards(city: City, nowState: State<Long>) {
     val islamic = remember { Hijri.today() }
     val card = IslamicDays.todayCard(islamic)
-    // three of the night: sunset → next fajr
-    val cal = Calendar.getInstance()
-    val t = timesFor(city, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH))
-    val tomorrow = timesFor(
-        city,
-        cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH) + 1,
-    )
-    val maghrib = minutesOf(t[4])
-    val fajrNext = minutesOf(tomorrow[0])
-    val nightLen = ((fajrNext - maghrib) + 1440) % 1440
-    val third = (maghrib + nightLen * 2 / 3) % 1440
-    val nowMin = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
-    val mins = t.map { minutesOf(it) }
-    var nextIdx = mins.indexOfFirst { it > nowMin }
-    var wraps = false
-    if (nextIdx < 0) { nextIdx = 0; wraps = true }
-    val nextLabel = "${PRAYER_AR[nextIdx]} ${hhmmAr(mins[nextIdx])}" + if (wraps) " (غداً)" else ""
 
     card?.let { (title, sub) ->
         Column(
@@ -277,53 +325,200 @@ private fun ContextCards(city: City) {
         }
         Spacer(Modifier.height(10.dp))
     }
+
+    val now = nowState.value
+    val (y, m, d) = cityDate(city, now)
+    val (ty, tm, td) = cityTomorrow(city, now)
+    val t = timesFor(city, y, m, d)
+    val tomorrow = timesFor(city, ty, tm, td)
+
+    // night portions over Maghrib → next Fajr (our stated convention — R5)
+    val night = WorshipWindows.night(maghrib = t[4], fajrNext = tomorrow[0])
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        MiniCard("التالي", nextLabel, Modifier.weight(1f), accent = Amber)
-        MiniCard("ثلث الليل الأخير", hhmmAr(third), Modifier.weight(1f), accent = Blue)
+        MiniCard("منتصف الليل", hhmmAr(minutesOf(night.midnightHour)), Modifier.weight(1f),
+            accent = Blue, sub = TAQDIRI)
+        MiniCard("الثلث الأخير", hhmmAr(minutesOf(night.lastThirdStartHour)), Modifier.weight(1f),
+            accent = Blue, sub = TAQDIRI)
     }
     Spacer(Modifier.height(10.dp))
+
+    WorshipCard(
+        city = city, nowState = nowState,
+        title = "وقت الضحى", accent = Teal,
+        start = WorshipWindows.duha(sunrise = t[1], dhuhr = t[2]).let { it.startHour to it.endHour },
+        sub = "من بعد الشروق إلى ما قبل الظهر · $TAQDIRI",
+    )
+    Spacer(Modifier.height(10.dp))
+    WorshipCard(
+        city = city, nowState = nowState,
+        title = "وقت الأسحار", accent = Gold,
+        start = WorshipWindows.sahar(maghrib = t[4], fajrNext = tomorrow[0]).let { it.startHour to it.endHour },
+        sub = "$AYAH_ASHAR · $TAQDIRI",
+    )
+    Spacer(Modifier.height(10.dp))
+
     val q = Qibla.bearing(city.lat, city.lon)
     MiniCard(
         "القبلة — ${"%.1f".format(q)}° من الشمال",
-        "على بعد ${"%,.0f".format(Qibla.distanceKm(city.lat, city.lon))} كم",
+        "على بعد ${kmLabel(Qibla.distanceKm(city.lat, city.lon))}",
         Modifier.fillMaxWidth(), accent = Gold,
     )
 }
 
+/** One worship window: window bounds as value, ticking «جارٍ الآن» while inside. */
 @Composable
-private fun MiniCard(label: String, value: String, modifier: Modifier, accent: Color) {
-    Column(modifier.background(Card, RoundedCornerShape(16.dp)).padding(horizontal = 12.dp, vertical = 10.dp)) {
-        Text(label, color = FgDim, fontSize = 11.sp)
-        if (value.isNotBlank()) Text(value, color = accent, fontSize = 14.sp, fontWeight = FontWeight(500))
+private fun WorshipCard(
+    city: City, nowState: State<Long>,
+    title: String, accent: Color,
+    start: Pair<Double, Double>,  // (startHour, endHour)
+    sub: String,
+) {
+    val nowHour = cityHourOfDay(city, nowState.value)
+    val (s, e) = start
+    val inWindow = !s.isNaN() && !e.isNaN() && nowHour >= s && nowHour < e
+    val value = if (s.isNaN() || e.isNaN()) "--:-- --:--"
+    else "${hhmmAr(minutesOf(s))} — ${hhmmAr(minutesOf(e))}"
+    Column(
+        Modifier.fillMaxWidth().background(Card, RoundedCornerShape(16.dp)).padding(horizontal = 14.dp, vertical = 10.dp)
+    ) {
+        Text(title, color = FgDim, fontSize = 11.sp)
+        Text(
+            (if (inWindow) "جارٍ الآن · " else "") + value,
+            color = accent, fontSize = 15.sp, fontWeight = FontWeight(500),
+        )
+        Text(sub, color = FgDim, fontSize = 11.sp)
     }
 }
 
 @Composable
-private fun TimesList(city: City) {
-    val cal = Calendar.getInstance()
-    val times = timesFor(city, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH))
-    val nowMin = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
+private fun MiniCard(label: String, value: String, modifier: Modifier, accent: Color, sub: String? = null) {
+    Column(modifier.background(Card, RoundedCornerShape(16.dp)).padding(horizontal = 12.dp, vertical = 10.dp)) {
+        Text(label, color = FgDim, fontSize = 11.sp)
+        if (value.isNotBlank()) Text(value, color = accent, fontSize = 14.sp, fontWeight = FontWeight(500))
+        if (sub != null) Text(sub, color = FgDim, fontSize = 10.sp)
+    }
+}
+
+private fun kmLabel(km: Double): String =
+    if (km < 1.0) "أقل من ١ كم" else "${"%,.0f".format(km)} كم"
+
+private fun minLabel(v: Double): String =
+    if (v == v.toInt().toDouble()) "${v.toInt()}" else "$v"
+
+@Composable
+private fun TimesList(city: City, nowState: State<Long>, onRowTap: (Int) -> Unit) {
+    val now = nowState.value
+    val (y, m, d) = cityDate(city, now)
+    val times = timesFor(city, y, m, d)
+    val nowHour = cityHourOfDay(city, now)
+    val seg = DayClock.position(dayAppointments(times), nowHour)
     Column(Modifier.fillMaxWidth().background(Card, RoundedCornerShape(18.dp)).padding(vertical = 6.dp)) {
         PRAYER_AR.forEachIndexed { i, name ->
-            val m = minutesOf(times[i])
-            val isNext = m > nowMin && minsUpTo(times, i).none { it > nowMin }
+            val key = PRAYER_KEY[i]
+            val isNext = seg?.next?.key == key
+            val isCurrent = seg?.current?.key == key
             Row(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                Modifier.fillMaxWidth().clickable { onRowTap(i) }
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(name, color = if (isNext) Amber else Fg, fontSize = 15.sp)
-                Text(hhmmAr(m), color = if (isNext) Amber else FgDim, fontSize = 15.sp)
+                Column {
+                    Text(name, color = if (isNext) Amber else Fg, fontSize = 15.sp)
+                    when {
+                        // SECONDARY ticking clocks on the two live rows only
+                        isNext -> Text(
+                            "بعد %d:%02d:%02d".format(
+                                seg.remainingSeconds / 3600, seg.remainingSeconds % 3600 / 60, seg.remainingSeconds % 60),
+                            color = Amber.copy(alpha = .7f), fontSize = 11.sp,
+                        )
+                        isCurrent -> Text(
+                            "جارٍ منذ %d:%02d:%02d".format(
+                                seg.elapsedSeconds / 3600, seg.elapsedSeconds % 3600 / 60, seg.elapsedSeconds % 60),
+                            color = FgDim, fontSize = 11.sp,
+                        )
+                    }
+                }
+                Text(hhmmAr(minutesOf(times[i])), color = if (isNext) Amber else FgDim, fontSize = 15.sp)
             }
         }
     }
 }
 
-private fun minsUpTo(times: List<Double>, upto: Int): List<Int> =
-    times.subList(0, upto).map { minutesOf(it) }
+/** R3 v1 — «لماذا هذا الوقت؟»: honest provenance for one prayer (decisions 2026-11-10 (4)). */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TimeDetailSheet(city: City, index: Int, onDismiss: () -> Unit) {
+    val sheetState = rememberModalBottomSheetState()
+    val now = remember { System.currentTimeMillis() }
+    val (y, m, d) = cityDate(city, now)
+    val times = timesFor(city, y, m, d)
+    val method = MethodTable[city.calcMethod]
+    val p = method.withSeasonalCorrections(m * 100 + d)
+    val seasonal = method.seasonal.firstOrNull { it.fromMMdd <= m * 100 + d && m * 100 + d <= it.toMMdd }
+    val margins = listOfNotNull(
+        ("الفجر" to p.margins.fajr), ("الشروق" to p.margins.sunrise), ("الظهر" to p.margins.dhuhr),
+        ("العصر" to p.margins.asr), ("المغرب" to p.margins.maghrib), ("العشاء" to p.margins.isha),
+    ).filter { it.second != 0.0 }.joinToString("، ") { "${it.first} +${it.second.toInt()}" }
+
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState, containerColor = CardHi) {
+        Column(
+            Modifier.fillMaxWidth().verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp).padding(bottom = 28.dp)
+        ) {
+            Text(PRAYER_AR[index], color = Gold, fontSize = 18.sp, fontWeight = FontWeight(600))
+            Spacer(Modifier.height(8.dp))
+            Text("المعروض ${hhmmAr(minutesOf(times[index]))}", color = Fg, fontSize = 24.sp, fontWeight = FontWeight(500))
+            Text(
+                "المحسوب ${formatHms(times[index])} — العرض مقرّب للدقيقة نصفاً للأعلى",
+                color = FgDim, fontSize = 12.sp,
+            )
+            Spacer(Modifier.height(14.dp))
+            Text("من أين جاء هذا الوقت؟", color = Fg, fontSize = 14.sp, fontWeight = FontWeight(500))
+            Spacer(Modifier.height(6.dp))
+            Detail("الطريقة", city.calcMethod)
+            Detail("زاوية الفجر", "${p.fajrAngle}°")
+            Detail("المغرب", if (p.maghribMinutesMode) "بعد الغروب بـ ${minLabel(p.maghribValue)} دقيقة" else "زاوية ${p.maghribValue}°")
+            Detail("العشاء", if (p.ishaMinutesMode) "بعد المغرب بـ ${minLabel(p.ishaValue)} دقيقة" else "زاوية ${p.ishaValue}°")
+            Detail("العصر", "بظل ${p.asrShadow}" + if (p.asrShadow == 2) " (حنفي)" else " (شافعي)")
+            if (margins.isNotBlank()) Detail("احتياط الحساب", margins)
+            if (seasonal != null)
+                Detail("نافذة تعديل موسمي", "من ${seasonal.fromMMdd / 100}/${seasonal.fromMMdd % 100} إلى ${seasonal.toMMdd / 100}/${seasonal.toMMdd % 100}")
+            Detail("قاعدة الاتساع العالي", when (method.highLatRule) {
+                app.miqat.core.HighLatitudeRule.NONE -> "لا تُطبق"
+                app.miqat.core.HighLatitudeRule.MID_NIGHT -> "منتصف الليل"
+                app.miqat.core.HighLatitudeRule.ONE_SEVENTH_NIGHT -> "سُبع الليل"
+                app.miqat.core.HighLatitudeRule.ANGLE_NIGHT -> "نسبة من الليل بالزاوية"
+            })
+            Detail("المنطقة الزمنية", "UTC+${city.utcOffset}")
+            // R3b register (توخي وحذر) — named cause, per council copy review
+            if (kotlin.math.abs(city.lat) >= 45.0 && method.highLatRule != app.miqat.core.HighLatitudeRule.NONE) {
+                Spacer(Modifier.height(8.dp))
+                Text("حساب تقريبي في هذه المنطقة", color = Sunset, fontSize = 13.sp, fontWeight = FontWeight(500))
+                Text(
+                    "في خطوط العرض العالية تُقدَّر أوقات الفجر والعشاء بنسب الليل، وقد يتقدّم الموعد أو يتأخر دقائق.",
+                    color = FgDim, fontSize = 12.sp,
+                )
+            }
+            Spacer(Modifier.height(10.dp))
+            Text(
+                "حتى لا يلبس على الناس: هذه القيم من حساب التطبيق؛ في الحالات الخاصة فتاوى ومواعيد بلدك هي المرجع.",
+                color = FgDim, fontSize = 11.sp,
+            )
+        }
+    }
+}
 
 @Composable
-private fun CityPicker(onSelect: (City) -> Unit, onDismiss: () -> Unit) {
+private fun Detail(label: String, value: String) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label, color = FgDim, fontSize = 13.sp)
+        Text(value, color = Fg, fontSize = 13.sp)
+    }
+}
+
+@Composable
+private fun CityPicker(fromCity: City, onSelect: (City) -> Unit, onDismiss: () -> Unit) {
     val context = LocalContext.current
     var query by remember { mutableStateOf("") }
     var results by remember { mutableStateOf<List<City>>(emptyList()) }
@@ -332,6 +527,8 @@ private fun CityPicker(onSelect: (City) -> Unit, onDismiss: () -> Unit) {
         if (query.isNotBlank()) results = CityStore.search(context, query)
         else results = emptyList()
     }
+    // snapshot for the rich rows (R2): local time now + distance from the picked city
+    val now = remember { System.currentTimeMillis() }
     Box(
         Modifier.fillMaxSize().background(Color(0xCC050810)).clickable { onDismiss() }
     ) {
@@ -340,7 +537,7 @@ private fun CityPicker(onSelect: (City) -> Unit, onDismiss: () -> Unit) {
                 .background(CardHi, RoundedCornerShape(20.dp)).clickable(enabled = false) {}
                 .padding(14.dp)
         ) {
-            androidx.compose.material3.OutlinedTextField(
+            OutlinedTextField(
                 value = query,
                 onValueChange = { query = it },
                 modifier = Modifier.fillMaxWidth(),
@@ -354,10 +551,15 @@ private fun CityPicker(onSelect: (City) -> Unit, onDismiss: () -> Unit) {
                         Modifier.fillMaxWidth().clickable { onSelect(c) }.padding(vertical = 10.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
-                        Column {
+                        Column(Modifier.weight(1f)) {
                             Text(c.ar.ifBlank { c.en }, color = Fg, fontSize = 15.sp)
-                            if (c.ar.isNotBlank() && c.en.isNotBlank())
-                                Text(c.en, color = FgDim, fontSize = 11.sp)
+                            val localTime = hhmmAr(
+                                ((cityHourOfDay(c, now) * 60).toInt()) % (24 * 60))
+                            val km = Qibla.distanceKm(fromCity.lat, fromCity.lon, c.lat, c.lon)
+                            Text(
+                                "التوقيت الآن $localTime · على بعد ${kmLabel(km)}",
+                                color = FgDim, fontSize = 11.sp,
+                            )
                         }
                         Text(c.countryCode, color = FgDim, fontSize = 12.sp)
                     }
