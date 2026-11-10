@@ -1,0 +1,228 @@
+<div id="miqat-design-root">
+  <div class="nav nav-pills" role="tablist" aria-label="جلسة التصميم">
+    <button class="nav-link active" id="tab-icons" role="tab" aria-controls="panel-icons" aria-selected="true" type="button">الأيقونة v2 — الذهبية</button>
+    <button class="nav-link" id="tab-home" role="tab" aria-controls="panel-home" aria-selected="false" type="button">الرئيسية — قوس اليوم</button>
+  </div>
+
+  <!-- ============ ICONS v2 PANEL ============ -->
+  <div id="panel-icons" role="tabpanel" aria-labelledby="tab-icons">
+    <div class="viz-dotted-background" style="padding:18px 14px; border-radius:12px; margin-top:12px;">
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@500;600;700&family=Amiri:wght@700&display=swap" rel="stylesheet">
+
+      <style>
+        .miq-squircle { border-radius: 26%; }
+        .miq-word {
+          font-family: 'Reem Kufi', 'Cairo', sans-serif;
+          font-weight: 600;
+          fill: url(#miqGold);
+        }
+        .miq-word-naskh { font-family: 'Amiri', serif; font-weight: 700; fill: url(#miqGold); }
+        .miq-vignette { fill: url(#miqNavy); }
+      </style>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:18px;">
+
+        <!-- 1: الكلمة — نقاء -->
+        <div style="color:#e8eaf6;">
+          <div style="font-size:13px; margin-bottom:8px;"><b>١ — الكلمة، نقاء</b> <span style="opacity:.55">(ترقية مباشرة لمرجعيتك)</span></div>
+          <svg width="170" height="170" viewBox="0 0 192 192" role="img" aria-label="أيقونة الميقات الذهبية">
+            <defs>
+              <radialGradient id="miqNavy" cx="50%" cy="38%" r="80%">
+                <stop offset="0" stop-color="#131B31"/><stop offset=".62" stop-color="#0D1424"/>
+                <stop offset="1" stop-color="#080D1A"/>
+              </radialGradient>
+              <linearGradient id="miqGold" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#F8E7AE"/><stop offset=".45" stop-color="#EAC964"/>
+                <stop offset=".78" stop-color="#C9962E"/><stop offset="1" stop-color="#A97B22"/>
+              </linearGradient>
+            </defs>
+            <rect class="miq-squircle" x="0" y="0" width="192" height="192" rx="44" fill="url(#miqNavy)"/>
+            <rect class="miq-squircle" x="0" y="0" width="192" height="192" rx="44" fill="none" stroke="#F0D48A" stroke-opacity=".08" stroke-width="1.5"/>
+            <text x="96" y="112" text-anchor="middle" class="miq-word" font-size="42">الميقات</text>
+          </svg>
+          <div class="text-small" style="opacity:.6; margin-top:8px;">
+            كوفية هندسية (Reem Kufi) بتدرّج ذهبي رباعي الدرجات وكحلي بعمق قطري — نفس روح مرجعيتك بإضاءة أعلى.
+          </div>
+        </div>
+
+        <!-- 2: الكلمة + نقطة القوس -->
+        <div style="color:#e8eaf6;">
+          <div style="font-size:13px; margin-bottom:8px;"><b>٢ — الكلمة + نقطة القوس</b> <span style="opacity:.55">(بصمة «قوس اليوم»)</span></div>
+          <svg width="170" height="170" viewBox="0 0 192 192" role="img" aria-label="أيقونة الميقات مع قوس اليوم">
+            <rect width="192" height="192" rx="44" fill="url(#miqNavy)" class="miq-squircle"/>
+            <text x="96" y="104" text-anchor="middle" class="miq-word" font-size="40">الميقات</text>
+            <path d="M 58 140 Q 96 118 134 140" fill="none" stroke="#EAC964" stroke-width="3.2" stroke-linecap="round" stroke-opacity=".85"/>
+            <circle cx="96" cy="127.5" r="4.6" fill="#F8E7AE"/>
+          </svg>
+          <div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
+            <svg width="48" height="48" viewBox="0 0 192 192" aria-hidden="true">
+              <rect width="192" height="192" rx="44" fill="url(#miqNavy)"/>
+              <text x="96" y="104" text-anchor="middle" class="miq-word" font-size="40">الميقات</text>
+              <path d="M 58 140 Q 96 118 134 140" fill="none" stroke="#EAC964" stroke-width="3.2" stroke-linecap="round" stroke-opacity=".85"/>
+              <circle cx="96" cy="127.5" r="4.6" fill="#F8E7AE"/>
+            </svg>
+            <span class="text-small" style="opacity:.6;">مقاس 48px — الكلمة تُقرأ والقوس يبقى بصمة</span>
+          </div>
+          <div class="text-small" style="opacity:.6; margin-top:6px;">
+            قوس نهاري رقيق تحت الاسم ونقطة واحدة عليه — «كل شيء له ميقات». نفس لغة الواجهة حرفياً.
+          </div>
+        </div>
+
+        <!-- 3: المحراب المنقّح -->
+        <div style="color:#e8eaf6;">
+          <div style="font-size:13px; margin-bottom:8px;"><b>٣ — المحراب بلا هلال</b> <span style="opacity:.55">(مرجعك الأسفل، منقّح)</span></div>
+          <svg width="170" height="170" viewBox="0 0 192 192" role="img" aria-label="أيقونة المحراب مع نقطة">
+            <rect width="192" height="192" rx="44" fill="url(#miqNavy)" class="miq-squircle"/>
+            <path d="M 40 158 L 40 96 Q 40 44 96 40 Q 152 44 152 96 L 152 158"
+                  fill="none" stroke="#EAC964" stroke-width="4" stroke-linecap="round" stroke-opacity=".9"/>
+            <line x1="96" y1="52" x2="96" y2="78" stroke="#EAC964" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="96" cy="86" r="6" fill="#F8E7AE"/>
+            <text x="96" y="140" text-anchor="middle" class="miq-word" font-size="34">الميقات</text>
+          </svg>
+          <div class="text-small" style="opacity:.6; margin-top:8px;">
+            هلال مرجعيتك صار نقطة معلّقة (الميقات لحظة، لا رمز) — القوس الإطاري أخف بحدّ نقطة مستدير.
+          </div>
+        </div>
+
+        <!-- 4: النسختان الوظيفيتان -->
+        <div style="color:#e8eaf6;">
+          <div style="font-size:13px; margin-bottom:8px;"><b>٤ — الوضعان الوظيفيان</b></div>
+          <div style="display:flex; gap:10px; align-items:flex-end;">
+            <svg width="80" height="80" viewBox="0 0 192 192" role="img" aria-label="نسخة النهار">
+              <defs>
+                <radialGradient id="miqCream" cx="50%" cy="38%" r="80%">
+                  <stop offset="0" stop-color="#FBF6EA"/><stop offset="1" stop-color="#EFE6D0"/>
+                </radialGradient>
+              </defs>
+              <rect width="192" height="192" rx="44" fill="url(#miqCream)" class="miq-squircle"/>
+              <text x="96" y="104" text-anchor="middle" font-family="'Reem Kufi','Cairo',sans-serif" font-weight="600" font-size="40" fill="#8A6414">الميقات</text>
+              <path d="M 58 140 Q 96 118 134 140" fill="none" stroke="#8A6414" stroke-width="3.2" stroke-linecap="round" stroke-opacity=".85"/>
+              <circle cx="96" cy="127.5" r="4.6" fill="#6E4E0E"/>
+            </svg>
+            <svg width="80" height="80" viewBox="0 0 192 192" role="img" aria-label="نسخة أحادية للأيقونات الثيمية">
+              <rect width="192" height="192" rx="44" fill="#0D1424" class="miq-squircle"/>
+              <text x="96" y="104" text-anchor="middle" font-family="'Reem Kufi','Cairo',sans-serif" font-weight="600" font-size="40" fill="#FFFFFF">الميقات</text>
+              <path d="M 58 140 Q 96 118 134 140" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-opacity=".8"/>
+              <circle cx="96" cy="127.5" r="4.6" fill="#FFFFFF"/>
+            </svg>
+            <svg width="80" height="80" viewBox="0 0 192 192" role="img" aria-label="بديل النسخ">
+              <rect width="192" height="192" rx="44" fill="url(#miqNavy)" class="miq-squircle"/>
+              <text x="96" y="106" text-anchor="middle" class="miq-word-naskh" font-size="44">الميقات</text>
+            </svg>
+          </div>
+          <div class="text-small" style="opacity:.6; margin-top:8px;">
+            نهاري (كريمي + ذهب عميق)، أحادي للأيقونات الثيمية، ونسخة نسخ (Amiri) إن أحببت النسخ على الكوفي.
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px; padding:10px 12px; border-radius:10px; background:rgba(255,255,255,.05); color:#e8eaf6; font-size:13px; line-height:1.7;">
+        <b>ما الذي رفع المرجعية من 6:</b> تدرّج ذهبي ربعي (لا لون واحد مسطّح) · عمق قطري في الكحلي ·
+        كيرفينغ وأوزان Reem Kufi مضبوطة · والتفصيلة التي تجعلها «ميقات» لا أيقونة صلاة: نقطة القوس.
+        <b>ملاحظة أمانة:</b> النص هنا بخط حي — الأصل النهائي للأستور يتطلّب تحويل حروف الكلمة إلى مسارات
+        vector (fonttools subset) حتى لا يعتمد الأيقونة على الخط، وسأنفّذه فور اختيارك للمرشّح.
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ HOME MOCKUP PANEL (unchanged) ============ -->
+  <div id="panel-home" role="tabpanel" aria-labelledby="tab-home" hidden>
+    <div class="viz-dotted-background" style="padding:18px; border-radius:12px; margin-top:12px; display:flex; justify-content:center;">
+      <div dir="rtl" style="width:340px; border-radius:28px; overflow:hidden; background:#0B1020; color:#E9EDFB; font-family:'Cairo',sans-serif; box-shadow:0 18px 50px rgba(0,0,0,.5); outline:1px solid rgba(255,255,255,.08);">
+        <div style="display:flex; justify-content:space-between; padding:10px 18px 0; font-size:11px; opacity:.75;">
+          <span>٢:١٥</span><span>٥٧٪</span>
+        </div>
+        <div style="padding:10px 18px 0;">
+          <div style="font-size:12px; opacity:.6;">الخرطوم · الخميس</div>
+          <div style="font-size:14px; font-weight:500;">١٥ رمضان ١٤٤٧ — ٧ نوفمبر ٢٠٢٦</div>
+        </div>
+        <div style="margin:14px 16px 0; padding:18px 16px 14px; border-radius:22px; background:linear-gradient(180deg,#141B33,#101528); outline:1px solid rgba(255,255,255,.06);">
+          <svg viewBox="0 0 300 110" width="100%" role="img" aria-label="قوس اليوم: العصر هو الصلاة الحالية">
+            <defs>
+              <linearGradient id="hArc" x1="0" y1="1" x2="1" y2="0">
+                <stop offset="0" stop-color="#5A74E8"/><stop offset=".38" stop-color="#7FD0C8"/>
+                <stop offset=".62" stop-color="#FFB74D"/><stop offset=".82" stop-color="#FF7A59"/>
+                <stop offset="1" stop-color="#3A4570"/>
+              </linearGradient>
+            </defs>
+            <path d="M 22 96 Q 150 -14 278 96" fill="none" stroke="#232B4A" stroke-width="7" stroke-linecap="round"/>
+            <path d="M 22 96 Q 150 -14 278 96" fill="none" stroke="url(#hArc)" stroke-width="7" stroke-linecap="round"
+                  stroke-dasharray="200 260" stroke-dashoffset="-150"/>
+            <circle cx="42" cy="66" r="6" fill="#7FD0C8" opacity=".55"/>
+            <circle cx="98" cy="33" r="6" fill="#7FD0C8" opacity=".55"/>
+            <circle cx="163" cy="29" r="10" fill="#FFB74D"/>
+            <circle cx="163" cy="29" r="17" fill="none" stroke="#FFB74D" stroke-opacity=".3" stroke-width="3"/>
+            <circle cx="222" cy="52" r="6" fill="#8A93B8"/>
+            <circle cx="262" cy="82" r="6" fill="#8A93B8"/>
+          </svg>
+          <div style="text-align:center; margin-top:2px;">
+            <div style="font-size:11px; opacity:.55; letter-spacing:.5px;">المتبقي لميقات العصر</div>
+            <div style="font-size:38px; font-weight:500; line-height:1.25;" class="tabular-nums">٠١:٢٤</div>
+            <div style="font-size:12px; opacity:.7;">العصر ٣:٣٩ · أذان صامت حالياً</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; margin:12px 16px 0;">
+          <div style="flex:1; padding:10px 12px; border-radius:16px; background:#121830; outline:1px solid rgba(255,255,255,.05);">
+            <div style="font-size:10px; opacity:.5;">التالي</div>
+            <div style="font-size:13px; font-weight:500; color:#FF9E80;">المغرب ٥:٣٠</div>
+          </div>
+          <div style="flex:1; padding:10px 12px; border-radius:16px; background:#121830; outline:1px solid rgba(255,255,255,.05);">
+            <div style="font-size:10px; opacity:.5;">ثلاث الليل</div>
+            <div style="font-size:13px; font-weight:500; color:#8FA6FF;">١١:٥٦</div>
+          </div>
+        </div>
+        <div style="margin:12px 16px 0; padding:14px; border-radius:18px; background:linear-gradient(135deg,#13203B,#101528); outline:1px solid rgba(255,255,255,.06);">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div>
+              <div style="font-size:13px; font-weight:500;">صيام الاثنين والخميس</div>
+              <div style="font-size:11px; opacity:.6;">غداً الخميس — فضل الصيام: كفّارة ومخالف للشيطان</div>
+            </div>
+            <button class="cursor-interaction" style="border:0; border-radius:999px; padding:8px 14px; font-size:12px; font-family:inherit; background:#FFB74D; color:#1A1305; font-weight:500;">أنا صائم</button>
+          </div>
+        </div>
+        <div style="margin:10px 16px 0; padding:14px; border-radius:18px; background:#121830; outline:1px solid rgba(255,255,255,.05);">
+          <div style="font-size:13px; font-weight:500;">أيام البيض</div>
+          <div style="font-size:11px; opacity:.6;">١٣–١٥ رمضان · بعد ٣ أيام — صيامها كصيام السنة كلها</div>
+        </div>
+        <div style="display:flex; justify-content:space-around; padding:12px 8px 16px; margin-top:14px; background:#0D1226; outline:1px solid rgba(255,255,255,.05);">
+          <div style="text-align:center; font-size:10px; color:#FFB74D;">
+            <div style="font-size:18px;">◎</div><div>الرئيسية</div>
+          </div>
+          <div style="text-align:center; font-size:10px; opacity:.55;">
+            <div style="font-size:18px;">▦</div><div>التقويم</div>
+          </div>
+          <div style="text-align:center; font-size:10px; opacity:.55;">
+            <div style="font-size:18px;">❖</div><div>الأذكار</div>
+          </div>
+          <div style="text-align:center; font-size:10px; opacity:.55;">
+            <div style="font-size:18px;">⚙</div><div>الإعدادات</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="text-small" style="opacity:.65; margin-top:10px;">
+      قوس اليوم: ألوان اللحظة (عنبري = العصر) على قوس واحد يجمع صلوات اليوم، والبطل الوحيد هو العدّاد.
+      البطاقات السياقية (S9) تظهر أسفله — لا شاشات جديدة. RTL-first بخط Cairo، وضع داكن أولاً.
+    </div>
+  </div>
+</div>
+<script>
+  (function () {
+    var tabIcons = document.getElementById('tab-icons');
+    var tabHome = document.getElementById('tab-home');
+    var panelIcons = document.getElementById('panel-icons');
+    var panelHome = document.getElementById('panel-home');
+    function select(which) {
+      var onIcons = which === 'icons';
+      tabIcons.setAttribute('aria-selected', onIcons);
+      tabIcons.classList.toggle('active', onIcons);
+      tabHome.setAttribute('aria-selected', !onIcons);
+      tabHome.classList.toggle('active', !onIcons);
+      panelIcons.hidden = !onIcons;
+      panelHome.hidden = onIcons;
+    }
+    tabIcons.addEventListener('click', function () { select('icons'); });
+    tabHome.addEventListener('click', function () { select('home'); });
+  })();
+</script>

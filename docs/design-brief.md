@@ -4,23 +4,32 @@
 > own failures (teardown §8) to hard design requirements, locks the icon
 > direction, and defines the Day-Arc system the S5 Compose build implements.
 
-## 0. Brand mark — direction (Hesham's constraint: NO crescent/dome/doodles)
+## 0. Brand mark — v2 state (updated 2026-11-10, recovered from harness memory)
 
-The icon must express **«ميقات» = the appointed time** — the umbrella concept
-over prayers, fasting, night thirds, seasons, Hajj markers (S9). Candidates
-explored (visuals in the session):
+History: the geometric candidates (أ القوس والنقطة / ب الدورة الميقاتية /
+ج ميم هندسي / د لحظة الأفق) were **all rejected** by Hesham («كلهم سيء»).
+His reference, self-rated 6/10: **gold «الميقات» wordmark on a deep-navy
+squircle** (Reem-Kufi-like construction). Direction locked: premium
+typographic gold-on-navy — NOT geometric symbol marks. (He later offered a
+mihrab-arch-with-hanging-crescent variant himself, despite the earlier
+no-crescent line.)
 
-| candidate | mark | verdict |
-|---|---|---|
-| **أ — القوس والنقطة** (recommended) | the day's sun-path arc in the Day-Arc palette gradient, one white point ON the arc = the appointed moment; horizon tick below | brand language = UI language, zero religious iconography, scales down cleanly, monochrome-friendly (Android 13 themed icons) |
-| ب — الدورة الميقاتية | open day/night cycle ring with the point at the opening | strong "umbrella" reading; reserve as alternate |
-| ج — ميم هندسي | geometric kufic-style meem whose head is the point | letter-based, more conventional |
-| د — لحظة الأفق | half-disc rising over a horizon line | most literal (fajr/maghrib moment) |
+v2 refinement rendered (goal: refine his reference to ≥8.5/10 or defer):
+`docs/design/miqat-design-session.html` (rescued 2026-11-10 from the ZCode
+visualization store — the repo is now the canonical home):
 
-Adaptive icon spec (S8): background `#0E1326`; foreground = arc + point inside
-the 66/108 safe zone; monochrome layer = arc + point in white. Point placement
-follows the actual next prayer's position on the arc (dynamic icon on Android
-13+ themed/monochrome is a stretch goal).
+| variant | mark |
+|---|---|
+| ١ — الكلمة، نقاء | pure Reem Kufi wordmark, 4-stop champagne→deep gold gradient, diagonal navy depth |
+| **٢ — الكلمة + نقطة القوس (recommended)** | wordmark + thin day-arc beneath with one gold point — the «كل شيء له ميقات» signature, literally the UI's language |
+| ٣ — المحراب بلا هلال | mihrab arch, the reference's crescent replaced by a hanging point + wordmark below |
+| ٤ — الوضعان الوظيفيان | light mode (cream/deep-gold), monochrome for themed icons, Amiri naskh alternative |
+
+**PICKED 2026-11-10: variant ٢ (wordmark + arc-point)** — Hesham's pick from the
+rendered four. Next: convert the wordmark to vector paths (fonttools subset — a
+store icon must not depend on a live font), then generate the adaptive icon set:
+background `#0D1424`, foreground inside the 66/108 safe zone, monochrome layer
+in white.
 
 ## 1. Donor gaps → hard design requirements (the "النقص" list)
 

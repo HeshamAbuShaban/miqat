@@ -2,6 +2,17 @@
 
 > One line per decision; newest first. `applicationId` `app.miqat` freezes at release.
 
+## 2026-11-10 — Icon: geometric candidates dead; gold-wordmark v2 awaits pick
+
+- All geometric icon candidates rejected by Hesham («كلهم سيء»); locked direction
+  = gold «الميقات» wordmark on deep-navy squircle (his 6/10 reference, target ≥8.5).
+  v2 four variants rendered in `docs/design/miqat-design-session.html`; pick pending;
+  then fonttools vector conversion → adaptive icons. State recorded in design-brief §0.
+- ZCode-era stranded state recovered: `SalatukPlus` path confirmed to be a leftover
+  symlink → Miqat and deleted (per its own memory-file instruction); design session
+  HTML rescued into `docs/design/`. Session env is now OpenCode; playbook rules
+  (plan-first, mock-first, emulator loop) unchanged.
+
 ## 2026-11-07 (3) — Engine naming scheme locked (Hesham: "التسمية مهمة")
 
 - Kotlin engine entities named for the donor-adjacent domain, future-proof for
