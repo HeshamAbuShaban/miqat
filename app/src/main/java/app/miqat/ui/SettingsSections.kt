@@ -363,6 +363,23 @@ fun NotificationsSection(state: AppState, fmt: Fmt) {
             n.kindOn(NotifyKind.MOTIVATIONAL),
         ) { v -> state.updateNotifications(n.copy(kindEnabled = n.kindEnabled + (NotifyKind.MOTIVATIONAL to v))) }
         Divider(Modifier.padding(horizontal = Space.lg, vertical = Space.sm))
+        SectionLabel("الصيام", Modifier.padding(horizontal = Space.lg))
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = Space.lg, vertical = Space.xs),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text("الإمساك قبل الفجر", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+            MinuteStepper(state.imsakLeadMinutes, { v ->
+                state.imsakLeadMinutes = v.coerceIn(0, 60)
+            }, 0..60, fmt)
+        }
+        Text(
+            "الفطر عند الغروب — والمدد معروضة في «مواقيت» و«كم بعدت عن هذا الوقت؟».",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = Space.lg),
+        )
         SectionLabel("تذكير الصيام", Modifier.padding(horizontal = Space.lg))
         ToggleRow(
             "تنبيه صيام الغد",

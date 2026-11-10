@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import app.miqat.core.Gap
 import app.miqat.core.Moment
 import app.miqat.core.MomentCategory
+import app.miqat.core.Hijri
 import app.miqat.core.Moments
 
 /**
@@ -291,6 +292,11 @@ fun rememberTimeline(state: AppState, now: Long): List<Moment> {
     return remember(y, m, d, state.city.calcMethod, state.display.methodOverride, state.adjusts) {
         val today = state.times(y, m, d)
         val tomorrow = state.times(ty, tm, td)
-        Moments.timeline(today, tomorrow.fajr, PRAYER_NAMES, ::minutesOf)
+        val hijri = Hijri.at(y, m, d)
+        Moments.timeline(
+            today, tomorrow.fajr, PRAYER_NAMES, ::minutesOf,
+            hijriMonth = hijri.hMonth, hijriDay = hijri.hDay,
+            imsakLeadMinutes = state.imsakLeadMinutes,
+        )
     }
 }

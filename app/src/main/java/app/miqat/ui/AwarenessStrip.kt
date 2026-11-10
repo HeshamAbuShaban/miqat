@@ -125,8 +125,7 @@ fun AwarenessStrip(
                 "منذ ${it.current.labelAr} ${fmt.hms(it.elapsedSeconds)}"
             } ?: ""
             val untilText = nextMoment?.let { m ->
-                val label = if (m.kind in PRAYER_KEY) m.labelAr else m.labelAr
-                "قبل $label ${fmt.hms(momentMinutes?.times(60)?.toLong() ?: 0L)}"
+                "قبل ${m.labelAr} ${fmt.hms(momentMinutes?.times(60)?.toLong() ?: 0L)}"
             } ?: ""
             Text(
                 sinceText,

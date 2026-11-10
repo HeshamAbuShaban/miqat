@@ -633,10 +633,14 @@ fun DayDetailScreen(state: AppState, fmt: Fmt, year: Int, month: Int, day: Int, 
         if (month == 12) 1 else month + 1,
         day,
     )
-    val timeline = remember(year, month, day, state.city.calcMethod, state.display.methodOverride, state.adjusts) {
-        Moments.timeline(times, tomorrow.fajr, PRAYER_NAMES, ::minutesOf)
-    }
     val hijri = Hijri.at(year, month, day)
+    val timeline = remember(year, month, day, state.city.calcMethod, state.display.methodOverride, state.adjusts) {
+        Moments.timeline(
+            times, tomorrow.fajr, PRAYER_NAMES, ::minutesOf,
+            hijriMonth = hijri.hMonth, hijriDay = hijri.hDay,
+            imsakLeadMinutes = state.imsakLeadMinutes,
+        )
+    }
 
     MiqatScaffold("${fmt.n(day)} / ${fmt.n(month)} / ${fmt.n(year)}", onBack = onBack) {
         Column(
@@ -683,6 +687,11 @@ fun DayDetailScreen(state: AppState, fmt: Fmt, year: Int, month: Int, day: Int, 
                 "وقت الأسحار" to Moments.SAHAR_START,
                 "منتصف الليل" to Moments.MIDNIGHT,
                 "الثلث الأخير من الليل" to Moments.LAST_THIRD,
+                "الإمساك" to Moments.IMSAK,
+                "الإفطار" to Moments.IFTAR,
+                "صلاة العيد" to Moments.EID_PRAYER,
+                "تكبير عرفة" to Moments.ARAFAH_TAKBIR,
+                "رمي الجمار" to Moments.RAMI,
             ).forEach { (label, kind) ->
                 val m = timeline.firstOrNull { it.kind == kind }
                 if (m != null) {

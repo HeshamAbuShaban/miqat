@@ -111,6 +111,9 @@ class AppState(context: Context) {
     /** The offset right now (the common case). */
     val utcOffset: Double get() = utcOffsetAt(System.currentTimeMillis())
 
+    /** How long before Fajr the fast begins (the imsak lead) — a setting. */
+    var imsakLeadMinutes: Int = 15
+
     /** Is daylight saving in force right now for the picked city? */
     val isDst: Boolean
         get() = effectiveZoneId?.let { MiqatData.isDst(appContext, it, System.currentTimeMillis()) } ?: false

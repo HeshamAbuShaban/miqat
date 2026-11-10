@@ -88,6 +88,8 @@ sealed interface Route {
     data object AdhanSettings : Route
     data object VerifySettings : Route
     data object IndicatorsSettings : Route
+    data object Qibla : Route
+    data object Distance : Route
     data object CalendarSettings : Route
     data object AppearanceSettings : Route
     data object AboutSettings : Route
@@ -147,12 +149,17 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
         Box(Modifier.fillMaxSize().padding(padding)) {
             when (val route = sub) {
                 null -> when (top) {
-                    TopLevel.Home -> HomeScreen(state, fmt, onOpenTimes = { top = TopLevel.Times })
+                    TopLevel.Home -> HomeScreen(
+                        state, fmt,
+                        onOpenTimes = { top = TopLevel.Times },
+                        onOpenQibla = { sub = Route.Qibla },
+                    )
                     TopLevel.Times -> TimesScreen(
                         state, fmt,
                         onOpenPrayer = { sub = Route.PrayerDetailArgs(it) },
                         onOpenWorship = { sub = Route.WorshipDetail(it) },
                         onOpenGaps = { sub = Route.Gaps },
+                        onOpenDistance = { sub = Route.Distance },
                         onOpenInterval = { sub = Route.Interval },
                         onOpenSunnah = { sub = Route.Sunnah },
                     )
@@ -191,6 +198,8 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                 Route.IndicatorsSettings -> MiqatScaffold("الإعدادات", onBack = { sub = null }) {
                     IndicatorsSection(state, fmt)
                 }
+                Route.Qibla -> QiblaScreen(state, fmt) { sub = null }
+                Route.Distance -> DistanceScreen(state, fmt) { sub = null }
                 Route.AdhanSettings -> MiqatScaffold("الإعدادات", onBack = { sub = null }) {
                     AdhanSection(state, fmt)
                 }
@@ -239,7 +248,12 @@ fun rememberNowState(): State<Long> {
  * its own screen (Times / Calendar / Settings) because the v1 home was a stack.
  */
 @Composable
-fun HomeScreen(state: AppState, fmt: Fmt, onOpenTimes: () -> Unit) {
+fun HomeScreen(
+    state: AppState,
+    fmt: Fmt,
+    onOpenTimes: () -> Unit,
+    onOpenQibla: () -> Unit = {},
+) {
     val context = LocalContext.current
     val nowState = rememberNowState()
     val now = nowState.value
@@ -425,11 +439,14 @@ fun HomeScreen(state: AppState, fmt: Fmt, onOpenTimes: () -> Unit) {
             Divider()
         }
 
-        // qibla — one line
+        // qibla — one line, and it opens the COMPASS
         val bearing = Qibla.bearing(state.city.lat, state.city.lon)
         val km = Qibla.distanceKm(state.city.lat, state.city.lon)
         Row(
-            Modifier.fillMaxWidth().padding(vertical = Space.md),
+            Modifier
+                .fillMaxWidth()
+                .clickable { onOpenQibla() }
+                .padding(vertical = Space.md),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text("القبلة", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
