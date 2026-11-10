@@ -82,8 +82,11 @@ Every step cites its donor lead (teardown §).
 - [x] Great-circle bearing/distance math (`Qibla.kt`, JVM-testable) + home
       mini-section showing bearing & distance per city
 
-- [ ] Compass: accel+magnet fusion, low-pass, `GeomagneticField` declination,
-      ±3° alignment lock (donor's exact recipe)
+- [x] Compass — DONE 2026-11-10: accel+magnetometer fusion, low-pass filter,
+      `GeomagneticField` declination, ±3° alignment lock, and a DRAWN rose (the
+      qibla is a direction, not a number). The declination is computed at
+      runtime (the donor's `qibla` table turned out to be the seasonal layer,
+      not a declination table)
 - [ ] Improvements: true-north toggle, sun-shadow qibla method (no magnetometer
       needed), haptic tick at alignment
 

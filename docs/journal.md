@@ -28,6 +28,34 @@
   cleanly rather than patched further.
 - 37/37 unit tests green; parity unchanged.
 
+## 2026-11-10 (8) — The compass, the distance tool, the day-sky (his 5th brief)
+
+- **The qibla is a direction now, not a number**: `CompassSensor` fuses the
+  accelerometer and the magnetometer, applies the local declination (true
+  north), filters the heading, and `QiblaScreen` draws the rose — the same sky
+  as the hero, the cardinal marks in Arabic, the Kaaba's needle in gold, the
+  phone's heading marked at the top, and the ring closing at the three-degree
+  lock. Without a magnetometer the app says so instead of pretending.
+- **«كم بعدت عن هذا الوقت؟»** — the neovim measure, on demand, over EVERY
+  appointed time (a prayer, a worship window, a sunnah time, a fasting
+  boundary): the distance, the side, and the clock time.
+- **«الطاعة» in the full sense** (his correction): the timeline now carries
+  the fasting boundaries (الإمساك، الإفطار), the Eid prayer, the takbir of
+  Arafah and the stoning of the pillars — on the days they belong to — beside
+  the prayers, the worship windows, the night markers and the sunnah timings.
+  The imsak lead is a setting.
+- **The v3 design direction** (docs/design-direction.md): the sky over the
+  Kaaba; the arc as the one signature (hero, compass, gap bridge, drift
+  chart); a new palette; and the hero rebuilt as THE DAY-SKY — stars above a
+  warm horizon, with the sun travelling the arc exactly where the day is.
+- While rebuilding the hero, patch damage in MiqatApp.kt surfaced (duplicate
+  declarations, an unbalanced brace) — the file was reconstructed cleanly.
+- **A tooling accident**: a scripted edit truncated `docs/decisions.md` to
+  zero bytes; it was restored from git and the two missing entries re-written
+  (the journal and the roadmap kept their copies). A guard was added
+  (`tools/check_docs.sh`) so a zero-length document can never ship again.
+- 37/37 unit tests green; parity unchanged.
+
 ## 2026-11-10 (7) — The awareness layer + the calendar rebuilt (his 4th brief)
 
 - **The awareness strip** (the neovim idea, in time): «الآن ٢٠:٠٤» · «داخل وقت
