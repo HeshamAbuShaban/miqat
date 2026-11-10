@@ -48,6 +48,24 @@ data class DisplayPrefs(
     val showGaps: Boolean = true,
     /** Which gap categories the user wants to see between the prayer rows. */
     val gapCategories: Set<String> = setOf("صلاة", "شمس", "عبادة", "ليل", "سنة"),
+    // --- the indicators (Hesham: "too much isn't a restriction when it gives
+    //     value — and you get to config it in the settings") ---
+    /** The awareness strip at the top (now / the time that entered / the next). */
+    val showAwarenessStrip: Boolean = true,
+    /** The daylight-saving notice when the clock is about to change. */
+    val showDstNotice: Boolean = true,
+    /** The nearest moment of any kind on the home. */
+    val showNearestMoment: Boolean = true,
+    /** The calendar's day cells carry the Hijri day. */
+    val calendarShowHijri: Boolean = true,
+    /** The calendar's day cells carry the Gregorian day. */
+    val calendarShowGregorian: Boolean = true,
+    /** The calendar's day cells carry the event dot. */
+    val calendarShowEvents: Boolean = true,
+    /** Which prayer the calendar's month table shows (0 = Fajr). */
+    val calendarPrayer: Int = 0,
+    /** The calendar's month table is visible. */
+    val calendarShowTable: Boolean = true,
 )
 
 object UserSettings {
@@ -67,6 +85,14 @@ object UserSettings {
     private const val K_URGENCY_IMMINENT = "urgency_imminent"
     private const val K_SHOW_GAPS = "show_gaps"
     private const val K_GAP_CATEGORIES = "gap_categories"
+    private const val K_SHOW_STRIP = "show_strip"
+    private const val K_SHOW_DST = "show_dst"
+    private const val K_SHOW_NEAREST = "show_nearest"
+    private const val K_CAL_HIJRI = "cal_hijri"
+    private const val K_CAL_GREG = "cal_greg"
+    private const val K_CAL_EVENTS = "cal_events"
+    private const val K_CAL_PRAYER = "cal_prayer"
+    private const val K_CAL_TABLE = "cal_table"
     private const val K_USE_GPS = "use_gps"
     private const val K_GPS_LAT = "gps_lat"
     private const val K_GPS_LON = "gps_lon"
@@ -138,6 +164,14 @@ object UserSettings {
             gapCategories = p.getStringSet(
                 K_GAP_CATEGORIES, setOf("صلاة", "شمس", "عبادة", "ليل", "سنة"),
             ) ?: emptySet(),
+            showAwarenessStrip = p.getBoolean(K_SHOW_STRIP, true),
+            showDstNotice = p.getBoolean(K_SHOW_DST, true),
+            showNearestMoment = p.getBoolean(K_SHOW_NEAREST, true),
+            calendarShowHijri = p.getBoolean(K_CAL_HIJRI, true),
+            calendarShowGregorian = p.getBoolean(K_CAL_GREG, true),
+            calendarShowEvents = p.getBoolean(K_CAL_EVENTS, true),
+            calendarPrayer = p.getInt(K_CAL_PRAYER, 0),
+            calendarShowTable = p.getBoolean(K_CAL_TABLE, true),
         )
     }
 
@@ -181,6 +215,14 @@ object UserSettings {
             .putInt(K_URGENCY_IMMINENT, d.urgencyImminentMinutes)
             .putBoolean(K_SHOW_GAPS, d.showGaps)
             .putStringSet(K_GAP_CATEGORIES, d.gapCategories)
+            .putBoolean(K_SHOW_STRIP, d.showAwarenessStrip)
+            .putBoolean(K_SHOW_DST, d.showDstNotice)
+            .putBoolean(K_SHOW_NEAREST, d.showNearestMoment)
+            .putBoolean(K_CAL_HIJRI, d.calendarShowHijri)
+            .putBoolean(K_CAL_GREG, d.calendarShowGregorian)
+            .putBoolean(K_CAL_EVENTS, d.calendarShowEvents)
+            .putInt(K_CAL_PRAYER, d.calendarPrayer)
+            .putBoolean(K_CAL_TABLE, d.calendarShowTable)
             .apply()
     }
 }

@@ -1,5 +1,6 @@
 package app.miqat.ui
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,23 +33,37 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import app.miqat.core.DstInfo
+import app.miqat.core.Drift
+import app.miqat.core.DriftPoint
 import app.miqat.core.Hijri
 import app.miqat.core.IslamicDay
-import app.miqat.core.IslamicDays
-import app.miqat.core.Moment
+import app.miqat.core.MiqatData
 import app.miqat.core.Moments
 import java.util.Calendar
 
 /**
- * CALENDAR (R4) — the month, computed on demand («وضع المدار»: only the visible
- * month is computed, and only while this screen is open).
+ * CALENDAR — rebuilt (R4, second pass).
  *
- * Each cell carries the Gregorian day and the Hijri day; an event dot marks
- * the Islamic days worth knowing (eids, Arafah, Ashura, the white days). Under
- * the grid, the month's events are listed — a calendar that only shows dots
- * makes you tap every day to find out what they mean.
+ * His words: «أبرز الهجري ودلّل بالميلادي بشكل ثانوي واضح»، «التحكم في الموعد
+ * المراد عرضه و العناصر ما تعرضه مصغرا او مكبرا»، «في طريقة العرض … pertaining
+ * to the long term: متى كانت تقام الصلاة في الشهر الفلاني»، and the drift:
+ * «اظهار الفروق الزمنية على مدى الأشهر … ان الفجر يكون في وقته العادي ثم
+ * يتجه نحو زيادة او نقصان».
+ *
+ * So the screen has THREE views, each its own job:
+ *  1. الشهر — the month, Hijri-first (the Gregorian secondary and smaller).
+ *  2. جدول الشهر — the month as a TIMETABLE: every day with the chosen
+ *     prayer's time AND its day-to-day change (the drift, visible in the
+ *     table itself), plus the day's transition marker when the clock changes.
+ *  3. الانحراف على مدى السنة — the chosen prayer across the twelve months, as
+ *     a curve with the TOTAL change stated in words.
  */
 @Composable
 fun CalendarScreen(
@@ -56,21 +71,25 @@ fun CalendarScreen(
     fmt: Fmt,
     onOpenDay: (Int, Int, Int) -> Unit,
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val now = System.currentTimeMillis()
-    val (cy, cm, cd) = state.cityDate(now)
+    val (cy, cm, _) = state.cityDate(now)
     var year by remember { mutableIntStateOf(cy) }
     var month by remember { mutableIntStateOf(cm) }
+    var view by remember { mutableStateOf(CalendarView.MONTH) }
 
-    // the visible month's grid — computed lazily, only this month
-    val context = androidx.compose.ui.platform.LocalContext.current
-    val cells = remember(year, month, state.city.lat, state.city.lon, state.utcOffset) {
-        monthGrid(context, year, month, state.display.hijriOffsetDays)
+    val d = state.display
+    val cells = remember(year, month, d.hijriOffsetDays) {
+        monthGrid(context, year, month, d.hijriOffsetDays)
     }
     val hijriLabel = cells.firstOrNull { it != null }?.let {
         Hijri.MONTHS_AR[(it.hijri.hMonth - 1).coerceIn(0, 11)]
     }
-    val events = remember(year, month, state.display.hijriOffsetDays) {
-        monthEvents(context, year, month, state.display.hijriOffsetDays)
+    val events = remember(year, month, d.hijriOffsetDays) {
+        monthEvents(context, year, month, d.hijriOffsetDays)
+    }
+    val transitions = remember(state.city.zoneId, year) {
+        state.city.zoneId?.let { DstInfo.transitionsInYear(context, it, year) } ?: emptyList()
     }
 
     Column(
@@ -80,102 +99,122 @@ fun CalendarScreen(
             .padding(horizontal = Space.lg),
     ) {
         Spacer(Modifier.height(Space.md))
+
+        // the three views — the screen's map
         Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+            Modifier.fillMaxWidth().padding(bottom = Space.sm),
+            horizontalArrangement = Arrangement.spacedBy(Space.sm),
         ) {
-            IconButton(Icons.AutoMirrored.Filled.KeyboardArrowRight, "الشهر السابق") {
-                month--; if (month < 1) { month = 12; year-- }
-            }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            CalendarView.entries.forEach { v ->
+                val selected = v == view
                 Text(
-                    "${fmt.n(month)} / ${fmt.n(year)}",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
-                if (hijriLabel != null) {
-                    Text(
-                        "$hijriLabel ${fmt.n(cells.firstNotNullOfOrNull { it?.hijri?.hYear } ?: 0)}هـ",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-            IconButton(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "الشهر التالي") {
-                month++; if (month > 12) { month = 1; year++ }
-            }
-        }
-        Spacer(Modifier.height(Space.xs))
-        Row(Modifier.fillMaxWidth()) {
-            ARABIC_WEEKDAYS.forEach { d ->
-                Text(
-                    d,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    v.labelAr,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = if (selected) MaterialTheme.colorScheme.onPrimary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(Radius.control))
+                        .background(
+                            if (selected) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.surfaceVariant
+                        )
+                        .clickable { view = v }
+                        .padding(vertical = Space.sm),
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.weight(1f),
                 )
-            }
-        }
-        Spacer(Modifier.height(Space.xs))
-        // a plain 7-column grid (six rows) — no lazy viewport, so the screen
-        // has no dead band and the events below scroll with it
-        cells.chunked(7).forEach { week ->
-            Row(Modifier.fillMaxWidth()) {
-                week.forEach { cell ->
-                    Box(Modifier.weight(1f)) {
-                        if (cell == null) {
-                            Box(Modifier.size(52.dp))
-                        } else {
-                            DayCell(
-                                day = cell.gregorianDay,
-                                hijri = cell.hijri,
-                                isToday = cell.isToday,
-                                event = cell.event,
-                                fmt = fmt,
-                                onClick = { onOpenDay(year, month, cell.gregorianDay) },
-                            )
-                        }
-                    }
-                }
-                repeat(7 - week.size) { Box(Modifier.weight(1f)) }
             }
         }
 
-        // the month's events — the dots explained
-        if (events.isNotEmpty()) {
-            Divider(Modifier.padding(top = Space.sm))
-            Column(Modifier.padding(vertical = Space.sm)) {
-                events.forEach { e ->
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .clickable { onOpenDay(year, month, e.gregorianDay) }
-                            .padding(vertical = Space.xs),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Box(
-                            Modifier
-                                .size(6.dp)
-                                .background(MaterialTheme.colorScheme.tertiary, CircleShape),
-                        )
-                        Spacer(Modifier.width(Space.md))
+        when (view) {
+            CalendarView.MONTH -> {
+                MonthHeader(year, month, hijriLabel, fmt) { dir ->
+                    if (dir < 0) { month--; if (month < 1) { month = 12; year-- } }
+                    else { month++; if (month > 12) { month = 1; year++ } }
+                }
+                Spacer(Modifier.height(Space.xs))
+                Row(Modifier.fillMaxWidth()) {
+                    ARABIC_WEEKDAYS.forEach { day ->
                         Text(
-                            e.title,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                        Spacer(Modifier.weight(1f))
-                        Text(
-                            "${fmt.n(e.hijriDay)} ${Hijri.MONTHS_AR[(e.hijriMonth - 1).coerceIn(0, 11)]} · ${fmt.n(e.gregorianDay)} ${fmt.n(month)}",
+                            day,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.weight(1f),
                         )
                     }
                 }
+                Spacer(Modifier.height(Space.xs))
+                cells.chunked(7).forEach { week ->
+                    Row(Modifier.fillMaxWidth()) {
+                        week.forEach { cell ->
+                            Box(Modifier.weight(1f)) {
+                                if (cell == null) {
+                                    Box(Modifier.size(54.dp))
+                                } else {
+                                    DayCell(
+                                        day = cell.gregorianDay,
+                                        hijri = cell.hijri,
+                                        isToday = cell.isToday,
+                                        event = cell.event,
+                                        shifted = transitions.any {
+                                            it.atMillis in dayRange(year, month, cell.gregorianDay)
+                                        },
+                                        showHijri = state.display.calendarShowHijri,
+                                        showGregorian = state.display.calendarShowGregorian,
+                                        showEvent = state.display.calendarShowEvents,
+                                        fmt = fmt,
+                                        onClick = { onOpenDay(year, month, cell.gregorianDay) },
+                                    )
+                                }
+                            }
+                        }
+                        repeat(7 - week.size) { Box(Modifier.weight(1f)) }
+                    }
+                }
+                if (events.isNotEmpty()) {
+                    Divider(Modifier.padding(top = Space.sm))
+                    Column(Modifier.padding(vertical = Space.sm)) {
+                        events.forEach { e ->
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onOpenDay(year, month, e.gregorianDay) }
+                                    .padding(vertical = Space.xs),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Box(
+                                    Modifier
+                                        .size(6.dp)
+                                        .background(MaterialTheme.colorScheme.tertiary, CircleShape),
+                                )
+                                Spacer(Modifier.width(Space.md))
+                                Text(
+                                    e.title,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                                Spacer(Modifier.weight(1f))
+                                Text(
+                                    "${fmt.n(e.hijriDay)} ${Hijri.MONTHS_AR[(e.hijriMonth - 1).coerceIn(0, 11)]} · ${fmt.n(e.gregorianDay)} ${fmt.n(month)}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            CalendarView.TABLE -> {
+                MonthTable(state, fmt, year, month, transitions, onOpenDay)
+            }
+
+            CalendarView.YEAR -> {
+                YearDriftView(state, fmt, year)
             }
         }
+
         if (year != cy || month != cm) {
             Text(
                 "العودة إلى شهر اليوم",
@@ -188,6 +227,43 @@ fun CalendarScreen(
             )
         }
         Spacer(Modifier.height(Space.md))
+    }
+}
+
+enum class CalendarView(val labelAr: String) {
+    MONTH("الشهر"),
+    TABLE("جدول الشهر"),
+    YEAR("الانحراف السنوي"),
+}
+
+@Composable
+private fun MonthHeader(
+    year: Int,
+    month: Int,
+    hijriLabel: String?,
+    fmt: Fmt,
+    onStep: (Int) -> Unit,
+) {
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IconButton(Icons.AutoMirrored.Filled.KeyboardArrowRight, "الشهر السابق") { onStep(-1) }
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            // the Hijri month leads; the Gregorian is the secondary line
+            Text(
+                hijriLabel ?: "",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            Text(
+                "${fmt.n(month)} / ${fmt.n(year)}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        IconButton(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "الشهر التالي") { onStep(1) }
     }
 }
 
@@ -205,12 +281,224 @@ private fun IconButton(icon: androidx.compose.ui.graphics.vector.ImageVector, de
     }
 }
 
+/**
+ * The month as a TIMETABLE: the chosen prayer's time for every day, with the
+ * change from the previous day — the drift, in the place where it matters.
+ */
+@Composable
+private fun MonthTable(
+    state: AppState,
+    fmt: Fmt,
+    year: Int,
+    month: Int,
+    transitions: List<app.miqat.core.DstTransition>,
+    onOpenDay: (Int, Int, Int) -> Unit,
+) {
+    val prayer = state.display.calendarPrayer.coerceIn(0, 5)
+    val cal = Calendar.getInstance().apply { clear(); set(year, month - 1, 1) }
+    val days = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
+    val rows = remember(year, month, prayer, state.city.calcMethod, state.display.methodOverride, state.adjusts) {
+        (1..days).map { day ->
+            val t = state.times(year, month, day).list[prayer]
+            day to (((t % 24.0) + 24.0) % 24.0 * 60).toInt()
+        }
+    }
+    var prev: Int? = null
+
+    Column(Modifier.padding(top = Space.sm)) {
+        Row(
+            Modifier.fillMaxWidth().padding(vertical = Space.xs),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                "موعد ${PRAYER_NAMES[prayer]} في ${fmt.n(month)}/${fmt.n(year)}",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            Text(
+                "التغيّر اليومي",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Divider()
+        rows.forEach { (day, minute) ->
+            val delta = prev?.let { minute - it }
+            prev = minute
+            val shifted = transitions.any { it.atMillis in dayRange(year, month, day) }
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpenDay(year, month, day) }
+                    .padding(vertical = 7.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        fmt.n(day),
+                        style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = TabularFigures),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.width(38.dp),
+                    )
+                    Text(
+                        fmt.hhmm(minute),
+                        style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = TabularFigures),
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (shifted) {
+                        Text(
+                            "تغيّر التوقيت",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.tertiary,
+                            modifier = Modifier.padding(end = Space.sm),
+                        )
+                    }
+                    Text(
+                        when {
+                            delta == null -> ""
+                            delta == 0 -> "—"
+                            else -> "${fmt.signed(delta)} د"
+                        },
+                        style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = TabularFigures),
+                        color = when {
+                            delta == null || delta == 0 -> MaterialTheme.colorScheme.onSurfaceVariant
+                            else -> MaterialTheme.colorScheme.secondary
+                        },
+                    )
+                }
+            }
+            Divider()
+        }
+    }
+}
+
+/**
+ * The drift across the YEAR: the chosen prayer's time month by month, drawn as
+ * a curve, with the TOTAL change stated in words («يتقدّم الفجر ٢٧ دقيقة بين
+ * يناير وديسمبر»). The chart is the one rich element; the numbers stay quiet.
+ */
+@Composable
+private fun YearDriftView(state: AppState, fmt: Fmt, year: Int) {
+    val prayer = state.display.calendarPrayer.coerceIn(0, 5)
+    val points = remember(year, prayer, state.city.calcMethod, state.display.methodOverride, state.adjusts) {
+        Drift.acrossYear(year, prayer) { y, m, day ->
+            state.times(y, m, day).list
+        }
+    }
+    val total = Drift.totalChange(points)
+    val trend = Drift.trend(points)
+
+    Column(Modifier.padding(top = Space.sm)) {
+        Text(
+            "انحراف ${PRAYER_NAMES[prayer]} على مدى ${fmt.n(year)}",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+        Spacer(Modifier.height(Space.xs))
+        Text(
+            when {
+                total == 0 -> "لا تغيّر يُذكر خلال السنة."
+                total > 0 -> "يتأخّر حتى ${fmt.n(total)} دقيقة بين أبعد نقطتين في السنة."
+                else -> "يتقدّم حتى ${fmt.n(-total)} دقيقة بين أبعد نقطتين في السنة."
+            },
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(Space.md))
+        DriftChart(points, fmt, Modifier.fillMaxWidth().height(180.dp))
+        Spacer(Modifier.height(Space.sm))
+        // the two ends of the curve, in words
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(
+                "${ARABIC_MONTHS.getOrElse(points.first().month - 1) { "" }}: ${fmt.hhmm(points.first().minuteOfDay)}",
+                style = MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = TabularFigures),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                "${ARABIC_MONTHS.getOrElse(points.last().month - 1) { "" }}: ${fmt.hhmm(points.last().minuteOfDay)}",
+                style = MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = TabularFigures),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Spacer(Modifier.height(Space.sm))
+        Text(
+            "الاتجاه العام: ${if (trend == 0) "ثابت" else if (trend > 0) "يتأخّر ${fmt.n(trend)} دقيقة" else "يتقدّم ${fmt.n(-trend)} دقيقة"}.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(Space.lg))
+    }
+}
+
+/**
+ * The drift chart: one line, one accent, a muted baseline — no rainbow, no
+ * glow. The y-axis is RELATIVE to the first point (the drift in minutes), so
+ * the curve shows the change, not the absolute time.
+ */
+@Composable
+private fun DriftChart(points: List<DriftPoint>, fmt: Fmt, modifier: Modifier = Modifier) {
+    val scheme = MaterialTheme.colorScheme
+    val deltas = points.map { it.deltaMinutes }
+    val minD = (deltas.minOrNull() ?: 0).coerceAtMost(0)
+    val maxD = (deltas.maxOrNull() ?: 0).coerceAtLeast(0)
+    val span = (maxD - minD).coerceAtLeast(1)
+
+    Column(modifier) {
+        Canvas(Modifier.fillMaxWidth().weight(1f)) {
+            if (points.size < 2) return@Canvas
+            val w = size.width
+            val h = size.height
+            fun x(i: Int) = w * i / (points.size - 1).toFloat()
+            fun y(d: Int) = h - ((d - minD).toFloat() / span) * (h - 12f) - 6f
+
+            // the zero baseline — a hairline, not a grid
+            drawLine(
+                color = scheme.outlineVariant,
+                start = Offset(0f, y(0)),
+                end = Offset(w, y(0)),
+                strokeWidth = 1f,
+            )
+            val path = Path()
+            points.forEachIndexed { i, p ->
+                val pt = Offset(x(i), y(p.deltaMinutes))
+                if (i == 0) path.moveTo(pt.x, pt.y) else path.lineTo(pt.x, pt.y)
+            }
+            drawPath(path, scheme.primary, style = Stroke(2.5f, cap = StrokeCap.Round))
+            // the ends, marked
+            points.forEachIndexed { i, p ->
+                if (i == 0 || i == points.size - 1) {
+                    drawCircle(scheme.primary, 5f, Offset(x(i), y(p.deltaMinutes)))
+                }
+            }
+        }
+        // the month scale, quiet
+        Row(Modifier.fillMaxWidth().padding(top = Space.xs)) {
+            listOf(1, 4, 7, 10).forEach { m ->
+                Text(
+                    ARABIC_MONTHS.getOrElse(m - 1) { "" },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = scheme.onSurfaceVariant,
+                    modifier = Modifier.weight(1f),
+                    textAlign = if (m == 1) TextAlign.Start else if (m == 10) TextAlign.End else TextAlign.Center,
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun DayCell(
     day: Int,
     hijri: IslamicDay,
     isToday: Boolean,
     event: String?,
+    shifted: Boolean,
+    showHijri: Boolean,
+    showGregorian: Boolean,
+    showEvent: Boolean,
     fmt: Fmt,
     onClick: () -> Unit,
 ) {
@@ -226,17 +514,23 @@ private fun DayCell(
             .padding(vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            fmt.n(day),
-            style = MaterialTheme.typography.bodyMedium,
-            color = if (isToday) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
-        )
-        Text(
-            fmt.n(hijri.hDay),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        if (event != null) {
+        // the HIJRI day leads (the month view's job), the Gregorian follows it
+        if (showHijri) {
+            Text(
+                fmt.n(hijri.hDay),
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (isToday) MaterialTheme.colorScheme.onPrimaryContainer
+                else MaterialTheme.colorScheme.onSurface,
+            )
+        }
+        if (showGregorian) {
+            Text(
+                fmt.n(day),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        if (showEvent && event != null) {
             Box(
                 Modifier
                     .padding(top = 2.dp)
@@ -244,10 +538,23 @@ private fun DayCell(
                     .background(MaterialTheme.colorScheme.tertiary, CircleShape),
             )
         }
+        if (shifted) {
+            Box(
+                Modifier
+                    .padding(top = 2.dp)
+                    .size(5.dp)
+                    .background(MaterialTheme.colorScheme.secondary, CircleShape),
+            )
+        }
     }
 }
 
-/** The visible month's cells (Gregorian day + its Hijri day + event marker). */
+private fun dayRange(year: Int, month: Int, day: Int): LongRange {
+    val start = Calendar.getInstance().apply { clear(); set(year, month - 1, day, 0, 0, 0) }.timeInMillis
+    val end = start + 86_400_000L
+    return start until end
+}
+
 private data class Cell(
     val gregorianDay: Int,
     val hijri: IslamicDay,
@@ -255,7 +562,6 @@ private data class Cell(
     val event: String?,
 )
 
-/** An event of the month, with the Gregorian day it falls on. */
 private data class MonthEvent(
     val title: String,
     val gregorianDay: Int,
@@ -268,7 +574,7 @@ private fun monthGrid(context: android.content.Context, year: Int, month: Int, h
         clear()
         set(year, month - 1, 1)
     }
-    val firstWeekday = cal.get(Calendar.DAY_OF_WEEK) % 7 // Saturday = 0
+    val firstWeekday = cal.get(Calendar.DAY_OF_WEEK) % 7
     val days = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
     val today = Calendar.getInstance()
     val cells = mutableListOf<Cell?>()
@@ -290,24 +596,10 @@ private fun monthGrid(context: android.content.Context, year: Int, month: Int, h
     return cells
 }
 
-/**
- * The event names come from the donor's own `day_events` table (59 rows, with
- * the Arabic wording) — with the engine's own rules as the fallback.
- */
 private fun eventTitle(context: android.content.Context, h: IslamicDay): String? {
-    val fromTable = app.miqat.core.MiqatData.dayEvents(context, h.hMonth)
+    val fromTable = MiqatData.dayEvents(context, h.hMonth)
         .firstOrNull { h.hDay in it.startDay..it.endDay }
-    if (fromTable != null) return fromTable.nameAr
-    return when {
-        IslamicDays.isEidAlFitr(h) -> "عيد الفطر"
-        IslamicDays.isEidAlAdha(h) -> "عيد الأضحى"
-        IslamicDays.isDayOfArafah(h) -> "يوم عرفة"
-        IslamicDays.isAshura(h) -> "عاشوراء"
-        IslamicDays.isTasuaa(h) -> "تاسوعاء"
-        IslamicDays.isWhiteDays(h) -> "أيام البيض"
-        IslamicDays.isEveOfRamadan(h) -> "ليلة رمضان"
-        else -> null
-    }
+    return fromTable?.nameAr
 }
 
 private fun monthEvents(context: android.content.Context, year: Int, month: Int, hijriOffset: Int): List<MonthEvent> {
@@ -323,6 +615,11 @@ private fun monthEvents(context: android.content.Context, year: Int, month: Int,
 }
 
 private val ARABIC_WEEKDAYS = listOf("سبت", "أحد", "إثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة")
+
+private val ARABIC_MONTHS = listOf(
+    "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
+    "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر",
+)
 
 /**
  * A single day: its prayers, its worship windows and the gaps between them —

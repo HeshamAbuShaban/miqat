@@ -91,9 +91,16 @@ class AppState(context: Context) {
      * bundled timezone table (the S2 "own tz table"), unless the user set a
      * manual override.
      */
+    /**
+     * The donor's key for the city's zone — from the city row, or resolved by
+     * the IANA name (the row's key is the fast path; the lookup is the truth).
+     */
+    val effectiveZoneId: Int?
+        get() = city.zoneId ?: MiqatData.zoneIdFor(appContext, city.zone)
+
     fun utcOffsetAt(epochMillis: Long): Double {
         display.manualUtcOffsetMinutes?.let { return it / 60.0 }
-        val zoneId = city.zoneId
+        val zoneId = effectiveZoneId
         if (zoneId != null) {
             val fromTable = MiqatData.utcOffsetHours(appContext, zoneId, epochMillis)
             if (fromTable != null) return fromTable
@@ -106,7 +113,7 @@ class AppState(context: Context) {
 
     /** Is daylight saving in force right now for the picked city? */
     val isDst: Boolean
-        get() = city.zoneId?.let { MiqatData.isDst(appContext, it, System.currentTimeMillis()) } ?: false
+        get() = effectiveZoneId?.let { MiqatData.isDst(appContext, it, System.currentTimeMillis()) } ?: false
 
     /**
      * The fix the times are computed from: the device GPS fix when the user

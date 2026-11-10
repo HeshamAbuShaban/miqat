@@ -100,6 +100,14 @@ fun SettingsScreen(
         )
         Divider(Modifier.padding(horizontal = Space.lg))
 
+        SectionLabel("المؤشرات", Modifier.padding(horizontal = Space.lg, vertical = Space.sm))
+        NavRow(
+            "المؤشرات والعرض",
+            "ما يظهر، وكم، وبأي صلاة",
+            onClick = { onOpen(SettingsRoute.Indicators) },
+        )
+        Divider(Modifier.padding(horizontal = Space.lg))
+
         SectionLabel("الاستعداد", Modifier.padding(horizontal = Space.lg, vertical = Space.sm))
         NavRow(
             "الاستعداد والتنبيه",
@@ -178,7 +186,7 @@ fun methodNameAr(id: String): String = when (id) {
 }
 
 /** The routes the settings tree opens. */
-enum class SettingsRoute { Location, Verify, Calculation, Notifications, Adhan, Awareness, Calendar, Appearance, About }
+enum class SettingsRoute { Location, Verify, Calculation, Notifications, Adhan, Awareness, Indicators, Calendar, Appearance, About }
 
 @Composable
 fun SettingsScreenTitle(text: String, subtitle: String? = null) {

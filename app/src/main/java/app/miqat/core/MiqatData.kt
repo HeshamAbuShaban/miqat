@@ -95,6 +95,18 @@ object MiqatData {
         emptyList()
     }
 
+    /** The donor's integer key for an IANA zone name (e.g. Asia/Riyadh → 327). */
+    fun zoneIdFor(context: Context, zoneName: String): Int? {
+        if (zoneName.isBlank()) return null
+        return try {
+            open(context).rawQuery(
+                "SELECT id FROM zones WHERE name = ? LIMIT 1", arrayOf(zoneName),
+            ).use { c -> if (c.moveToFirst()) c.getInt(0) else null }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     /**
      * The UTC offset (hours) in force for a zone at a given instant — DST
      * included. The donor's table stores one row per transition, with the

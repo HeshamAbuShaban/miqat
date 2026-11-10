@@ -530,6 +530,76 @@ fun AdhanSection(state: AppState, fmt: Fmt) {
     }
 }
 
+/**
+ * INDICATORS — what the app shows, and how much of it. Hesham's rule: «too
+ * much isn't a restriction, especially when it gives value … you get to
+ * config it in the settings».
+ */
+@Composable
+fun IndicatorsSection(state: AppState, fmt: Fmt) {
+    val d = state.display
+    Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Space.lg)) {
+        SettingsScreenTitle("المؤشرات", "ما يظهر في الشاشة الرئيسية والتقويم — كلُّها قابلة للإطفاء")
+        SectionLabel("في الرئيسية", Modifier.padding(horizontal = Space.lg))
+        ToggleRow(
+            "شريط الوعي",
+            "الآن، والوقت الذي دخل، وما يبعد عنه",
+            d.showAwarenessStrip,
+        ) { v -> state.updateDisplay(d.copy(showAwarenessStrip = v)) }
+        ToggleRow(
+            "أقرب وقت",
+            "أقرب موعد من أي نوع — صلاة أو عبادة أو سنة",
+            d.showNearestMoment,
+        ) { v -> state.updateDisplay(d.copy(showNearestMoment = v)) }
+        ToggleRow(
+            "تنبيه التوقيت الصيفي",
+            "قبل أن تتقدّم الساعة أو تتراجع",
+            d.showDstNotice,
+        ) { v -> state.updateDisplay(d.copy(showDstNotice = v)) }
+        Divider(Modifier.padding(horizontal = Space.lg, vertical = Space.md))
+        SectionLabel("في التقويم", Modifier.padding(horizontal = Space.lg))
+        ToggleRow("اليوم الهجري", null, d.calendarShowHijri) { v ->
+            state.updateDisplay(d.copy(calendarShowHijri = v))
+        }
+        ToggleRow("اليوم الميلادي", null, d.calendarShowGregorian) { v ->
+            state.updateDisplay(d.copy(calendarShowGregorian = v))
+        }
+        ToggleRow("علامات المناسبات", null, d.calendarShowEvents) { v ->
+            state.updateDisplay(d.copy(calendarShowEvents = v))
+        }
+        ToggleRow("جدول الشهر", "موعد كل يوم مع تغيّره", d.calendarShowTable) { v ->
+            state.updateDisplay(d.copy(calendarShowTable = v))
+        }
+        Spacer(Modifier.height(Space.xs))
+        Text(
+            "الموعد المعروض في جدول الشهر والانحراف السنوي",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = Space.lg),
+        )
+        PRAYER_NAMES.forEachIndexed { i, name ->
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clickable { state.updateDisplay(d.copy(calendarPrayer = i)) }
+                    .padding(vertical = Space.xs),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(name, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+                if (d.calendarPrayer == i) {
+                    Text(
+                        "مختار",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+        }
+        Spacer(Modifier.height(Space.xl))
+    }
+}
+
 @Composable
 fun AwarenessSection(state: AppState, fmt: Fmt) {
     val d = state.display

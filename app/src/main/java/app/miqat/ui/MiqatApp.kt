@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -32,6 +33,8 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import java.util.Calendar
+import java.util.TimeZone
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
@@ -41,6 +44,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -53,6 +57,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.miqat.core.Appointment
 import app.miqat.core.DayClock
+import app.miqat.core.DstInfo
+import app.miqat.core.DstTransition
 import app.miqat.core.LocalPrayerTimes
 import app.miqat.core.Moments
 import app.miqat.core.Urgency
@@ -81,6 +87,7 @@ sealed interface Route {
     data object AwarenessSettings : Route
     data object AdhanSettings : Route
     data object VerifySettings : Route
+    data object IndicatorsSettings : Route
     data object CalendarSettings : Route
     data object AppearanceSettings : Route
     data object AboutSettings : Route
@@ -158,6 +165,7 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                             SettingsRoute.Awareness -> Route.AwarenessSettings
                             SettingsRoute.Adhan -> Route.AdhanSettings
                             SettingsRoute.Verify -> Route.VerifySettings
+                            SettingsRoute.Indicators -> Route.IndicatorsSettings
                             SettingsRoute.Calendar -> Route.CalendarSettings
                             SettingsRoute.Appearance -> Route.AppearanceSettings
                             SettingsRoute.About -> Route.AboutSettings
@@ -180,6 +188,9 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                     NotificationsSection(state, fmt)
                 }
                 Route.VerifySettings -> VerifyScreen(state, fmt) { sub = null }
+                Route.IndicatorsSettings -> MiqatScaffold("الإعدادات", onBack = { sub = null }) {
+                    IndicatorsSection(state, fmt)
+                }
                 Route.AdhanSettings -> MiqatScaffold("الإعدادات", onBack = { sub = null }) {
                     AdhanSection(state, fmt)
                 }
@@ -229,6 +240,7 @@ fun rememberNowState(): State<Long> {
  */
 @Composable
 fun HomeScreen(state: AppState, fmt: Fmt, onOpenTimes: () -> Unit) {
+    val context = LocalContext.current
     val nowState = rememberNowState()
     val now = nowState.value
     val (y, m, d) = state.cityDate(now)
@@ -294,39 +306,20 @@ fun HomeScreen(state: AppState, fmt: Fmt, onOpenTimes: () -> Unit) {
             Spacer(Modifier.height(Space.md))
         }
 
-        // next up — a single line, not a stack of cards
-        if (seg != null) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .clickable { onOpenTimes() }
-                    .padding(vertical = Space.sm),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column {
-                    Text("المتبقي", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(
-                        seg.next.labelAr + if (seg.nextIsTomorrow) " (غداً)" else "",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                }
-                Text(
-                    fmt.hms(seg.remainingSeconds),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.tertiary,
-                )
-            }
-            Divider()
-            Row(
-                Modifier.fillMaxWidth().padding(vertical = Space.sm),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Text("منذ ${seg.current.labelAr}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(fmt.hms(seg.elapsedSeconds), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Divider()
+        // the awareness strip (neovim's "how far are you from the lines") —
+        // ONE place that says: now, what time has entered, and what is next
+        if (state.display.showAwarenessStrip) {
+            val timeline = rememberTimeline(state, now)
+            AwarenessStrip(
+                state = state,
+                fmt = fmt,
+                nowMillis = now,
+                appointments = PRAYER_KEY.mapIndexed { i, k ->
+                    Appointment(k, PRAYER_NAMES[i], times.list[i])
+                },
+                moments = timeline,
+            )
+            Spacer(Modifier.height(Space.md))
         }
 
         // today's times — one compact strip, the schedule at a glance
@@ -358,6 +351,50 @@ fun HomeScreen(state: AppState, fmt: Fmt, onOpenTimes: () -> Unit) {
             }
         }
         Divider()
+
+        // the daylight-saving notice — the clock will change, and that moves
+        // every prayer's wall-clock time with it
+        if (state.display.showDstNotice) {
+            val zoneId = state.city.zoneId
+            val transition = if (zoneId != null) {
+                DstInfo.nextTransition(context, zoneId, now)
+            } else null
+            if (transition != null) {
+                val days = (transition.atMillis - now) / 86_400_000L
+                if (days in 0..30) {
+                    val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+                        timeInMillis = transition.atMillis
+                    }
+                    val d = cal.get(Calendar.DAY_OF_MONTH)
+                    val m = cal.get(Calendar.MONTH) + 1
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .background(
+                                MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = .45f),
+                                RoundedCornerShape(Radius.row),
+                            )
+                            .padding(Space.md),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Box(
+                            Modifier
+                                .size(7.dp)
+                                .background(MaterialTheme.colorScheme.tertiary, CircleShape),
+                        )
+                        Spacer(Modifier.width(Space.md))
+                        Text(
+                            "تغيّر التوقيت ${transition.directionAr}: الساعة " +
+                                "${DstTransition.fmtHours(kotlin.math.abs(transition.deltaHours))} " +
+                                "يوم ${fmt.n(d)}/${fmt.n(m)} — فتتغيّر مواعيد الصلوات في تلك الليلة.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                    Spacer(Modifier.height(Space.md))
+                }
+            }
+        }
 
         // the nearest moment of ANY kind — the next prayer, the next window,
         // whatever comes first (the app's one piece of "intelligence" on home)

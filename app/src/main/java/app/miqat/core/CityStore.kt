@@ -36,7 +36,9 @@ data class City(
 object CityStore {
 
     /** Default home city — rendered instantly before the store opens. */
-    val MAKKAH = City("Makkah", "مكة", "SA", 21.42664, 39.82563, 3.0, "makkah", "Asia/Riyadh", 9)
+    // the zone id is resolved by NAME at runtime (MiqatData.zoneIdFor) — a
+    // guessed id would silently apply another zone's offset
+    val MAKKAH = City("Makkah", "مكة", "SA", 21.42664, 39.82563, 3.0, "makkah", "Asia/Riyadh", null)
 
     private const val ASSET = "cities-v3.db"
 
