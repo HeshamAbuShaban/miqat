@@ -78,21 +78,25 @@ object UserSettings {
 
     fun saveCity(context: Context, city: City) {
         prefs(context).edit().putString(
-            K_CITY, listOf(city.en, city.ar, city.countryCode, city.lat, city.lon, city.utcOffset, city.calcMethod)
-                .joinToString("\u0001")
+            K_CITY, listOf(
+                city.en, city.ar, city.countryCode, city.lat, city.lon, city.utcOffset,
+                city.calcMethod, city.zone, city.zoneId?.toString() ?: "",
+            ).joinToString("\u0001")
         ).apply()
     }
 
     fun city(context: Context): City? {
         val s = prefs(context).getString(K_CITY, null) ?: return null
         val p = s.split("\u0001")
-        if (p.size != 7) return null
+        if (p.size < 7) return null
         return City(
             en = p[0], ar = p[1], countryCode = p[2],
             lat = p[3].toDoubleOrNull() ?: return null,
             lon = p[4].toDoubleOrNull() ?: return null,
             utcOffset = p[5].toDoubleOrNull() ?: return null,
             calcMethod = p[6],
+            zone = p.getOrElse(7) { "" },
+            zoneId = p.getOrElse(8) { "" }.toIntOrNull(),
         )
     }
 

@@ -90,7 +90,7 @@ fun CityPickerSheet(
             }
             LazyColumn(Modifier.fillMaxWidth().heightIn(max = 420.dp)) {
                 items(results) { c ->
-                    CityResultRow(c, fromCity, now, arabicIndic) { onSelect(c) }
+                    CityResultRow(c, fromCity, now, arabicIndic, context) { onSelect(c) }
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 }
             }
@@ -106,7 +106,10 @@ fun CityPickerSheet(
 }
 
 @Composable
-private fun CityResultRow(c: City, from: City, now: Long, arabicIndic: Boolean, onClick: () -> Unit) {
+private fun CityResultRow(
+    c: City, from: City, now: Long, arabicIndic: Boolean,
+    context: android.content.Context, onClick: () -> Unit,
+) {
     val localMinute = (((utcHourOfDay(now) + c.utcOffset) % 24.0 + 24.0) % 24.0 * 60).toInt()
     val km = Qibla.distanceKm(from.lat, from.lon, c.lat, c.lon)
     Row(
@@ -122,7 +125,7 @@ private fun CityResultRow(c: City, from: City, now: Long, arabicIndic: Boolean, 
             Text(
                 buildString {
                     if (c.ar.isNotBlank() && c.en.isNotBlank()) append("${c.en} · ")
-                    append(c.countryCode)
+                    append(app.miqat.core.MiqatData.countryNameAr(context, c.countryCode))
                     append(" · التوقيت الآن ${app.miqat.core.NumFmt.hhmm(localMinute, arabicIndic, false)}")
                     append(" · ")
                     append(if (km < 1.0) "أقل من ١ كم" else "${app.miqat.core.NumFmt.n(km.toInt(), arabicIndic)} كم")

@@ -65,6 +65,43 @@ object NotificationPoster {
             .build()
     }
 
+    /** Posts a notification whose body carries a text and its citation. */
+    fun postWithText(
+        context: Context,
+        kind: NotifyKind,
+        label: String,
+        slot: Int,
+        quiet: Boolean,
+        text: String,
+        citation: String?,
+    ) {
+        val nm = context.getSystemService(NotificationManager::class.java) ?: return
+        NotifyChannels.ensure(context)
+        val prefs = NotificationPrefsStore.load(context)
+        val body = if (citation != null) "$text\n$citation" else text
+        val builder = NotificationCompat.Builder(context, channelFor(kind))
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(titleFor(kind, label))
+            .setContentText(body)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+            .setPriority(priorityFor(kind))
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setAutoCancel(true)
+        val contentIntent = PendingIntent.getActivity(
+            context, slot + 1,
+            Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            },
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        builder.setContentIntent(contentIntent)
+        if (!quiet) builder.setDefaults(NotificationCompat.DEFAULT_SOUND)
+        try {
+            nm.notify(notificationId(kind, slot), builder.build())
+        } catch (_: SecurityException) {
+        }
+    }
+
     fun post(context: Context, kind: NotifyKind, label: String, slot: Int, quiet: Boolean = false) {
         val nm = context.getSystemService(NotificationManager::class.java) ?: return
         NotifyChannels.ensure(context)
@@ -184,6 +221,17 @@ object NotificationPoster {
             NotifyKind.MOTIVATIONAL -> motivational ?: ""
         }
         return base
+    }
+
+    /**
+     * The reminder payload: the donor's own dhikr for that prayer, with the
+     * verified citation printed under it (nothing ships uncited).
+     */
+    fun reminderPayload(context: Context, slot: Int): Pair<String, String?>? {
+        val events = MiqatData.prayerEvents(context, slot)
+        val event = events.firstOrNull { AdhkarCitations.citationFor(it.id) != null } ?: return null
+        val citation = AdhkarCitations.lineFor(event.id)
+        return event.messageAr to citation
     }
 
     /** The contextual motivational line for today (Islamic day). */

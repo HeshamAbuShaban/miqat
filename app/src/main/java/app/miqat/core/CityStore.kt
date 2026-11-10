@@ -17,6 +17,10 @@ data class City(
     val lon: Double,
     val utcOffset: Double,
     val calcMethod: String,
+    /** The IANA zone id (e.g. Asia/Riyadh) — for the DST-correct offset. */
+    val zone: String = "",
+    /** The donor's integer key into the timezone table. */
+    val zoneId: Int? = null,
 )
 
 /**
@@ -32,9 +36,9 @@ data class City(
 object CityStore {
 
     /** Default home city — rendered instantly before the store opens. */
-    val MAKKAH = City("Makkah", "مكة", "SA", 21.42664, 39.82563, 3.0, "makkah")
+    val MAKKAH = City("Makkah", "مكة", "SA", 21.42664, 39.82563, 3.0, "makkah", "Asia/Riyadh", 9)
 
-    private const val ASSET = "cities-v2.db"
+    private const val ASSET = "cities-v3.db"
 
     @Volatile
     private var db: SQLiteDatabase? = null
@@ -62,11 +66,12 @@ object CityStore {
         }
     }
 
-    private const val COLS = "en, ar, country, lat, lon, tz, method"
+    private const val COLS = "en, ar, country, lat, lon, tz, method, zone, zone_id"
 
     private fun read(row: android.database.Cursor): City = City(
         row.getString(0), row.getString(1), row.getString(2),
         row.getDouble(3), row.getDouble(4), row.getDouble(5), row.getString(6),
+        row.getString(7), if (row.isNull(8)) null else row.getInt(8),
     )
 
     /**
@@ -82,13 +87,18 @@ object CityStore {
             val qLower = q.lowercase()
             val d = open(context)
             val out = ArrayList<City>(limit)
+            // the Arabic side is searched on the NORMALIZED column (ar_lower),
+            // so «الاهرام» finds «الأهرام» — and it is indexed
+            val qFold = ArabicFold.fold(q)
             d.rawQuery(
                 """SELECT $COLS FROM cities
                    WHERE en_lower LIKE ?||'%' OR en_lower LIKE '%'||?||'%'
-                      OR ar LIKE '%'||?||'%'
-                   ORDER BY (en_lower LIKE ?||'%') DESC, LENGTH(en), en
+                      OR ar_lower LIKE ?||'%' OR ar_lower LIKE '%'||?||'%'
+                   ORDER BY (en_lower LIKE ?||'%') DESC,
+                            (ar_lower LIKE ?||'%') DESC,
+                            LENGTH(en), en
                    LIMIT ?""",
-                arrayOf(qLower, qLower, q, qLower, limit.toString())
+                arrayOf(qLower, qLower, qFold, qFold, qLower, qFold, limit.toString())
             ).use { c ->
                 while (c.moveToNext()) out.add(read(c))
             }

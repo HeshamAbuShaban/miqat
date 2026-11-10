@@ -62,14 +62,15 @@ fun CalendarScreen(
     var month by remember { mutableIntStateOf(cm) }
 
     // the visible month's grid — computed lazily, only this month
+    val context = androidx.compose.ui.platform.LocalContext.current
     val cells = remember(year, month, state.city.lat, state.city.lon, state.utcOffset) {
-        monthGrid(year, month, state.display.hijriOffsetDays)
+        monthGrid(context, year, month, state.display.hijriOffsetDays)
     }
     val hijriLabel = cells.firstOrNull { it != null }?.let {
         Hijri.MONTHS_AR[(it.hijri.hMonth - 1).coerceIn(0, 11)]
     }
     val events = remember(year, month, state.display.hijriOffsetDays) {
-        monthEvents(year, month, state.display.hijriOffsetDays)
+        monthEvents(context, year, month, state.display.hijriOffsetDays)
     }
 
     Column(
@@ -262,7 +263,7 @@ private data class MonthEvent(
     val hijriMonth: Int,
 )
 
-private fun monthGrid(year: Int, month: Int, hijriOffset: Int): List<Cell?> {
+private fun monthGrid(context: android.content.Context, year: Int, month: Int, hijriOffset: Int): List<Cell?> {
     val cal = Calendar.getInstance().apply {
         clear()
         set(year, month - 1, 1)
@@ -281,7 +282,7 @@ private fun monthGrid(year: Int, month: Int, hijriOffset: Int): List<Cell?> {
                 isToday = today.get(Calendar.YEAR) == year &&
                     today.get(Calendar.MONTH) + 1 == month &&
                     today.get(Calendar.DAY_OF_MONTH) == d,
-                event = eventTitle(hijri),
+                event = eventTitle(context, hijri),
             ),
         )
     }
@@ -289,24 +290,33 @@ private fun monthGrid(year: Int, month: Int, hijriOffset: Int): List<Cell?> {
     return cells
 }
 
-private fun eventTitle(h: IslamicDay): String? = when {
-    IslamicDays.isEidAlFitr(h) -> "عيد الفطر"
-    IslamicDays.isEidAlAdha(h) -> "عيد الأضحى"
-    IslamicDays.isDayOfArafah(h) -> "يوم عرفة"
-    IslamicDays.isAshura(h) -> "عاشوراء"
-    IslamicDays.isTasuaa(h) -> "تاسوعاء"
-    IslamicDays.isWhiteDays(h) -> "أيام البيض"
-    IslamicDays.isEveOfRamadan(h) -> "ليلة رمضان"
-    else -> null
+/**
+ * The event names come from the donor's own `day_events` table (59 rows, with
+ * the Arabic wording) — with the engine's own rules as the fallback.
+ */
+private fun eventTitle(context: android.content.Context, h: IslamicDay): String? {
+    val fromTable = app.miqat.core.MiqatData.dayEvents(context, h.hMonth)
+        .firstOrNull { h.hDay in it.startDay..it.endDay }
+    if (fromTable != null) return fromTable.nameAr
+    return when {
+        IslamicDays.isEidAlFitr(h) -> "عيد الفطر"
+        IslamicDays.isEidAlAdha(h) -> "عيد الأضحى"
+        IslamicDays.isDayOfArafah(h) -> "يوم عرفة"
+        IslamicDays.isAshura(h) -> "عاشوراء"
+        IslamicDays.isTasuaa(h) -> "تاسوعاء"
+        IslamicDays.isWhiteDays(h) -> "أيام البيض"
+        IslamicDays.isEveOfRamadan(h) -> "ليلة رمضان"
+        else -> null
+    }
 }
 
-private fun monthEvents(year: Int, month: Int, hijriOffset: Int): List<MonthEvent> {
+private fun monthEvents(context: android.content.Context, year: Int, month: Int, hijriOffset: Int): List<MonthEvent> {
     val out = mutableListOf<MonthEvent>()
     val cal = Calendar.getInstance().apply { clear(); set(year, month - 1, 1) }
     val days = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
     for (d in 1..days) {
         val h = Hijri.at(year, month, d)
-        val title = eventTitle(h) ?: continue
+        val title = eventTitle(context, h) ?: continue
         out.add(MonthEvent(title, d, h.hDay, h.hMonth))
     }
     return out

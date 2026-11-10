@@ -17,6 +17,7 @@ import app.miqat.core.NotificationPrefsStore
 import app.miqat.core.PrayerAdjusts
 import app.miqat.core.PrayerTimes
 import app.miqat.core.LocationFix
+import app.miqat.core.MiqatData
 import app.miqat.core.UserSettings
 import java.util.Calendar
 import java.util.TimeZone
@@ -85,9 +86,27 @@ class AppState(context: Context) {
     /** Effective calculation method (user override wins over the city's). */
     val method: CalcMethod get() = MethodTable[display.methodOverride ?: city.calcMethod]
 
-    /** Effective UTC offset in hours (manual override wins). */
-    val utcOffset: Double
-        get() = display.manualUtcOffsetMinutes?.let { it / 60.0 } ?: city.utcOffset
+    /**
+     * The UTC offset in force at [epochMillis] — DST included, from the
+     * bundled timezone table (the S2 "own tz table"), unless the user set a
+     * manual override.
+     */
+    fun utcOffsetAt(epochMillis: Long): Double {
+        display.manualUtcOffsetMinutes?.let { return it / 60.0 }
+        val zoneId = city.zoneId
+        if (zoneId != null) {
+            val fromTable = MiqatData.utcOffsetHours(appContext, zoneId, epochMillis)
+            if (fromTable != null) return fromTable
+        }
+        return city.utcOffset
+    }
+
+    /** The offset right now (the common case). */
+    val utcOffset: Double get() = utcOffsetAt(System.currentTimeMillis())
+
+    /** Is daylight saving in force right now for the picked city? */
+    val isDst: Boolean
+        get() = city.zoneId?.let { MiqatData.isDst(appContext, it, System.currentTimeMillis()) } ?: false
 
     /**
      * The fix the times are computed from: the device GPS fix when the user
@@ -96,11 +115,14 @@ class AppState(context: Context) {
      */
     val locationFix: app.miqat.core.LocationFix
         get() = gpsFix
-            ?: app.miqat.core.LocationFix(city.lat, city.lon, utcOffset, app.miqat.core.LocationSource.MANUAL)
+            ?: app.miqat.core.LocationFix(
+                city.lat, city.lon, utcOffset, app.miqat.core.LocationSource.MANUAL,
+            )
 
     val confidence: app.miqat.core.TimeConfidence get() = locationFix.confidence
 
-    fun location(): Location = Location(locationFix.latitude, locationFix.longitude, locationFix.utcOffsetHours)
+    fun location(epochMillis: Long = System.currentTimeMillis()): Location =
+        Location(locationFix.latitude, locationFix.longitude, utcOffsetAt(epochMillis))
 
     /** Refresh the device fix (called after the permission is granted). */
     fun refreshGps() {
@@ -117,7 +139,16 @@ class AppState(context: Context) {
 
     /** Engine times for a date, WITHOUT the user's manual adjusts. */
     fun rawTimes(year: Int, month: Int, day: Int): LocalPrayerTimes =
-        PrayerTimes.compute(year, month, day, location(), method)
+        PrayerTimes.compute(year, month, day, location(epochOfLocalNoon(year, month, day)), method)
+
+    /** The epoch of local noon on a date — the reference point for the offset. */
+    private fun epochOfLocalNoon(year: Int, month: Int, day: Int): Long {
+        val utc = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            clear()
+            set(year, month - 1, day, 12, 0, 0)
+        }
+        return utc.timeInMillis
+    }
 
     /** Engine times + the user's manual minute-adjusts (what the UI shows). */
     fun times(year: Int, month: Int, day: Int): LocalPrayerTimes {
@@ -136,7 +167,7 @@ class AppState(context: Context) {
 
     fun cityCalendar(epochMillis: Long): Calendar {
         val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-        cal.timeInMillis = epochMillis + (utcOffset * 3600_000.0).toLong()
+        cal.timeInMillis = epochMillis + (utcOffsetAt(epochMillis) * 3600_000.0).toLong()
         return cal
     }
 

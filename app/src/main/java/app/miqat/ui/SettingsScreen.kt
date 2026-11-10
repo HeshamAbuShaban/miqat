@@ -59,6 +59,12 @@ fun SettingsScreen(
             onClick = { onOpen(SettingsRoute.Location) },
         )
         Divider(Modifier.padding(horizontal = Space.lg))
+        NavRow(
+            "تحقّق من المواعيد",
+            "أدخل جدول مدينتك الرسمي وقارنه بالحساب",
+            onClick = { onOpen(SettingsRoute.Verify) },
+        )
+        Divider(Modifier.padding(horizontal = Space.lg))
 
         SectionLabel("الحساب", Modifier.padding(horizontal = Space.lg, vertical = Space.sm))
         NavRow(
@@ -172,7 +178,7 @@ fun methodNameAr(id: String): String = when (id) {
 }
 
 /** The routes the settings tree opens. */
-enum class SettingsRoute { Location, Calculation, Notifications, Adhan, Awareness, Calendar, Appearance, About }
+enum class SettingsRoute { Location, Verify, Calculation, Notifications, Adhan, Awareness, Calendar, Appearance, About }
 
 @Composable
 fun SettingsScreenTitle(text: String, subtitle: String? = null) {

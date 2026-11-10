@@ -80,6 +80,7 @@ sealed interface Route {
     data object NotificationsSettings : Route
     data object AwarenessSettings : Route
     data object AdhanSettings : Route
+    data object VerifySettings : Route
     data object CalendarSettings : Route
     data object AppearanceSettings : Route
     data object AboutSettings : Route
@@ -156,6 +157,7 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                             SettingsRoute.Notifications -> Route.NotificationsSettings
                             SettingsRoute.Awareness -> Route.AwarenessSettings
                             SettingsRoute.Adhan -> Route.AdhanSettings
+                            SettingsRoute.Verify -> Route.VerifySettings
                             SettingsRoute.Calendar -> Route.CalendarSettings
                             SettingsRoute.Appearance -> Route.AppearanceSettings
                             SettingsRoute.About -> Route.AboutSettings
@@ -177,6 +179,7 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                 Route.NotificationsSettings -> MiqatScaffold("الإعدادات", onBack = { sub = null }) {
                     NotificationsSection(state, fmt)
                 }
+                Route.VerifySettings -> VerifyScreen(state, fmt) { sub = null }
                 Route.AdhanSettings -> MiqatScaffold("الإعدادات", onBack = { sub = null }) {
                     AdhanSection(state, fmt)
                 }

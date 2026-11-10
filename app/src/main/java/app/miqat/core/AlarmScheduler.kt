@@ -298,7 +298,19 @@ class AlarmReceiver : BroadcastReceiver() {
         val label = intent.getStringExtra("label") ?: "الموعد"
         val slot = intent.getIntExtra("slot", -1)
         val quiet = intent.getBooleanExtra("quiet", false)
-        NotificationPoster.post(context, kind, label, slot, quiet)
+        if (kind == NotifyKind.REMINDER) {
+            // the reminder carries the dhikr (with its verified citation)
+            val payload = NotificationPoster.reminderPayload(context, slot)
+            if (payload != null) {
+                NotificationPoster.postWithText(
+                    context, kind, label, slot, quiet, payload.first, payload.second,
+                )
+            } else {
+                NotificationPoster.post(context, kind, label, slot, quiet)
+            }
+        } else {
+            NotificationPoster.post(context, kind, label, slot, quiet)
+        }
         // the adhan itself: a foreground service so it is heard with the phone
         // in a pocket
         if (kind == NotifyKind.DIRECT && !quiet) {
