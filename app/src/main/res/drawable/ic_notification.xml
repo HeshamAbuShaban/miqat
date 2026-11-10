@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The notification glyph: the «ميقات» wordmark arc reduced to a mark.
+     Monochrome, safe for the status bar (API 21+). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#FFFFFF">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M3.5,18.2c3.1,-6.2 6.3,-9.3 9.6,-9.3c2.4,0 4.6,1.2 7.4,3.7c-1.1,-3.9 -3.7,-6.1 -7.6,-6.1c-3.6,0 -6.7,3.1 -9.4,11.7z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M11.2,4.4m-1.7,0a1.7,1.7 0,1 1,3.4 0a1.7,1.7 0,1 1,-3.4 0" />
+</vector>

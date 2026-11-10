@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Miqat</string>
+    <!-- The app is Arabic-first (RTL is forced, the UI is Arabic): the default
+         launcher label is Arabic. values-en keeps the Latin name for English
+         locales. -->
+    <string name="app_name">الميقات</string>
 </resources>

@@ -1,8 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- S0 skeleton: engine demo only. Scheduling/location/audio permissions arrive
-         with S3 (see ROADMAP) — request when used, like the donor's alarm ladder. -->
+    <!-- S3 notification machinery: exact alarms for the appointed times,
+         re-armed on boot/time changes. No location permission, no network. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- An alarm app is the legitimate use case for exact alarms (the adhan
+         must not drift). USE_EXACT_ALARM (API 33+) is install-granted for alarm
+         apps; the revocable SCHEDULE_EXACT_ALARM covers older releases. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+
     <application
         android:label="@string/app_name"
         android:theme="@style/Theme.Miqat"
@@ -19,5 +30,25 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <receiver
+            android:name=".core.AlarmReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="app.miqat.action.ALARM" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".core.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.intent.action.DATE_CHANGED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

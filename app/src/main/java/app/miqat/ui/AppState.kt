@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import app.miqat.core.CalcMethod
 import app.miqat.core.City
+import app.miqat.core.AlarmScheduler
 import app.miqat.core.CityStore
 import app.miqat.core.DisplayPrefs
 import app.miqat.core.LocalPrayerTimes
@@ -46,6 +47,8 @@ class AppState(context: Context) {
         display = UserSettings.display(appContext)
         notifications = NotificationPrefsStore.load(appContext)
         loaded = true
+        // arm the alarms for the appointed times (S3)
+        AlarmScheduler.reschedule(appContext)
     }
 
     // --- mutations (persist immediately) -----------------------------------
@@ -53,21 +56,25 @@ class AppState(context: Context) {
     fun selectCity(c: City) {
         city = c
         UserSettings.saveCity(appContext, c)
+        AlarmScheduler.reschedule(appContext)
     }
 
     fun updateAdjusts(a: PrayerAdjusts) {
         adjusts = a
         UserSettings.saveAdjusts(appContext, a)
+        AlarmScheduler.reschedule(appContext)
     }
 
     fun updateDisplay(d: DisplayPrefs) {
         display = d
         UserSettings.saveDisplay(appContext, d)
+        AlarmScheduler.reschedule(appContext)
     }
 
     fun updateNotifications(n: NotificationPrefs) {
         notifications = n
         NotificationPrefsStore.save(appContext, n)
+        AlarmScheduler.reschedule(appContext)
     }
 
     // --- derived -----------------------------------------------------------

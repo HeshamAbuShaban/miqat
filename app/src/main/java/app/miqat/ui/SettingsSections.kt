@@ -1,7 +1,9 @@
 package app.miqat.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.Alignment
@@ -9,14 +11,22 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.RoundedCornerShape
 import app.miqat.core.MethodTable
 import app.miqat.core.NotifyKind
 
@@ -81,13 +91,7 @@ fun CalculationSection(state: AppState, fmt: Fmt) {
         )
         Divider(Modifier.padding(horizontal = Space.lg, vertical = Space.md))
         SectionLabel("طريقة بديلة", Modifier.padding(horizontal = Space.lg))
-        Text(
-            "اضغط لاختيار طريقة الحساب المحفوظة داخل التطبيق — بلا إنترنت.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = Space.lg),
-        )
-        MethodPicker(state)
+        MethodPickerRow(state)
         Divider(Modifier.padding(horizontal = Space.lg, vertical = Space.md))
         SectionLabel("تعديل يدوي بالدقائق", Modifier.padding(horizontal = Space.lg))
         Text(
@@ -111,45 +115,96 @@ fun CalculationSection(state: AppState, fmt: Fmt) {
 }
 
 @Composable
-private fun MethodPicker(state: AppState) {
+private fun MethodPickerRow(state: AppState) {
+    var open by remember { mutableStateOf(false) }
+    val current = state.display.methodOverride ?: state.city.calcMethod
+    NavRow(
+        "الطريقة المستخدمة",
+        methodNameAr(current) + if (state.display.methodOverride != null) " (بديلة)" else " (طريقة المدينة)",
+        onClick = { open = true },
+    )
+    if (open) {
+        MethodPickerDialog(
+            current = current,
+            onPick = { id ->
+                state.updateDisplay(state.display.copy(methodOverride = id))
+                open = false
+            },
+            onDismiss = { open = false },
+        )
+    }
+}
+
+/** The method chooser as its own dialog — 59 options need search, not a scroll. */
+@Composable
+private fun MethodPickerDialog(
+    current: String,
+    onPick: (String) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var query by remember { mutableStateOf("") }
     val ids = remember { MethodTable.ids().sorted() }
-    Column(Modifier.padding(horizontal = Space.lg, vertical = Space.sm)) {
-        ids.forEach { id ->
-            val selected = (state.display.methodOverride ?: state.city.calcMethod) == id
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .clickable { state.updateDisplay(state.display.copy(methodOverride = id)) }
-                    .padding(vertical = Space.xs),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    methodNameAr(id),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                )
-                if (selected) {
-                    Text(
-                        "مفعّلة",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
+    val filtered = remember(query) {
+        val q = query.trim().lowercase()
+        if (q.isEmpty()) ids else ids.filter {
+            it.contains(q) || methodNameAr(it).contains(query.trim())
+        }
+    }
+    Dialog(onDismissRequest = onDismiss) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .heightIn(max = 560.dp)
+                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(22.dp))
+                .padding(Space.lg),
+        ) {
+            Text(
+                "طريقة الحساب",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Spacer(Modifier.height(Space.sm))
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                placeholder = { Text("ابحث…", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+            )
+            Spacer(Modifier.height(Space.sm))
+            LazyColumn(Modifier.weight(1f, fill = false)) {
+                items(filtered) { id ->
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable { onPick(id) }
+                            .padding(vertical = Space.md),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            methodNameAr(id),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = if (id == current) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurface,
+                        )
+                        if (id == current) {
+                            Text(
+                                "مفعّلة",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                    Divider()
                 }
             }
-        }
-        if (state.display.methodOverride != null) {
+            Spacer(Modifier.height(Space.sm))
             Row(
-                Modifier
-                    .fillMaxWidth()
-                    .clickable { state.updateDisplay(state.display.copy(methodOverride = null)) }
-                    .padding(vertical = Space.sm),
+                Modifier.fillMaxWidth().clickable { onDismiss() },
+                horizontalArrangement = Arrangement.Center,
             ) {
-                Text(
-                    "العودة إلى طريقة المدينة",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.tertiary,
-                )
+                Text("إغلاق", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyLarge)
             }
         }
     }
@@ -157,7 +212,58 @@ private fun MethodPicker(state: AppState) {
 
 @Composable
 fun NotificationsSection(state: AppState, fmt: Fmt) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val n = state.notifications
+    // Android 13+ asks in CONTEXT: when the user turns a kind on (or previews
+    // it), we explain why the permission is needed and ask for it there.
+    val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (granted) {
+            app.miqat.core.NotificationPoster.preview(context, NotifyKind.DIRECT, "الظهر")
+        }
+    }
+    var rationale by remember { mutableStateOf(false) }
+
+    fun ensurePermission(onGranted: () -> Unit) {
+        if (android.os.Build.VERSION.SDK_INT < 33 ||
+            androidx.core.content.ContextCompat.checkSelfPermission(
+                context, android.Manifest.permission.POST_NOTIFICATIONS,
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            onGranted()
+        } else {
+            rationale = true
+        }
+    }
+
+    if (rationale) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { rationale = false },
+            title = { Text("السماح بالإشعارات") },
+            text = {
+                Text(
+                    "يحتاج التطبيق إذن الإشعارات ليوقظك عند دخول وقت الصلاة. " +
+                        "لا يُرسل أي شيء إلى أي جهة — الإشعار على جهازك وحده."
+                )
+            },
+            confirmButton = {
+                Text(
+                    "السماح",
+                    modifier = Modifier.clickable {
+                        permissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                        rationale = false
+                    },
+                )
+            },
+            dismissButton = {
+                Text(
+                    "لاحقاً",
+                    modifier = Modifier.clickable { rationale = false },
+                )
+            },
+        )
+    }
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Space.lg)) {
         SettingsScreenTitle("الإشعارات", "أربعة أنواع: تمهيدية · مباشرة · تذكيرية · تحفيزية")
         ToggleRow(
@@ -169,7 +275,13 @@ fun NotificationsSection(state: AppState, fmt: Fmt) {
             "مباشرة",
             "الأذان عند الموعد",
             n.kindOn(NotifyKind.DIRECT),
-        ) { v -> state.updateNotifications(n.copy(kindEnabled = n.kindEnabled + (NotifyKind.DIRECT to v))) }
+        ) { v ->
+            if (v) ensurePermission {
+                state.updateNotifications(n.copy(kindEnabled = n.kindEnabled + (NotifyKind.DIRECT to v)))
+            } else {
+                state.updateNotifications(n.copy(kindEnabled = n.kindEnabled + (NotifyKind.DIRECT to v)))
+            }
+        }
         ToggleRow(
             "تذكيرية",
             "بعد الموعد بـ ${fmt.n(n.reminderDelayMinutes)} دقيقة",
@@ -198,10 +310,34 @@ fun NotificationsSection(state: AppState, fmt: Fmt) {
             }
         }
         Divider(Modifier.padding(horizontal = Space.lg, vertical = Space.md))
+        // previews («معاينة» — the setting must show its consequence before you
+        // keep it; the sound/vibration you hear here is the one you will get)
+        NavRow("معاينة الأذان", "صوت واهتزاز وقناة الإشعار المباشر", onClick = {
+            ensurePermission {
+                app.miqat.core.NotificationPoster.preview(context, NotifyKind.DIRECT, "الظهر")
+            }
+        })
+        Divider(Modifier.padding(horizontal = Space.lg))
+        NavRow("معاينة التذكير", "ما يصل بعد الموعد", onClick = {
+            app.miqat.core.NotificationPoster.preview(context, NotifyKind.REMINDER, "الظهر")
+        })
+        Divider(Modifier.padding(horizontal = Space.lg))
+        NavRow("معاينة المحتوى التحفيزي", "ما يرافق الإشعارات الأخرى", onClick = {
+            app.miqat.core.NotificationPoster.preview(context, NotifyKind.MOTIVATIONAL, "")
+        })
+        Divider(Modifier.padding(horizontal = Space.lg))
         ToggleRow("صوت الأذان", null, n.adhanSound) { v -> state.updateNotifications(n.copy(adhanSound = v)) }
         ToggleRow("الاهتزاز", null, n.vibrate) { v -> state.updateNotifications(n.copy(vibrate = v)) }
         ToggleRow("إشعار ملء الشاشة", "تنبيه يوقف الساعة بنقرة", n.fullScreenAlarm) { v -> state.updateNotifications(n.copy(fullScreenAlarm = v)) }
-        ToggleRow("عدّاد دائم", "إشعار مستمر بالمتبقي", n.continuousNotification) { v -> state.updateNotifications(n.copy(continuousNotification = v)) }
+        ToggleRow(
+            "ساعات الهدوء",
+            "من ٢٢:٠٠ إلى ٠٥:٠٠ — لا إشعارات",
+            n.quietFromMinute >= 0,
+        ) { v ->
+            state.updateNotifications(
+                n.copy(quietFromMinute = if (v) 22 * 60 else -1, quietToMinute = if (v) 5 * 60 else -1)
+            )
+        }
         Spacer(Modifier.height(Space.xl))
     }
 }
