@@ -134,10 +134,16 @@ Every step cites its donor lead (teardown §).
       (research-agenda R2)
 - [ ] «Why this time» transparency screen + two warning registers (حتى لا يلبس
       على الناس / توخي وحذر) + offline timetable reconciliation (research-agenda R3)
-- [x] Calendar — DONE 2026-11-10 (R4): Gregorian + Hijri month grid computed on
-      demand, the month's events listed under it, the day screen carrying the
-      prayers, the gaps and the worship windows. REMAINING: export/share the
-      month as an image, and the regional Hijri presets
+- [x] Calendar — DONE 2026-11-10 (R4, rebuilt the same day): three views —
+      الشهر (Hijri-first cells, Gregorian secondary), جدول الشهر (every day with
+      the chosen prayer's time and its day-to-day change) and الانحراف السنوي
+      (the curve with the total change in words); the month's events listed
+      under the grid; the day screen carries the prayers, the gaps and the
+      worship windows; DST transition days are marked. REMAINING: export/share
+      the month as an image, and the regional Hijri presets
+- [x] The awareness layer — DONE 2026-11-10: the strip (now / the time that
+      entered / the distances to the neighbouring lines — the neovim idea),
+      the DST notice, and every indicator toggleable in «المؤشرات»
 - [ ] Settings tree mirroring donor completeness (per-prayer adjusts, DST,
       silent modes, formats) — donor's 13 preference screens are the checklist;
       add «التوابع» discipline: previews, computation warnings, location

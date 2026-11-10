@@ -3,6 +3,29 @@
 > One dated entry per working session (see AGENTS.md). Next agent: read ROADMAP top
 > unfinished step, then this.
 
+## 2026-11-10 (7) — The awareness layer + the calendar rebuilt (his 4th brief)
+
+- **The awareness strip** (the neovim idea, in time): «الآن ٢٠:٠٤» · «داخل وقت
+  العشاء» (the time that has ENTERED) · «منذ العشاء ٠:٥٣» · «قبل منتصف الليل
+  ٣:٢١» — the lines around you, and which one you stand on. It replaced the
+  two duplicated rows the v2 home carried (less stacking, more meaning).
+- **The calendar, rebuilt**: three views — الشهر (Hijri-first cells, the
+  Gregorian secondary and smaller), جدول الشهر (every day with the chosen
+  prayer's time AND its day-to-day change), and الانحراف السنوي (the curve
+  across the year with the TOTAL change in words: «يتأخّر حتى ٩٠ دقيقة بين
+  أبعد نقطتين في السنة» + the general trend).
+- **The DST indicators**: the next transition of the city's zone, with its
+  direction («التوقيت يتقدّم ساعة يوم ٣٠/٣ — فتتغيّر مواعيد الصلوات في تلك
+  الليلة»), marked in the calendar and announced on the home.
+- **Everything configurable** (his rule): a new «المؤشرات» settings section —
+  each indicator can be switched off, the calendar's elements (Hijri day,
+  Gregorian day, event dots) too, and the prayer the timetable/drift shows is
+  chosen there.
+- **A real bug found and fixed**: the Makkah constant carried a guessed zone
+  id, so the DST-correct offset applied another zone's rules (Fajr showed 4:10
+  instead of 5:10). Zone ids are now resolved by NAME from the timezone table.
+- 37/37 unit tests green (5 new for the drift model and the DST wording).
+
 ## 2026-11-10 (6) — Data layer v3 + verification screen + the donor's other tables
 
 - **The donor's DB carried more than the cities** — the teardown had missed four
