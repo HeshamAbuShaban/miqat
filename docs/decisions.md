@@ -2,6 +2,32 @@
 
 > One line per decision; newest first. `applicationId` `app.miqat` freezes at release.
 
+## 2026-11-10 (8) — Data layer v3: the donor's other tables, used properly
+
+The donor DB carried more than the city list, and the teardown had missed it:
+
+- `MiqatData` — the companion asset `miqat-data-v1.db`: the Arabic COUNTRY
+  names (251), the Islamic DAYS worth knowing (59, with the donor's own
+  wording), the donor's REMINDER TEXTS with their time windows (21), and the
+  TIMEZONE table (416 zones, 28,522 DST rules).
+- The city asset became `cities-v3.db`: every city now carries its IANA zone
+  id and the donor's zone key, so the app computes the DST-correct UTC offset
+  for ANY date (the S2 "own tz table" item) instead of trusting a fixed offset.
+- `ArabicFold` — the Arabic search folding (hamza, ta-marbuta, alef maqsura,
+  diacritics, tatweel). The BUILD script folds the same way, so the comparison
+  runs on an INDEXED column: «الاهرام» finds «الأهرام», «القاهره» finds
+  «القاهرة». Pinned by `ArabicFoldTest` — the first build of this column was
+  silently broken (empty folds) and the test now guards it.
+- `Reconciliation` / `OfficialTimes` — the VERIFICATION screen (R3.3): the
+  user enters their city's official timetable and the app shows the difference
+  per prayer and can adopt it as the manual adjusts. This is the honest
+  offline answer to «المعيار الذهبي هي قيم الإنترنت» — the comparison happens
+  against the user's own official data, on the device, with nothing sent
+  anywhere.
+- `AdhkarCitations` — the council verified the donor's 21 reminder texts one by
+  one; eight carry a verified number, the rest print the collection-only
+  attribution. The reminder notification now carries the dhikr WITH its source.
+
 ## 2026-11-10 (7) — Moment registry, urgency model, location source
 
 - `Moments` / `Moment` / `MomentCategory` — ONE timeline for every appointed

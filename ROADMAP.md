@@ -39,8 +39,11 @@ Every step cites its donor lead (teardown §).
 - [x] Indexed storage — DONE 2026-11-10 as **prebuilt SQLite asset, no Room**
       (decisions 2026-11-10 (2)): `assets/cities-v2.db` + `CityStore.kt`,
       copy-on-first-open, async first frame, DB-backed ranked search
-- [ ] Own tz table (donor `timezone`/`zone` design) instead of trusting ICU —
-      keeps old-device correctness
+- [x] Own tz table — DONE 2026-11-10: the donor's `zone` (416) + `timezone`
+      (28,522 DST rules) are bundled; every city carries its zone id, so the
+      UTC offset is DST-correct for any date (`AppState.utcOffsetAt`)
+- [x] Arabic-tolerant search — DONE 2026-11-10: the names are folded at BUILD
+      time into an indexed column (`ar_lower`), so «الاهرام» finds «الأهرام»
 - [ ] Seasonal corrections table (schema mirroring donor `qibla`, cleaner columns)
 - [ ] `day_events` (Islamic calendar events AR/EN) + `prayer_events` (duas/azkar
       per prayer with priority) — donor corpus already ships the text (AR/EN/FR)
@@ -167,6 +170,9 @@ Every step cites its donor lead (teardown §).
       foreground service for persistence — do better)
 - [ ] Backup/export settings (donor has `allowBackup=false` = nothing survives)
 - [ ] Per-city method auto-pick from DB default + manual override with badge
+- [x] Verification against an official timetable — DONE 2026-11-10: the user
+      enters the official times of their city and the app shows the difference
+      per prayer and can adopt it as the manual adjusts (R3.3, offline)
 - [ ] Optional community/telemetry-free update channel for corrections table
       (signed file drop, no server-side accounts)
 - [ ] Wear OS complication / tile (donor has nothing)
