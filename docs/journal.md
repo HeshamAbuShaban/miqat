@@ -42,7 +42,10 @@ steppers. Rebuilt as an app, not a screen:
   navigating (BackHandler now walks our own stack), the calendar's first
   weekday (Saturday-first offset was off by one), and the Arabic launcher label.
 - 20/20 unit tests green; parity unchanged (87.78% @ ±1m). Commits:
-  `7ed2526` (design system + navigation + calendar), `3ceb5f4` (S3 delivery).
+  `7ed2526` (design system + navigation + calendar), `3ceb5f4` (S3 delivery),
+  `9928811` + `09d698c` (docs + polish) — **and the whole stack pushed**:
+  `410bce9..09d698c main -> main` (the credential store still had his token, so
+  no new PAT was needed).
 
 ## 2026-11-10 (2) — LONG-RUN BUILD: R1/R2/R3/R5 v0 shipped + verified on emulator
 
