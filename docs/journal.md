@@ -3,6 +3,52 @@
 > One dated entry per working session (see AGENTS.md). Next agent: read ROADMAP top
 > unfinished step, then this.
 
+## 2026-11-10 (4) — Skills applied + R8–R12 (urgency, gaps, intervals, location, sunnah)
+
+Hesham's second brief (and a nudge to actually USE the skills): the remaining
+time must be unmistakable, the gaps between appointments must be visible, any
+two moments must be measurable on demand, the golden criterion for the times is
+the real location, and the sunnah's own timings (sleep, suhur, qaylula, Qur'an
+reading) belong in the app.
+
+- **Skills applied, not just read**: `unslop` (direction + 9 passes), the
+  `frontend-design` two-pass method, `mobile-android-design`. What changed:
+  the hero's hue gradient is gone (flat panel, the arc is the one rich element),
+  the ⚙ emoji became a Material icon, radii tightened to a nested scale
+  (`Radius`), tabular figures on every clock, and the app's direction is now
+  written down (nocturnal / exact / unhurried; the arc as the signature).
+- **`Moments`** — one timeline for every appointed time (prayers, sunrise,
+  worship windows, night markers, sunnah windows) in absolute minutes. Because
+  everything is a moment, the gap between two appointments is a subtraction and
+  an interval between ANY two categories is computable on demand.
+- **`Urgency`** — CALM / SOON / IMMINENT / NOW from the remaining seconds,
+  shared by the hero, the prayer rows and the notifications; thresholds in
+  settings. The countdown now CHANGES as the time approaches (amber «اقترب
+  وقت…», sunset «استعدّ لصلاة…» / «حان الآن»).
+- **`GapBridge`** — the signature detail: the time between two appointments
+  drawn as a hairline with its duration (better than the donor, per his words),
+  plus the «المدد بين المواقيت» screen with a proportional measure; which gaps
+  show is a setting.
+- **«احسب بين ميقوتين»** — any two moments, any categories (Fajr → Duha for
+  i'tikaf), with the duration and «من الآن حتى…».
+- **`LocationSource` + `TimeConfidence`** — GPS (Android LocationManager, no
+  Play Services → F-Droid clean) when the user allows it, the picked city
+  otherwise, and the app SAYS SO: «موقعك غير مُتحقَّق منه» in the settings and
+  on the prayer-detail page, with «ثقة الحساب: تقديري». No online-times mode —
+  the app computes locally and never phones home; the honest replacement is
+  verification against an official timetable (still open, R3.3).
+- **«مواقيت السنة»** — النوم، السحور، القيلولة، أوقات قراءة القرآن, computed
+  from the day.
+- **The sourcing council did its job**: it verified every narration against the
+  canonical corpus and found that THREE well-known phrasings DO NOT EXIST —
+  «ينام أحدكم حتى لا يسهر»، «إن في القيلولة شفاء»، «الإخلاص والمفلقتين في يوم
+  كأنما قرأ ثلث القرآن» — they never reached a screen. Six texts are verified
+  and ship with their numbers (Bukhari 1145/Muslim 758, Bukhari 1923/Muslim
+  1095, Bukhari 6281/6279, Muslim 804, Bukhari 5015). The gate lives in
+  `docs/sourcing-table.md`.
+- 27/27 unit tests green (7 new: moment registry + urgency), parity unchanged.
+- Commit `20ab399` (R8–R12), docs updated.
+
 ## 2026-11-10 (3) — S5 v2 REBUILD: his «سيئة وفقيرة» verdict acted on
 
 He came back and rejected the UI outright: «do i really have to tell you that
