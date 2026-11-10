@@ -3,6 +3,47 @@
 > One dated entry per working session (see AGENTS.md). Next agent: read ROADMAP top
 > unfinished step, then this.
 
+## 2026-11-10 (3) — S5 v2 REBUILD: his «سيئة وفقيرة» verdict acted on
+
+He came back and rejected the UI outright: «do i really have to tell you that
+this design is slop! … i didnt prevent you from expanding and putting each
+feature and core in its proper view, no bloated thing, this is absolutely
+stacked badly presented, you really call that a settings! where the F is
+everything... its missing tons!!!». Diagnosis was correct on my side: the home
+had become a STACK of unrelated cards and "settings" was one sheet with six
+steppers. Rebuilt as an app, not a screen:
+
+- **Architecture**: 4 top-level destinations (الرئيسية / المواقيت / التقويم /
+  الإعدادات) + sub-routes; each worship window, each prayer detail, each day
+  and each settings section is its OWN screen. Home keeps one hero and stops.
+  This supersedes decisions 2026-11-07 (2) («never new screens») — his newer
+  instruction wins and is recorded (decisions 2026-11-10 (6)).
+- **Settings tree**: 6 sections (الموقع / الحساب / الإشعارات / التقويم /
+  المظهر / عن التطبيق), each a real screen with EFFECTIVE controls; the donor's
+  59 calc methods are pickable through a searchable dialog; per-prayer minute
+  adjusts; Hijri offset; digits/clock/theme. The dead "continuous notification"
+  switch was DELETED rather than shipped — no decorative UI.
+- **Design system**: Cairo (SIL OFL, from the donor's assets) + one palette +
+  one spacing scale + light/dark, in `ui/Theme.kt`.
+- **Two root-cause bugs found by looking at real screenshots**:
+  (1) the device locale decided the layout direction, so an en-US device
+  rendered the Arabic UI mirrored (prayer order reversed, wrong nav order) —
+  RTL is now FORCED at the app level; (2) Arabic-Indic digits are bidi class
+  AN, so clock strings rendered REVERSED — every number now goes through
+  `NumFmt`, which isolates runs LTR (U+2066/2069).
+- **S3 v0 (real, not a facade)**: exact alarms for the prayers + worship
+  windows, boot/time/tz re-arm, 4+1 notification channels with Arabic names
+  (the council's map), quiet hours, in-context POST_NOTIFICATIONS request with
+  an honest rationale, and notification PREVIEWS (the «معاينة» he asked for).
+  Verified live: 11 alarms scheduled (exact=true), channels created, a posted
+  notification record (`channel=miqat_direct importance=4 category=alarm`).
+- Fixed along the way: section content rendering under the app bar (the
+  Scaffold padding was being dropped), Android BACK exiting the app instead of
+  navigating (BackHandler now walks our own stack), the calendar's first
+  weekday (Saturday-first offset was off by one), and the Arabic launcher label.
+- 20/20 unit tests green; parity unchanged (87.78% @ ±1m). Commits:
+  `7ed2526` (design system + navigation + calendar), `3ceb5f4` (S3 delivery).
+
 ## 2026-11-10 (2) — LONG-RUN BUILD: R1/R2/R3/R5 v0 shipped + verified on emulator
 
 His direction: free models only for the council, then «start the long run of

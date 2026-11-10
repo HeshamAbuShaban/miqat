@@ -2,6 +2,35 @@
 
 > One line per decision; newest first. `applicationId` `app.miqat` freezes at release.
 
+## 2026-11-10 (6) — S5 v2 ARCHITECTURE (supersedes the "cards on home" rule)
+
+Hesham's verdict on the v1 UI: «النسخة الحالية سيئة وفقيرة على كافة الأصعدة … its
+missing tons» and «كلها وزيادات اخرى سيئة … بذكاء يتم توزيعها وتنقيتها في طريقة
+عرضها». The v1 home had become a STACK of unrelated cards, and "settings" was one
+bottom sheet with six steppers. Both are now rebuilt as an APP:
+
+- **Four top-level destinations, one per core** (`TopLevel`): الرئيسية / المواقيت /
+  التقويم / الإعدادات. This SUPERSEDES decisions 2026-11-07 (2) ("never new
+  screens"): his new instruction is explicit — every feature and core gets its
+  OWN view. Home keeps ONE hero and nothing else.
+- **Every worship window is its own SCREEN** (`WorshipKind`: DUHA / SAHAR /
+  MIDNIGHT / LAST_THIRD) with window, definition, source and the
+  «تقديري بحسب الاصطلاح» chip — not a row in a list.
+- **Settings is a TREE** (`SettingsRoute`): الموقع / الحساب / الإشعارات /
+  التقويم / المظهر / عن التطبيق — each opens a real screen whose controls are
+  effective (no decorative switches: the dead "continuous notification" switch
+  was removed rather than shipped).
+- **Design system** (`ui/Theme.kt`): Cairo (SIL OFL, from the donor's own
+  assets), one spacing scale, one palette, light+dark.
+- **RTL is forced** — the layout direction is a property of the PRODUCT, not of
+  the device locale; an en-US device previously rendered the Arabic UI mirrored
+  (prayer order reversed). This was the «اللغة الممزوجة» complaint, fixed at
+  the root.
+- **All numbers are Arabic-Indic by default** and isolated LTR (U+2066/2069) so
+  a clock never renders reversed — `NumFmt` is the single entry point.
+- `AppState` is the single source of truth; every mutation persists immediately
+  and re-arms the alarms.
+
 ## 2026-11-10 (5) — Settings v1 names: `UserSettings` + `PrayerAdjusts`
 
 - `UserSettings` — SharedPreferences wrapper (F-Droid clean, no DataStore yet):

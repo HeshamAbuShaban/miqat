@@ -189,9 +189,9 @@ private fun WorshipRow(
 fun WorshipDetailScreen(state: AppState, fmt: Fmt, kind: WorshipKind, onBack: () -> Unit) {
     val nowState = rememberNowState()
     val now = nowState.value
-    val (y, m, d) = state.cityDate(now)
+    val (year, month, day) = state.cityDate(now)
     val (ty, tm, td) = state.cityTomorrow(now)
-    val times = state.times(y, m, d)
+    val times = state.times(year, month, day)
     val tomorrow = state.times(ty, tm, td)
     val night = WorshipWindows.night(maghrib = times.maghrib, fajrNext = tomorrow.fajr)
     val duha = WorshipWindows.duha(sunrise = times.sunrise, dhuhr = times.dhuhr)
@@ -285,8 +285,14 @@ fun WorshipDetailScreen(state: AppState, fmt: Fmt, kind: WorshipKind, onBack: ()
             )
             Spacer(Modifier.height(Space.lg))
             Divider()
-            InfoRow("التاريخ", "$y/$m/$d")
-            InfoRow("أصل الحساب", "من المغرب إلى الفجر")
+            InfoRow("التاريخ", "${fmt.n(year)}/${fmt.n(month)}/${fmt.n(day)}")
+            InfoRow(
+                "أصل الحساب",
+                when (kind) {
+                    WorshipKind.DUHA -> "من الشروق إلى الظهر"
+                    else -> "من المغرب إلى الفجر"
+                },
+            )
             InfoRow("الطبيعة", "تقديري بحسب الاصطلاح")
             Spacer(Modifier.height(Space.xxl))
         }

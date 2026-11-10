@@ -50,8 +50,13 @@ Every step cites its donor lead (teardown §).
 
 ## S3 — Alarm & audio machinery (teardown §4)
 
-- [ ] Adhan scheduler: AlarmManager exact + boot/timezone/date/connectivity re-arm
-      (donor `SalatiReceiver` action list is the checklist)
+- [x] Adhan scheduler — **v0 DONE 2026-11-10**: exact alarms via AlarmManager for
+      the prayers + worship windows, boot/time/timezone/date re-arm, 4+1 channels
+      (تمهيدية/مباشرة/تذكيرية/تحفيزية + عدّاد), quiet hours, in-context
+      POST_NOTIFICATIONS request, notification previews. REMAINING: adhan audio
+      packs (donor's ogg sets — licensing review before shipping), ongoing
+      countdown notification, full-screen alarm ACTIVITY, iqama/second-call,
+      call-pause and DND integration
 - [ ] Full-screen lockscreen alarm (`USE_FULL_SCREEN_INTENT` + slide-to-stop)
 - [ ] Adhan audio packs: ship per-muezzin packs (donor has haramayn/maghrebi/
       standard + iqama + shahada + hayya-'ala-salah Fajr variant + bird sounds)
@@ -80,8 +85,18 @@ Every step cites its donor lead (teardown §).
       moment — Fajr cool night blue → Duha bright → Asr amber → Maghrib sunset →
       Isha deep navy; dark-first, dynamic color as base, restrained accents
       (v0 hardcoded palette live)
-- [ ] ONE hero: next-prayer countdown; all S9 features land as contextual cards on
-      the same home (fasting today / Arafah / last-third) — never new screens
+- [x] ONE hero on home — **v2 (2026-11-10)**: home = hero + today's strip +
+      nearest worship window + qibla, NOTHING else; every other feature moved
+      to its OWN screen (4 top-level destinations + sub-routes). This SUPERSEDES
+      the old "cards on home, never new screens" rule — his new instruction was
+      explicit: each feature and core in its proper view, no stacked home
+      (decisions 2026-11-10 (6))
+- [x] Design system: Cairo (OFL), one palette + spacing scale, light/dark,
+      RTL forced at the app level, Arabic-Indic digits isolated LTR
+      (`ui/Theme.kt`, `core/NumFmt.kt`)
+- [x] Settings TREE: الموقع / الحساب / الإشعارات / التقويم / المظهر / عن التطبيق
+      — six real screens, every control effective; method picker is a search
+      dialog over the donor's 59 methods
 - [ ] Compose + Material 3, dark/light/dynamic; Pixel-stock benchmark
 - [x] **R1 dual clocks** — DONE 2026-11-10: remaining PRIMARY + elapsed
       SECONDARY, HH:MM:SS ticking (1 Hz aligned ticker, leaf-scoped
