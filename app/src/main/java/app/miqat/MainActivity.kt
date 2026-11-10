@@ -60,7 +60,9 @@ import app.miqat.core.IslamicDays
 import app.miqat.core.Location
 import app.miqat.core.MethodTable
 import app.miqat.core.PrayerTimes
+import app.miqat.core.PrayerAdjusts
 import app.miqat.core.Qibla
+import app.miqat.core.UserSettings
 import app.miqat.core.WorshipWindows
 import app.miqat.core.formatHms
 import java.util.Calendar
@@ -158,7 +160,9 @@ private fun Home() {
         CityStore.makkah(context)?.let { if (!picked) selected = it }
     }
     var pickerOpen by remember { mutableStateOf(false) }
+    var settingsOpen by remember { mutableStateOf(false) }
     var detailIndex by remember { mutableStateOf<Int?>(null) }
+    var adjusts by remember { mutableStateOf(PrayerAdjusts()) }
     val nowState = rememberNowState()
 
     Box(Modifier.fillMaxSize().background(Bg)) {
@@ -166,50 +170,72 @@ private fun Home() {
             Modifier.fillMaxSize().verticalScroll(rememberScrollState())
                 .windowInsetsPadding(WindowInsets.statusBars).padding(16.dp)
         ) {
-            Header(selected) { pickerOpen = true }
+            Header(selected, onOpenPicker = { pickerOpen = true }, onOpenSettings = { settingsOpen = true })
             Spacer(Modifier.height(14.dp))
-            DayArcHero(selected, nowState)
+            DayArcHero(selected, nowState, adjusts)
             Spacer(Modifier.height(12.dp))
-            ContextCards(selected, nowState)
+            ContextCards(selected, nowState, adjusts)
             Spacer(Modifier.height(12.dp))
-            TimesList(selected, nowState) { detailIndex = it }
+            TimesList(selected, nowState, adjusts) { detailIndex = it }
             Spacer(Modifier.height(20.dp))
         }
         if (pickerOpen) {
             CityPicker(fromCity = selected, onSelect = {
                 picked = true
                 selected = it
+                UserSettings.saveCity(context, it)
                 pickerOpen = false
             }, onDismiss = { pickerOpen = false })
         }
         detailIndex?.let { idx ->
-            TimeDetailSheet(selected, idx) { detailIndex = null }
+            TimeDetailSheet(selected, idx, adjusts) { detailIndex = null }
+        }
+        if (settingsOpen) {
+            SettingsSheet(
+                city = selected, adjusts = adjusts,
+                onChange = {
+                    adjusts = it
+                    UserSettings.saveAdjusts(context, it)
+                },
+                onOpenPicker = { settingsOpen = false; pickerOpen = true },
+                onDismiss = { settingsOpen = false },
+            )
         }
     }
 }
 
 @Composable
-private fun Header(city: City, onOpenPicker: () -> Unit) {
+private fun Header(city: City, onOpenPicker: () -> Unit, onOpenSettings: () -> Unit) {
     val islamic = remember { Hijri.today() }
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text("الميقات", color = Gold, fontSize = 20.sp, fontWeight = FontWeight(600))
-            Text(city.ar.ifBlank { city.en }, color = FgDim, fontSize = 13.sp,
-                 modifier = Modifier.clickable { onOpenPicker() })
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(city.ar.ifBlank { city.en }, color = FgDim, fontSize = 13.sp,
+                     modifier = Modifier.clickable { onOpenPicker() })
+                Spacer(Modifier.width(14.dp))
+                Text("⚙", color = FgDim, fontSize = 16.sp,
+                     modifier = Modifier.clickable { onOpenSettings() })
+            }
         }
         Spacer(Modifier.height(4.dp))
         Text(Hijri.label(islamic), color = Fg, fontSize = 14.sp)
     }
 }
 
-/** Compute the 6 times for a city on a specific date (local hours). */
-private fun timesFor(city: City, year: Int, month: Int, day: Int): List<Double> {
+/** Compute the 6 times for a city on a date, with the user's minute-adjusts
+ *  applied AFTER the engine (R3: adjusts are a user override, engine intact). */
+private fun timesFor(
+    city: City, year: Int, month: Int, day: Int,
+    adjusts: PrayerAdjusts = PrayerAdjusts(),
+): List<Double> {
     val t = PrayerTimes.compute(
         year, month, day,
         Location(city.lat, city.lon, city.utcOffset),
         MethodTable[city.calcMethod],
     )
-    return listOf(t.fajr, t.sunrise, t.dhuhr, t.asr, t.maghrib, t.isha)
+    val list = listOf(t.fajr, t.sunrise, t.dhuhr, t.asr, t.maghrib, t.isha)
+    return List(6) { i -> list[i] + adjusts.forIndex(i) / 60.0 }
 }
 
 private fun minutesOf(hours: Double): Int {
@@ -227,10 +253,10 @@ private fun dayAppointments(times: List<Double>): List<Appointment> =
     PRAYER_KEY.mapIndexed { i, k -> Appointment(k, PRAYER_AR[i], times[i]) }
 
 @Composable
-private fun DayArcHero(city: City, nowState: State<Long>) {
+private fun DayArcHero(city: City, nowState: State<Long>, adjusts: PrayerAdjusts) {
     val now = nowState.value
     val (y, m, d) = cityDate(city, now)
-    val times = timesFor(city, y, m, d)
+    val times = timesFor(city, y, m, d, adjusts)
     val nowHour = cityHourOfDay(city, now)
 
     val seg = DayClock.position(dayAppointments(times), nowHour)
@@ -310,7 +336,7 @@ private fun DayArcHero(city: City, nowState: State<Long>) {
 }
 
 @Composable
-private fun ContextCards(city: City, nowState: State<Long>) {
+private fun ContextCards(city: City, nowState: State<Long>, adjusts: PrayerAdjusts) {
     val islamic = remember { Hijri.today() }
     val card = IslamicDays.todayCard(islamic)
 
@@ -329,8 +355,8 @@ private fun ContextCards(city: City, nowState: State<Long>) {
     val now = nowState.value
     val (y, m, d) = cityDate(city, now)
     val (ty, tm, td) = cityTomorrow(city, now)
-    val t = timesFor(city, y, m, d)
-    val tomorrow = timesFor(city, ty, tm, td)
+    val t = timesFor(city, y, m, d, adjusts)
+    val tomorrow = timesFor(city, ty, tm, td, adjusts)
 
     // night portions over Maghrib → next Fajr (our stated convention — R5)
     val night = WorshipWindows.night(maghrib = t[4], fajrNext = tomorrow[0])
@@ -406,10 +432,10 @@ private fun minLabel(v: Double): String =
     if (v == v.toInt().toDouble()) "${v.toInt()}" else "$v"
 
 @Composable
-private fun TimesList(city: City, nowState: State<Long>, onRowTap: (Int) -> Unit) {
+private fun TimesList(city: City, nowState: State<Long>, adjusts: PrayerAdjusts, onRowTap: (Int) -> Unit) {
     val now = nowState.value
     val (y, m, d) = cityDate(city, now)
-    val times = timesFor(city, y, m, d)
+    val times = timesFor(city, y, m, d, adjusts)
     val nowHour = cityHourOfDay(city, now)
     val seg = DayClock.position(dayAppointments(times), nowHour)
     Column(Modifier.fillMaxWidth().background(Card, RoundedCornerShape(18.dp)).padding(vertical = 6.dp)) {
@@ -448,11 +474,13 @@ private fun TimesList(city: City, nowState: State<Long>, onRowTap: (Int) -> Unit
 /** R3 v1 — «لماذا هذا الوقت؟»: honest provenance for one prayer (decisions 2026-11-10 (4)). */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TimeDetailSheet(city: City, index: Int, onDismiss: () -> Unit) {
+private fun TimeDetailSheet(city: City, index: Int, adjusts: PrayerAdjusts, onDismiss: () -> Unit) {
     val sheetState = rememberModalBottomSheetState()
     val now = remember { System.currentTimeMillis() }
     val (y, m, d) = cityDate(city, now)
-    val times = timesFor(city, y, m, d)
+    val raw = timesFor(city, y, m, d)               // engine + margins, NO user adjust
+    val times = timesFor(city, y, m, d, adjusts)    // what the UI shows everywhere
+    val userAdj = adjusts.forIndex(index)
     val method = MethodTable[city.calcMethod]
     val p = method.withSeasonalCorrections(m * 100 + d)
     val seasonal = method.seasonal.firstOrNull { it.fromMMdd <= m * 100 + d && m * 100 + d <= it.toMMdd }
@@ -469,10 +497,19 @@ private fun TimeDetailSheet(city: City, index: Int, onDismiss: () -> Unit) {
             Text(PRAYER_AR[index], color = Gold, fontSize = 18.sp, fontWeight = FontWeight(600))
             Spacer(Modifier.height(8.dp))
             Text("المعروض ${hhmmAr(minutesOf(times[index]))}", color = Fg, fontSize = 24.sp, fontWeight = FontWeight(500))
-            Text(
-                "المحسوب ${formatHms(times[index])} — العرض مقرّب للدقيقة نصفاً للأعلى",
-                color = FgDim, fontSize = 12.sp,
-            )
+            if (userAdj != 0) {
+                // R3a register (حتى لا يلبس على الناس): both values, no preaching
+                Text(
+                    "بعد تعديلك اليدوي ${if (userAdj > 0) "+" else ""}$userAdj دقيقة — الحساب الأصلي ${formatHms(raw[index])}",
+                    color = Sunset, fontSize = 12.sp,
+                )
+                Text("تعديل يدوي على هذا الوقت", color = Sunset, fontSize = 13.sp, fontWeight = FontWeight(500))
+            } else {
+                Text(
+                    "المحسوب ${formatHms(times[index])} — العرض مقرّب للدقيقة نصفاً للأعلى",
+                    color = FgDim, fontSize = 12.sp,
+                )
+            }
             Spacer(Modifier.height(14.dp))
             Text("من أين جاء هذا الوقت؟", color = Fg, fontSize = 14.sp, fontWeight = FontWeight(500))
             Spacer(Modifier.height(6.dp))
@@ -515,6 +552,92 @@ private fun Detail(label: String, value: String) {
         Text(label, color = FgDim, fontSize = 13.sp)
         Text(value, color = Fg, fontSize = 13.sp)
     }
+}
+
+/** Settings v0 (decisions 2026-11-10 (5)): location block + per-prayer manual
+ *  minute-adjusts with the R3a register. The settings TREE (S5, donor 13-screen
+ *  checklist) grows from here. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SettingsSheet(
+    city: City,
+    adjusts: PrayerAdjusts,
+    onChange: (PrayerAdjusts) -> Unit,
+    onOpenPicker: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val sheetState = rememberModalBottomSheetState()
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState, containerColor = CardHi) {
+        Column(
+            Modifier.fillMaxWidth().verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp).padding(bottom = 28.dp)
+        ) {
+            Text("الإعدادات", color = Gold, fontSize = 18.sp, fontWeight = FontWeight(600))
+            Spacer(Modifier.height(12.dp))
+
+            // --- location (R6: تبيان الموقع وتأكيده) ---
+            Text("الموقع", color = Fg, fontSize = 14.sp, fontWeight = FontWeight(500))
+            Spacer(Modifier.height(4.dp))
+            Text(city.ar.ifBlank { city.en }, color = Fg, fontSize = 15.sp)
+            Text(
+                "${city.lat}, ${city.lon} · UTC+${city.utcOffset} · الطريقة ${city.calcMethod}",
+                color = FgDim, fontSize = 12.sp,
+            )
+            Text(
+                "تغيير المدينة",
+                color = Teal, fontSize = 13.sp,
+                modifier = Modifier.clickable { onOpenPicker() }.padding(vertical = 6.dp),
+            )
+            Spacer(Modifier.height(12.dp))
+
+            // --- manual minute-adjusts (donor adjust_min_* parity) ---
+            Text("تعديل يدوي للأوقات (دقائق)", color = Fg, fontSize = 14.sp, fontWeight = FontWeight(500))
+            if (adjusts.hasAny) {
+                // R3a register — no preaching, both values live on each detail page
+                Text(
+                    "القيم المعروضة بعد تعديلك اليدوي؛ الحساب الأصلي باقٍ في صفحة «لماذا هذا الوقت؟» لكل وقت.",
+                    color = Sunset, fontSize = 12.sp,
+                )
+            }
+            Spacer(Modifier.height(4.dp))
+            PRAYER_AR.forEachIndexed { i, name ->
+                val v = adjusts.forIndex(i)
+                Row(
+                    Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(name, color = if (v != 0) Sunset else Fg, fontSize = 14.sp)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        StepBox("−") { if (v > -30) onChange(adjusts.withIndex(i, v - 1)) }
+                        Text(
+                            "${if (v > 0) "+" else ""}$v",
+                            color = if (v != 0) Sunset else FgDim,
+                            fontSize = 15.sp, fontWeight = FontWeight(500),
+                            modifier = Modifier.width(52.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        )
+                        StepBox("+") { if (v < 30) onChange(adjusts.withIndex(i, v + 1)) }
+                    }
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "حتى لا يلبس على الناس: عدّلتَ لأن التطبيق ليس متأكداً تماماً في حالتك — والحساب الأصلي يبقى ظاهراً دائماً.",
+                color = FgDim, fontSize = 11.sp,
+            )
+        }
+    }
+}
+
+@Composable
+private fun StepBox(symbol: String, onClick: () -> Unit) {
+    Text(
+        symbol, color = Fg, fontSize = 18.sp,
+        modifier = Modifier
+            .background(Card, RoundedCornerShape(10.dp))
+            .clickable { onClick() }
+            .padding(horizontal = 14.dp, vertical = 2.dp),
+    )
 }
 
 @Composable

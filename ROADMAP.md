@@ -116,7 +116,12 @@ Every step cites its donor lead (teardown §).
 - [ ] Settings tree mirroring donor completeness (per-prayer adjusts, DST,
       silent modes, formats) — donor's 13 preference screens are the checklist;
       add «التوابع» discipline: previews, computation warnings, location
-      verification, scoped notification control (research-agenda R6)
+      verification, scoped notification control (research-agenda R6).
+      **v0 DONE 2026-11-10**: `SettingsSheet` (location block with coords/tz/
+      method + per-prayer ± minute steppers, ±30 cap) + `UserSettings.kt`
+      (SharedPreferences; saved city fixes the reset-to-Makkah gap) + R3a
+      register live in the detail sheet («تعديل يدوي على هذا الوقت», both
+      values shown); DST/silent/previews/notification-scoping remain
 
 ## S6 — Beyond the donor (the "tons of additions")
 
