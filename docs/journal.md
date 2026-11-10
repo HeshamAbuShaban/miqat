@@ -40,6 +40,14 @@ building and completing everything you have». Done in one run (3 commits):
   (0:16:05 → 0:15:47 across screenshots), detail sheet, rich picker.
 - Commits: `d41f06b` (core), `d0e64ea` (UI). **Still awaiting push** (needs his
   PAT): de919cd, 93bbe42, 8b5d2d9, d41f06b, d0e64ea + this docs commit.
+- **Settings v0 follow-up (same run, `3536fd7`)**: gear in the header →
+  `SettingsSheet` (location block: coords/tz/method + «تغيير المدينة»; 6
+  stepper rows for per-prayer ± minutes, ±30 cap) + `UserSettings.kt`
+  (SharedPreferences — saved city now survives restarts, fixing the
+  reset-to-Makkah gap). Adjusts apply AFTER the engine in the UI layer only —
+  engine + parity untouched — and the detail sheet grows the R3a register
+  («تعديل يدوي على هذا الوقت» + الحساب الأصلي معروضاً معاً). Verified live:
+  +1 min on Fajr propagated consistently to row/hero/sahar window.
 
 ## 2026-11-10 — S2 shipped + icon shipped + research agenda (his «سيئة وفقيرة» brief)
 
