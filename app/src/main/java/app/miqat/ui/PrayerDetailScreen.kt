@@ -145,7 +145,9 @@ fun PrayerDetailScreen(state: AppState, fmt: Fmt, index: Int, onBack: () -> Unit
                     app.miqat.core.HighLatitudeRule.ANGLE_NIGHT -> "نسبة من الليل بالزاوية"
                 },
             )
-            InfoRow("المنطقة الزمنية", "UTC+${state.utcOffset}")
+            InfoRow("المنطقة الزمنية", "UTC+${fmt.n(state.locationFix.utcOffsetHours.toInt())}")
+            InfoRow("الموقع", state.locationFix.source.labelAr)
+            InfoRow("ثقة الحساب", state.confidence.labelAr)
 
             if (kotlin.math.abs(state.city.lat) >= 45.0 &&
                 method.highLatRule != app.miqat.core.HighLatitudeRule.NONE
@@ -163,6 +165,15 @@ fun PrayerDetailScreen(state: AppState, fmt: Fmt, index: Int, onBack: () -> Unit
                 )
             }
 
+            val warn = state.confidence.warn
+            if (warn != null) {
+                Spacer(Modifier.height(Space.md))
+                Text(
+                    warn,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.tertiary,
+                )
+            }
             Spacer(Modifier.height(Space.lg))
             Divider()
             Spacer(Modifier.height(Space.md))

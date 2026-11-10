@@ -3,6 +3,9 @@ package app.miqat.ui
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -38,24 +41,86 @@ import app.miqat.core.NotifyKind
 
 @Composable
 fun LocationSection(state: AppState, fmt: Fmt, onPickCity: () -> Unit) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val gps = state.gpsFix
+    val confidence = state.confidence
+
+    // The permission is asked HERE, in context, when the user asks for GPS.
+    val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions(),
+    ) { granted ->
+        if (granted.values.any { it }) {
+            state.refreshGps()
+        } else {
+            // declined: we fall back to the picked city — and say so
+            state.clearGps()
+        }
+    }
+
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Space.lg)) {
-        SettingsScreenTitle("الموقع", "المدينة والإحداثيات والمنطقة الزمنية")
+        SettingsScreenTitle("الموقع", "من أين تأتي المواقيت")
+
+        // the confidence of the whole chain — never hidden
+        if (confidence.warn != null) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .background(
+                        MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = .55f),
+                        RoundedCornerShape(Radius.row),
+                    )
+                    .padding(Space.md),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    Modifier
+                        .size(8.dp)
+                        .background(MaterialTheme.colorScheme.tertiary, RoundedCornerShape(4.dp)),
+                )
+                Spacer(Modifier.width(Space.md))
+                Text(
+                    confidence.warn,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+            Spacer(Modifier.height(Space.md))
+        }
+
         NavRow(
-            "المدينة",
+            "مصدر الموقع",
+            state.locationFix.source.labelAr,
+            onClick = {
+                if (gps != null) {
+                    state.clearGps()
+                } else {
+                    permissionLauncher.launch(
+                        arrayOf(
+                            android.Manifest.permission.ACCESS_FINE_LOCATION,
+                            android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                        ),
+                    )
+                }
+            },
+        )
+        Divider(Modifier.padding(horizontal = Space.lg))
+        NavRow(
+            "المدينة المختارة",
             "${state.city.ar.ifBlank { state.city.en }} · ${state.city.countryCode}",
             onPickCity,
         )
         Divider(Modifier.padding(horizontal = Space.lg))
-        InfoRow("خط العرض", fmt.decimal(state.city.lat, 4))
-        InfoRow("خط الطول", fmt.decimal(state.city.lon, 4))
-        InfoRow("إزاحة التوقيت", "UTC+${fmt.n(state.utcOffset.toInt())}")
-        InfoRow("المنطقة الزمنية", if (state.display.manualUtcOffsetMinutes == null) "تلقائية" else "يدوية")
-        Spacer(Modifier.height(Space.sm))
+        InfoRow("خط العرض", fmt.decimal(state.locationFix.latitude, 4))
+        InfoRow("خط الطول", fmt.decimal(state.locationFix.longitude, 4))
+        InfoRow("إزاحة التوقيت", "UTC+${fmt.n(state.locationFix.utcOffsetHours.toInt())}")
+        InfoRow("ثقة الحساب", confidence.labelAr)
+        InfoRow("إزاحة التوقيت اليدوية", if (state.display.manualUtcOffsetMinutes == null) "تلقائية" else "يدوية")
+        Spacer(Modifier.height(Space.md))
         Text(
-            "الموقع من قاعدة المدن المضمّنة — لا نطلب صلاحيات الموقع ولا نرسل شيئاً لأي جهة.",
+            "الموقع من قاعدة المدن المضمّنة أو من نظام الموقع بإذنك — لا نطلب الإذن إلا حين تختار " +
+                "ذلك، ولا نرسل شيئاً لأي جهة.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = Space.lg),
         )
         Spacer(Modifier.height(Space.xl))
     }
@@ -347,9 +412,43 @@ fun NotificationsSection(state: AppState, fmt: Fmt) {
 }
 
 @Composable
+fun AwarenessSection(state: AppState, fmt: Fmt) {
+    val d = state.display
+    Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Space.lg)) {
+        SettingsScreenTitle("الاستعداد والتنبيه", "كيف يتغيّر التطبيق مع اقتراب الموعد")
+        ToggleRow(
+            "تنبيه الاستعداد",
+            "يتغيّر شكل العدّاد قبل الموعد بأقل من ${fmt.n(d.urgencySoonMinutes)} دقيقة",
+            d.urgencyEnabled,
+        ) { v -> state.updateDisplay(d.copy(urgencyEnabled = v)) }
+        InfoRow("تنبيه مبكر", "${fmt.n(d.urgencySoonMinutes)} دقيقة")
+        InfoRow("لحظة الدخول", "${fmt.n(d.urgencyImminentMinutes)} دقيقة")
+        Divider(Modifier.padding(horizontal = Space.lg, vertical = Space.md))
+        SectionLabel("المدد المعروضة", Modifier.padding(horizontal = Space.lg))
+        ToggleRow(
+            "إظهار المدة بين المواقيت",
+            "خط يربط كل ميقين بالذي يليه مع مدته",
+            d.showGaps,
+        ) { v -> state.updateDisplay(d.copy(showGaps = v)) }
+        app.miqat.core.MomentCategory.entries.forEach { category ->
+            ToggleRow(
+                category.labelAr,
+                null,
+                d.gapCategories.contains(category.labelAr),
+            ) { on ->
+                val next = d.gapCategories.toMutableSet()
+                if (on) next.add(category.labelAr) else next.remove(category.labelAr)
+                state.updateDisplay(d.copy(gapCategories = next))
+            }
+        }
+        Spacer(Modifier.height(Space.xl))
+    }
+}
+
+@Composable
 fun CalendarSection(state: AppState, fmt: Fmt) {
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Space.lg)) {
-        SettingsScreenTitle("التقويم الهجري", "أم القرى — Adjustable ±3 days")
+        SettingsScreenTitle("التقويم الهجري", "تقويم أم القرى — تعديل من ثلاثة أيام")
         Row(
             Modifier.fillMaxWidth().padding(horizontal = Space.lg, vertical = Space.sm),
             horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
@@ -397,7 +496,7 @@ fun AboutSection() {
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Space.lg)) {
         SettingsScreenTitle("عن الميقات", "مواقيت الصلاة والصيام — يعمل بلا إنترنت")
         InfoRow("الإصدار", "0.1.0")
-        InfoRow("المحرك", "PrayTimes port — تطابق 87.78% @ ±1 دقيقة")
+        InfoRow("المحرك", "نقل محرك PrayTimes — تطابق ٨٧٫٧٨٪ عند ± دقيقة")
         InfoRow("قاعدة المدن", "218,032 مدينة مضمّنة")
         InfoRow("الاتصال", "لا يوجد — صفر تتبّع")
         Divider(Modifier.padding(horizontal = Space.lg, vertical = Space.md))

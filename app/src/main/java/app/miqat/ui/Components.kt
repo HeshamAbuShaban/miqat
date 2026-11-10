@@ -43,6 +43,8 @@ class Fmt(val prefs: DisplayPrefs) {
     fun hms(seconds: Long) = NumFmt.hms(seconds, ar)
     fun n(v: Int) = NumFmt.n(v, ar)
     fun decimal(v: Double, digits: Int = 1) = NumFmt.decimal(v, digits, ar)
+    /** A duration in minutes: "1:17" (h:mm) or "45 د" (under an hour). */
+    fun duration(minutes: Int): String = NumFmt.duration(minutes, ar)
     fun decimalUnit(v: Double, digits: Int = 1, unit: String) = NumFmt.decimalUnit(v, digits, unit, ar)
     fun signed(v: Int) = NumFmt.signedMinutes(v, ar)
 }
@@ -241,11 +243,58 @@ private fun StepButton(symbol: String, onClick: () -> Unit) {
         style = MaterialTheme.typography.titleLarge,
         color = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier
-            .clip(RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(Radius.control))
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 2.dp),
     )
+}
+
+/**
+ * The GAP BRIDGE — the app's signature detail.
+ *
+ * The time between one appointed moment and the next is drawn as a hairline
+ * connector between the two rows, with the duration centred on it. It makes
+ * the gaps legible without another card, and it is the same mark everywhere:
+ * between prayer rows, in the gaps table, and in the interval tool.
+ */
+@Composable
+fun GapBridge(minutes: Int, label: String? = null) {
+    Row(
+        Modifier.fillMaxWidth().padding(vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // the hairline (start side = right in RTL)
+        Box(
+            Modifier
+                .width(1.dp)
+                .height(26.dp)
+                .background(MaterialTheme.colorScheme.outlineVariant),
+        )
+        Spacer(Modifier.width(Space.md))
+        Text(
+            label ?: durationLabel(minutes),
+            style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = TabularFigures),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.width(Space.sm))
+        Text(
+            "المدة",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .6f),
+        )
+    }
+}
+
+/** "1:17" / "2:04:30" — the duration format used across the app. */
+fun durationLabel(minutes: Int): String {
+    val sign = if (minutes < 0) "−" else ""
+    val m = kotlin.math.abs(minutes)
+    return if (m >= 60) {
+        val h = m / 60
+        val mm = m % 60
+        "$sign$h:%02d".format(mm)
+    } else "$sign$m د"
 }
 
 /** The chip that marks an approximate, convention-based value («تقديري»). */
@@ -256,7 +305,7 @@ fun ApproxChip(text: String = "تقديري بحسب الاصطلاح") {
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier
-            .clip(RoundedCornerShape(6.dp))
+            .clip(RoundedCornerShape(Radius.chip))
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .padding(horizontal = 8.dp, vertical = 3.dp),
     )

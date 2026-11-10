@@ -7,6 +7,10 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Optional: only if the user chooses "موقعي (نظام الموقع)" in the
+         settings — the app works fully offline from the bundled city database. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <!-- An alarm app is the legitimate use case for exact alarms (the adhan
          must not drift). USE_EXACT_ALARM (API 33+) is install-granted for alarm
          apps; the revocable SCHEDULE_EXACT_ALARM covers older releases. -->

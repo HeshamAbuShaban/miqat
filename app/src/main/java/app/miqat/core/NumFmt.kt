@@ -60,6 +60,16 @@ object NumFmt {
     fun decimalUnit(value: Double, fractionDigits: Int, unit: String, arabicIndic: Boolean): String =
         ltr(digits("%.${fractionDigits}f".format(value), arabicIndic) + unit)
 
+    /** A duration in minutes: "1:17" (h:mm) or "45 د" (under an hour). */
+    fun duration(minutes: Int, arabicIndic: Boolean): String {
+        val m = kotlin.math.abs(minutes)
+        return if (m >= 60) {
+            ltr(digits("%d:%02d".format(m / 60, m % 60), arabicIndic))
+        } else {
+            ltr(digits("%d".format(m), arabicIndic)) + " د"
+        }
+    }
+
     /** Signed minutes with an explicit sign — adjustment steppers. */
     fun signedMinutes(value: Int, arabicIndic: Boolean): String {
         val sign = if (value > 0) "+" else if (value < 0) "−" else ""

@@ -16,6 +16,7 @@ import app.miqat.core.NotificationPrefs
 import app.miqat.core.NotificationPrefsStore
 import app.miqat.core.PrayerAdjusts
 import app.miqat.core.PrayerTimes
+import app.miqat.core.LocationFix
 import app.miqat.core.UserSettings
 import java.util.Calendar
 import java.util.TimeZone
@@ -32,6 +33,7 @@ class AppState(context: Context) {
     private val appContext = context.applicationContext
 
     var city by mutableStateOf(CityStore.MAKKAH); private set
+    var gpsFix by mutableStateOf<LocationFix?>(null); private set
     var adjusts by mutableStateOf(PrayerAdjusts()); private set
     var display by mutableStateOf(DisplayPrefs()); private set
     var notifications by mutableStateOf(NotificationPrefs()); private set
@@ -46,6 +48,7 @@ class AppState(context: Context) {
         adjusts = UserSettings.adjusts(appContext)
         display = UserSettings.display(appContext)
         notifications = NotificationPrefsStore.load(appContext)
+        gpsFix = UserSettings.gpsFix(appContext)
         loaded = true
         // arm the alarms for the appointed times (S3)
         AlarmScheduler.reschedule(appContext)
@@ -86,7 +89,31 @@ class AppState(context: Context) {
     val utcOffset: Double
         get() = display.manualUtcOffsetMinutes?.let { it / 60.0 } ?: city.utcOffset
 
-    fun location(): Location = Location(city.lat, city.lon, utcOffset)
+    /**
+     * The fix the times are computed from: the device GPS fix when the user
+     * allowed it, otherwise the city they picked. The state of this decision is
+     * never hidden — [confidence] says plainly how much to trust the result.
+     */
+    val locationFix: app.miqat.core.LocationFix
+        get() = gpsFix
+            ?: app.miqat.core.LocationFix(city.lat, city.lon, utcOffset, app.miqat.core.LocationSource.MANUAL)
+
+    val confidence: app.miqat.core.TimeConfidence get() = locationFix.confidence
+
+    fun location(): Location = Location(locationFix.latitude, locationFix.longitude, locationFix.utcOffsetHours)
+
+    /** Refresh the device fix (called after the permission is granted). */
+    fun refreshGps() {
+        val fix = app.miqat.core.LocationProvider.lastKnown(appContext)
+        gpsFix = fix
+        UserSettings.saveGpsFix(appContext, fix)
+    }
+
+    /** Drop the GPS fix and go back to the picked city (with the warning). */
+    fun clearGps() {
+        gpsFix = null
+        UserSettings.saveGpsFix(appContext, null)
+    }
 
     /** Engine times for a date, WITHOUT the user's manual adjusts. */
     fun rawTimes(year: Int, month: Int, day: Int): LocalPrayerTimes =

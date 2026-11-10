@@ -2,6 +2,30 @@
 
 > One line per decision; newest first. `applicationId` `app.miqat` freezes at release.
 
+## 2026-11-10 (7) — Moment registry, urgency model, location source
+
+- `Moments` / `Moment` / `MomentCategory` — ONE timeline for every appointed
+  time (prayers, sunrise, worship windows, night markers, sunnah windows), in
+  absolute minutes from local midnight. Because everything is a moment: the gap
+  between two appointments is a subtraction, and an interval between ANY two
+  categories is computable on demand (his brief: «احسب الوقت بين موعدين اثنين
+  ايا كان الصنف»).
+- `Urgency` / `UrgencyRules` — CALM / SOON / IMMINENT / NOW from the remaining
+  seconds, thresholds configurable (15 / 5 minutes by default). ONE model, used
+  by the hero, the prayer rows and the notifications, so the app says the same
+  thing at the same urgency («اذا أوشك الوقت على النفاذ فتجعله مختلف»).
+- `LocationSource` (GPS / MANUAL) + `TimeConfidence` (CONFIRMED / ESTIMATED) —
+  the golden criterion is the user's real location; when it is absent or
+  refused, the app says so plainly («موقعك غير مُتحقَّق منه») and computes from
+  the picked city. GPS via Android's own LocationManager (no Play Services, so
+  the tree stays F-Droid clean).
+- `GapBridge` — the app's signature detail: the time between two appointments
+  drawn as a hairline connector with its duration, in the prayer list, in the
+  gaps table, and in the interval tool.
+- The sunnah texts are gated by `docs/sourcing-table.md` — the council verified
+  them corpus-wide; three well-known phrasings turned out NOT to exist and were
+  dropped before shipping.
+
 ## 2026-11-10 (6) — S5 v2 ARCHITECTURE (supersedes the "cards on home" rule)
 
 Hesham's verdict on the v1 UI: «النسخة الحالية سيئة وفقيرة على كافة الأصعدة … its

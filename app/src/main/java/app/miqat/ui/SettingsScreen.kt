@@ -88,6 +88,14 @@ fun SettingsScreen(
         )
         Divider(Modifier.padding(horizontal = Space.lg))
 
+        SectionLabel("الاستعداد", Modifier.padding(horizontal = Space.lg, vertical = Space.sm))
+        NavRow(
+            "الاستعداد والتنبيه",
+            "تنبيه مبكر ${fmt.n(state.display.urgencySoonMinutes)} د · المدد المعروضة",
+            onClick = { onOpen(SettingsRoute.Awareness) },
+        )
+        Divider(Modifier.padding(horizontal = Space.lg))
+
         SectionLabel("التقويم", Modifier.padding(horizontal = Space.lg, vertical = Space.sm))
         NavRow(
             "التقويم الهجري",
@@ -158,7 +166,7 @@ fun methodNameAr(id: String): String = when (id) {
 }
 
 /** The routes the settings tree opens. */
-enum class SettingsRoute { Location, Calculation, Notifications, Calendar, Appearance, About }
+enum class SettingsRoute { Location, Calculation, Notifications, Awareness, Calendar, Appearance, About }
 
 @Composable
 fun SettingsScreenTitle(text: String, subtitle: String? = null) {

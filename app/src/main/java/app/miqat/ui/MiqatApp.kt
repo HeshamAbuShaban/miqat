@@ -54,6 +54,8 @@ import androidx.compose.ui.unit.sp
 import app.miqat.core.Appointment
 import app.miqat.core.DayClock
 import app.miqat.core.LocalPrayerTimes
+import app.miqat.core.Urgency
+import app.miqat.core.UrgencyRules
 import app.miqat.core.Hijri
 import app.miqat.core.IslamicDays
 import app.miqat.core.Qibla
@@ -75,10 +77,14 @@ sealed interface Route {
     data object LocationSettings : Route
     data object CalculationSettings : Route
     data object NotificationsSettings : Route
+    data object AwarenessSettings : Route
     data object CalendarSettings : Route
     data object AppearanceSettings : Route
     data object AboutSettings : Route
     data class DayDetail(val year: Int, val month: Int, val day: Int) : Route
+    data object Gaps : Route
+    data object Interval : Route
+    data object Sunnah : Route
 }
 
 /** The worship windows that deserve their own screen (R5 «زوائد غابت»). */
@@ -136,6 +142,9 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                         state, fmt,
                         onOpenPrayer = { sub = Route.PrayerDetailArgs(it) },
                         onOpenWorship = { sub = Route.WorshipDetail(it) },
+                        onOpenGaps = { sub = Route.Gaps },
+                        onOpenInterval = { sub = Route.Interval },
+                        onOpenSunnah = { sub = Route.Sunnah },
                     )
                     TopLevel.Calendar -> CalendarScreen(state, fmt, onOpenDay = { y, m, d -> sub = Route.DayDetail(y, m, d) })
                     TopLevel.Settings -> SettingsScreen(state, fmt, onOpen = { r ->
@@ -143,6 +152,7 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                             SettingsRoute.Location -> Route.LocationSettings
                             SettingsRoute.Calculation -> Route.CalculationSettings
                             SettingsRoute.Notifications -> Route.NotificationsSettings
+                            SettingsRoute.Awareness -> Route.AwarenessSettings
                             SettingsRoute.Calendar -> Route.CalendarSettings
                             SettingsRoute.Appearance -> Route.AppearanceSettings
                             SettingsRoute.About -> Route.AboutSettings
@@ -152,6 +162,9 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                 is Route.PrayerDetailArgs -> PrayerDetailScreen(state, fmt, route.index) { sub = null }
                 is Route.WorshipDetail -> WorshipDetailScreen(state, fmt, route.kind) { sub = null }
                 is Route.DayDetail -> DayDetailScreen(state, fmt, route.year, route.month, route.day) { sub = null }
+                Route.Gaps -> GapsScreen(state, fmt) { sub = null }
+                Route.Interval -> IntervalScreen(state, fmt) { sub = null }
+                Route.Sunnah -> SunnahScreen(state, fmt) { sub = null }
                 Route.LocationSettings -> MiqatScaffold("الإعدادات", onBack = { sub = null }) {
                     LocationSection(state, fmt) { pickerOpen = true }
                 }
@@ -160,6 +173,9 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                 }
                 Route.NotificationsSettings -> MiqatScaffold("الإعدادات", onBack = { sub = null }) {
                     NotificationsSection(state, fmt)
+                }
+                Route.AwarenessSettings -> MiqatScaffold("الإعدادات", onBack = { sub = null }) {
+                    AwarenessSection(state, fmt)
                 }
                 Route.CalendarSettings -> MiqatScaffold("الإعدادات", onBack = { sub = null }) {
                     CalendarSection(state, fmt)
@@ -400,8 +416,8 @@ private fun HeroCard(
         Modifier
             .fillMaxWidth()
             .background(
-                Brush.verticalGradient(listOf(scheme.primaryContainer.copy(alpha = .55f), scheme.surface)),
-                RoundedCornerShape(24.dp),
+                scheme.surface,
+                RoundedCornerShape(Radius.hero),
             )
             .padding(Space.lg),
     ) {
@@ -450,16 +466,34 @@ private fun HeroCard(
         }
         Spacer(Modifier.height(Space.sm))
         if (seg != null) {
+            val urgency = if (state.display.urgencyEnabled) {
+                UrgencyRules.of(
+                    seg.remainingSeconds,
+                    state.display.urgencySoonMinutes,
+                    state.display.urgencyImminentMinutes,
+                )
+            } else Urgency.CALM
+            val momentColor = when (urgency) {
+                Urgency.CALM -> scheme.onSurface
+                Urgency.SOON -> UrgencySoon
+                Urgency.IMMINENT, Urgency.NOW -> UrgencyImminent
+            }
             Text(
-                "المتبقي لميقات ${seg.next.labelAr}" + if (seg.nextIsTomorrow) " (غداً)" else "",
+                when (urgency) {
+                    Urgency.NOW -> "حان الآن: ${seg.next.labelAr}"
+                    Urgency.IMMINENT -> "استعدّ لصلاة ${seg.next.labelAr}"
+                    Urgency.SOON -> "اقترب وقت ${seg.next.labelAr}"
+                    Urgency.CALM -> "المتبقي لميقات ${seg.next.labelAr}" +
+                        if (seg.nextIsTomorrow) " (غداً)" else ""
+                },
                 style = MaterialTheme.typography.bodyMedium,
-                color = scheme.onSurfaceVariant,
+                color = if (urgency == Urgency.CALM) scheme.onSurfaceVariant else momentColor,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
             Text(
                 fmt.hms(seg.remainingSeconds),
-                style = MaterialTheme.typography.displayMedium,
-                color = scheme.onSurface,
+                style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = TabularFigures),
+                color = momentColor,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
         }

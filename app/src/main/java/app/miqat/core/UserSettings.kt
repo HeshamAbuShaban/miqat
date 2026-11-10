@@ -40,6 +40,14 @@ data class DisplayPrefs(
     val manualUtcOffsetMinutes: Int? = null,
     /** Global calc-method override; null = the city's own default method. */
     val methodOverride: String? = null,
+    // --- urgency (the app must react as the appointed time approaches) ---
+    val urgencyEnabled: Boolean = true,
+    val urgencySoonMinutes: Int = 15,
+    val urgencyImminentMinutes: Int = 5,
+    // --- gaps (the time between one appointment and the next) ---
+    val showGaps: Boolean = true,
+    /** Which gap categories the user wants to see between the prayer rows. */
+    val gapCategories: Set<String> = setOf("صلاة", "شمس", "عبادة", "ليل", "سنة"),
 )
 
 object UserSettings {
@@ -54,6 +62,14 @@ object UserSettings {
     private const val K_UTC_OFFSET_MODE = "utc_offset_mode"     // "auto" | "manual"
     private const val K_UTC_OFFSET_MIN = "utc_offset_minutes"
     private const val K_METHOD_OVERRIDE = "method_override"
+    private const val K_URGENCY_ON = "urgency_enabled"
+    private const val K_URGENCY_SOON = "urgency_soon"
+    private const val K_URGENCY_IMMINENT = "urgency_imminent"
+    private const val K_SHOW_GAPS = "show_gaps"
+    private const val K_GAP_CATEGORIES = "gap_categories"
+    private const val K_USE_GPS = "use_gps"
+    private const val K_GPS_LAT = "gps_lat"
+    private const val K_GPS_LON = "gps_lon"
 
     private fun prefs(context: Context): SharedPreferences =
         context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
@@ -111,7 +127,40 @@ object UserSettings {
             hijriOffsetDays = p.getInt(K_HIJRI_OFFSET, 0),
             manualUtcOffsetMinutes = if (mode == "manual") p.getInt(K_UTC_OFFSET_MIN, 0) else null,
             methodOverride = p.getString(K_METHOD_OVERRIDE, null),
+            urgencyEnabled = p.getBoolean(K_URGENCY_ON, true),
+            urgencySoonMinutes = p.getInt(K_URGENCY_SOON, 15),
+            urgencyImminentMinutes = p.getInt(K_URGENCY_IMMINENT, 5),
+            showGaps = p.getBoolean(K_SHOW_GAPS, true),
+            gapCategories = p.getStringSet(
+                K_GAP_CATEGORIES, setOf("صلاة", "شمس", "عبادة", "ليل", "سنة"),
+            ) ?: emptySet(),
         )
+    }
+
+    // --- GPS location override ---------------------------------------------
+
+    /** The last confirmed device fix, or null when the user declined GPS. */
+    fun gpsFix(context: Context): LocationFix? {
+        val p = prefs(context)
+        if (!p.getBoolean(K_USE_GPS, false)) return null
+        val lat = p.getFloat(K_GPS_LAT, 0f).toDouble()
+        val lon = p.getFloat(K_GPS_LON, 0f).toDouble()
+        if (lat == 0.0 && lon == 0.0) return null
+        val offset = java.util.TimeZone.getDefault().getOffset(System.currentTimeMillis())
+            .toDouble() / 3_600_000.0
+        return LocationFix(lat, lon, offset, LocationSource.GPS)
+    }
+
+    fun saveGpsFix(context: Context, fix: LocationFix?) {
+        val e = prefs(context).edit()
+        if (fix == null) {
+            e.putBoolean(K_USE_GPS, false)
+        } else {
+            e.putBoolean(K_USE_GPS, true)
+                .putFloat(K_GPS_LAT, fix.latitude.toFloat())
+                .putFloat(K_GPS_LON, fix.longitude.toFloat())
+        }
+        e.apply()
     }
 
     fun saveDisplay(context: Context, d: DisplayPrefs) {
@@ -123,6 +172,11 @@ object UserSettings {
             .putString(K_UTC_OFFSET_MODE, if (d.manualUtcOffsetMinutes == null) "auto" else "manual")
             .putInt(K_UTC_OFFSET_MIN, d.manualUtcOffsetMinutes ?: 0)
             .putString(K_METHOD_OVERRIDE, d.methodOverride)
+            .putBoolean(K_URGENCY_ON, d.urgencyEnabled)
+            .putInt(K_URGENCY_SOON, d.urgencySoonMinutes)
+            .putInt(K_URGENCY_IMMINENT, d.urgencyImminentMinutes)
+            .putBoolean(K_SHOW_GAPS, d.showGaps)
+            .putStringSet(K_GAP_CATEGORIES, d.gapCategories)
             .apply()
     }
 }

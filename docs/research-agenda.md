@@ -316,6 +316,20 @@ Cross-cutting, applies to R3/R4/R5/R6:
 
 ---
 
+## R8–R12 — the second brief (2026-11-10, after the v2 rebuild)
+
+New demands from Hesham, classified:
+
+| Stream | Demand | Where it landed |
+|--------|--------|-----------------|
+| **R8** | «اذا أوشك الوقت على النفاذ فتجعله مختلف عن حاله الطبيعي … التفكير بمنطق وذكاء» | `Urgency` model (CALM/SOON/IMMINENT/NOW) applied to the hero, the prayer rows and the notifications; thresholds in settings |
+| **R9** | «الوقت بين كل صلاة واخرى بائن وواضح» (better than the donor) | `GapBridge` hairlines in the prayer list + the «المدد بين المواقيت» screen with a proportional measure; which gaps show is a setting |
+| **R10** | «عند الطلب يحسب الوقت بين موعدين اثنين ايا كان الصنف» (i'tikaf planning: Fajr → Duha) | «احسب بين ميقوتين» — any two moments, any categories, with the duration and «من الآن حتى…» |
+| **R11** | «المعيار الذهبي هي قيم الانترنت و قيم الموقع؛ فإذا غاب هذا ورفض المستخدم ينبّه ويحذّر» | `LocationSource` + `TimeConfidence`: GPS when allowed, the picked city otherwise, with the warning shown in the settings AND on the prayer-detail page. No online times mode: the app computes locally and never phones home — the honest replacement is VERIFICATION against an official timetable (R3.3, still open) |
+| **R12** | مواقيت السنة: النوم، السحور، القيلولة، قراءة القرآن «أناء الليل وأطراف النهار» | «مواقيت السنة» screen, computed from the day's prayers; texts gated by `docs/sourcing-table.md` |
+
+---
+
 ## Appendix — council verdicts, 2026-11-10 (free-model pass, Hesham's direction)
 
 Two seats ran; the IA fresh-eyes seat (R7) failed on subagent model routing

@@ -40,6 +40,21 @@ val Blue = Color(0xFF5A74E8)
 val Sunset = Color(0xFFFF7A59)
 val Crimson = Color(0xFFE5484D)
 
+// urgency (the app reacts as the appointed time approaches — «اقترب الموعد»)
+val UrgencySoon = Color(0xFFFFB74D)     // amber — the same gold as the brand
+val UrgencyImminent = Color(0xFFFF7A59) // sunset — warmer, louder, still calm
+
+/** Radius scale (nested radii add up): chips 6, controls 10, rows 12, cards 14,
+ *  panels 18, the hero 20. Nothing is a pill. */
+object Radius {
+    val chip = 6.dp
+    val control = 10.dp
+    val row = 12.dp
+    val card = 14.dp
+    val panel = 18.dp
+    val hero = 20.dp
+}
+
 // dark scheme
 val NightBg = Color(0xFF0B1020)
 val NightSurface = Color(0xFF121830)
@@ -65,6 +80,8 @@ private val DarkColors = darkColorScheme(
     onSecondary = Color(0xFF00312C),
     tertiary = Amber,
     onTertiary = Color(0xFF3A2500),
+    tertiaryContainer = Color(0xFF3B2A08),
+    onTertiaryContainer = Cream,
     background = NightBg,
     onBackground = NightText,
     surface = NightSurface,
@@ -86,6 +103,8 @@ private val LightColors = lightColorScheme(
     onSecondary = Color(0xFFFFFFFF),
     tertiary = Color(0xFF8A5200),
     onTertiary = Color(0xFFFFFFFF),
+    tertiaryContainer = Color(0xFFFFE3C2),
+    onTertiaryContainer = Color(0xFF2B1800),
     background = PaperBg,
     onBackground = InkText,
     surface = PaperSurface,
@@ -105,6 +124,10 @@ val Cairo = FontFamily(
     Font(R.font.cairo_medium, FontWeight.Medium),
     Font(R.font.cairo_bold, FontWeight.Bold),
 )
+
+/** Tabular figures — a ticking clock must not reflow its neighbours
+ *  (council: use `tnum` with Arabic-Indic digits). */
+val TabularFigures = "tnum"
 
 private val MiqatType = Typography(
     displayLarge = TextStyle(fontFamily = Cairo, fontWeight = FontWeight.Bold, fontSize = 57.sp, lineHeight = 64.sp),

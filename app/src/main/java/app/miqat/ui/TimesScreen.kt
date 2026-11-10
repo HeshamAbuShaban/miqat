@@ -23,6 +23,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import app.miqat.core.Appointment
 import app.miqat.core.DayClock
+import app.miqat.core.Moments
+import app.miqat.core.Urgency
+import app.miqat.core.UrgencyRules
 import app.miqat.core.WorshipWindows
 
 /** Minutes-of-day for a fractional hour (same round-half-up as the donor). */
@@ -43,6 +46,9 @@ fun TimesScreen(
     fmt: Fmt,
     onOpenPrayer: (Int) -> Unit,
     onOpenWorship: (WorshipKind) -> Unit,
+    onOpenGaps: () -> Unit,
+    onOpenInterval: () -> Unit,
+    onOpenSunnah: () -> Unit,
 ) {
     val nowState = rememberNowState()
     val now = nowState.value
@@ -71,9 +77,19 @@ fun TimesScreen(
         )
         Spacer(Modifier.height(Space.sm))
 
+        val timeline = rememberTimeline(state, now)
+        val gapAfter = Moments.gaps(timeline).associateBy { it.from.kind }
+
         PRAYER_NAMES.forEachIndexed { i, name ->
             val isNext = seg?.next?.key == PRAYER_KEY[i]
             val isCurrent = seg?.current?.key == PRAYER_KEY[i]
+            val urgency = if (state.display.urgencyEnabled && isNext && seg != null) {
+                UrgencyRules.of(
+                    seg.remainingSeconds,
+                    state.display.urgencySoonMinutes,
+                    state.display.urgencyImminentMinutes,
+                )
+            } else Urgency.CALM
             PrayerRow(
                 name = name,
                 time = fmt.hhmm(minutesOf(times.list[i])),
@@ -83,8 +99,16 @@ fun TimesScreen(
                     else -> null
                 },
                 highlighted = isNext,
+                urgency = urgency,
                 onClick = { onOpenPrayer(i) },
             )
+            // the gap to the next moment — drawn, not stacked
+            val gap = gapAfter[PRAYER_KEY[i]]
+            if (state.display.showGaps && gap != null &&
+                state.display.gapCategories.contains(gap.to.category.labelAr)
+            ) {
+                GapBridge(gap.minutes, fmt.duration(gap.minutes))
+            }
             Divider()
         }
 
@@ -124,6 +148,20 @@ fun TimesScreen(
             fmt.hhmm(minutesOf(night.lastThirdStartHour)),
             "آخر ثلث الليل — وقت الاستغفار",
         ) { onOpenWorship(WorshipKind.LAST_THIRD) }
+        Divider()
+
+        Spacer(Modifier.height(Space.lg))
+        Text(
+            "أدوات",
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+        Spacer(Modifier.height(Space.xs))
+        NavRow("المدد بين المواقيت", "كم يبقى بين كل موعد والذي يليه", onOpenGaps)
+        Divider(Modifier.padding(horizontal = Space.lg))
+        NavRow("احسب بين ميقوتين", "أي ميقوتين كان — من أي نوع", onOpenInterval)
+        Divider(Modifier.padding(horizontal = Space.lg))
+        NavRow("مواقيت السنة", "النوم والسحور والقيلولة وقراءة القرآن", onOpenSunnah)
         Spacer(Modifier.height(Space.xxl))
     }
 }
@@ -134,6 +172,7 @@ private fun PrayerRow(
     time: String,
     clock: String?,
     highlighted: Boolean,
+    urgency: Urgency = Urgency.CALM,
     onClick: () -> Unit,
 ) {
     Row(
@@ -145,7 +184,12 @@ private fun PrayerRow(
             Text(
                 name,
                 style = MaterialTheme.typography.bodyLarge,
-                color = if (highlighted) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface,
+                color = when (urgency) {
+                    Urgency.IMMINENT, Urgency.NOW -> UrgencyImminent
+                    Urgency.SOON -> UrgencySoon
+                    Urgency.CALM -> if (highlighted) MaterialTheme.colorScheme.tertiary
+                    else MaterialTheme.colorScheme.onSurface
+                },
             )
             if (clock != null) {
                 Text(
@@ -157,8 +201,13 @@ private fun PrayerRow(
         }
         Text(
             time,
-            style = MaterialTheme.typography.titleMedium,
-            color = if (highlighted) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = TabularFigures),
+            color = when (urgency) {
+                Urgency.IMMINENT, Urgency.NOW -> UrgencyImminent
+                Urgency.SOON -> UrgencySoon
+                Urgency.CALM -> if (highlighted) MaterialTheme.colorScheme.tertiary
+                else MaterialTheme.colorScheme.onSurface
+            },
         )
     }
 }

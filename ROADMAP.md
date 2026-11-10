@@ -140,6 +140,20 @@ Every step cites its donor lead (teardown §).
 
 ## S6 — Beyond the donor (the "tons of additions")
 
+- [x] **R8 urgency model** — DONE 2026-11-10: the countdown changes as the
+      appointed time approaches (CALM/SOON/IMMINENT/NOW), shared by the hero,
+      the rows and the notifications; thresholds configurable
+- [x] **R9 the gaps between appointments** — DONE 2026-11-10: hairline bridges
+      with the duration in the prayer list + a «المدد بين المواقيت» screen with
+      a proportional measure; which gaps show is a setting
+- [x] **R10 interval between any two moments** — DONE 2026-11-10: «احسب بين
+      ميقوتين» (any categories — e.g. Fajr → Duha for i'tikaf)
+- [x] **R11 location source + confidence** — DONE 2026-11-10: GPS when the user
+      allows it (Android LocationManager, F-Droid clean), the picked city
+      otherwise, with the warning shown in the settings AND on the prayer-detail
+      page. REMAINING: verification against an official timetable (R3.3)
+- [x] **R12 مواقيت السنة** — DONE 2026-11-10: النوم، السحور، القيلولة، أوقات
+      قراءة القرآن — computed from the day; texts gated by docs/sourcing-table.md
 - [ ] Athkar/tasbih module (donor DB already carries azkar text)
 - [ ] Monthly timetable export: PDF/image share (donor's SharingActivity minimal)
 - [ ] Battery-kind scheduler (WorkManager + exact-alarm hybrid; donor burns a
