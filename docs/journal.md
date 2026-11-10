@@ -3,6 +3,34 @@
 > One dated entry per working session (see AGENTS.md). Next agent: read ROADMAP top
 > unfinished step, then this.
 
+## 2026-11-10 (6) — Data layer v3 + verification screen + the donor's other tables
+
+- **The donor's DB carried more than the cities** — the teardown had missed four
+  tables that belong in the app: the Arabic country names (251), the Islamic
+  days (59, with the donor's own wording), the reminder texts (21, with their
+  time windows) and the TIMEZONE table (416 zones / 28,522 DST rules). All of it
+  is now bundled as `miqat-data-v1.db` and used:
+  - the search rows show «فلسطين» instead of "PS";
+  - the calendar's events come from the donor's own `day_events`;
+  - the تذكيرية notification carries the donor's dhikr;
+  - and the city asset became `cities-v3.db` with zone ids, so **the UTC offset
+    is DST-correct for any date** — the S2 "own tz table" item, closed.
+- **Arabic search now tolerates spelling**: the names are folded at BUILD time
+  into an indexed column, so «الاهرام» finds «الأهرام» and «القاهره» finds
+  «القاهرة». The FIRST build of that column was silently broken (empty folds,
+  every Arabic query matched everything) — `ArabicFoldTest` now guards the
+  rules, and the build script folds identically.
+- **«تحقّق من المواعيد»** (R3.3): the user types their city's official
+  timetable; the app shows the difference prayer by prayer and can adopt it as
+  the manual adjusts. This is the honest offline answer to «المعيار الذهبي هي
+  قيم الإنترنت»: the comparison is against the user's own official data, on the
+  device, with nothing sent anywhere.
+- **The adhkar citations**: the council verified the donor's 21 reminder texts
+  one by one — eight carry a verified number, the rest print «رواه: <المصدر> —
+  رقم الحديث غير متحقق منه». The reminder notification prints the dhikr with
+  its source.
+- 31/31 unit tests green; parity unchanged.
+
 ## 2026-11-10 (5) — Overnight run: adhan audio, alarm screen, calendar, fasting nudges, numbers audit
 
 Hesham went to sleep and gave a standing order: keep going, no questions, make
