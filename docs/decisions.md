@@ -2,6 +2,42 @@
 
 > One line per decision; newest first. `applicationId` `app.miqat` freezes at release.
 
+## 2026-11-11 — The three councils, and the Layer-0 mandate
+
+Hesham: «take the wheel, let the council help you — Council of Models → مجلس
+النماذج · Design Council → مجلس التصميم · Advisory Council → المجلس
+الاستشاري». Named and used from here on:
+
+- **مجلس النماذج (Council of Models)** — the free-model seats (deepseek /
+  minimax / longcat / flint / mimo): research, verification, and wide critique.
+- **مجلس التصميم (Design Council)** — palette, type, layout, the day-sky, the
+  compass, the home composition.
+- **المجلس الاستشاري (Advisory Council)** — the adversarial seat: what a user
+  would call dishonest, noisy or missing, and what must NOT be built yet.
+
+**The mandate it produced (2026-11-10):** the app is right at its spine
+(«متى الميقات، كم بقي، ولماذا — بصدق، بلا إنترنت») but it drifted into a
+general Islamic utility, and two gates were open. So:
+
+- **Layer 0 (gates) FIRST** — no feature is added before:
+  0.1 the «تقديري بحسب الاصطلاح» qualifier in EVERY window-bound payload;
+  0.2 ONE source of "now" for the whole app (the two-clock split caused the
+      location bug — the same split could lie again);
+  0.3 the manual-adjust ceiling raised (a ±30 min cap refuses an official
+      timetable that is further off);
+  0.4 the missed-Fajr gate: battery-optimisation deep link, call/audio-focus
+      pause, the iqama (second call), the always-on countdown;
+  0.5 an explicit confidence class per time (مؤكد / محسوب / تقديري).
+- **Then** Layer 1 the calendar as a worship ledger, Layer 2 the acts catalog,
+  Layer 3 the craft (palette A, the proportional-clock hero, the seven-line
+  home), Layer 4 the sighting-informed calendar + athkar, Layer 5 the tooling
+  (root `DESIGN.md`, `docs/ui-patterns.md`, the anatomy skill, the figures),
+  Layer 6 the widgets and the export.
+- **Cuts**: the separate "nearest act" card (merged into the strip), the
+  separate motivational channel (merged into the reminder), the duplicated
+  events list under the grid, "which prayer?" as a settings prerequisite, the
+  gradients on cards, and the shadows in the dark theme.
+
 ## 2026-11-10 (11) — The location rule (bugfix, 2026-11-10)
 
 - `LocationRules.effective(...)` — the coordinates and the UTC offset ALWAYS

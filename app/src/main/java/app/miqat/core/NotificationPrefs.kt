@@ -48,6 +48,10 @@ data class NotificationPrefs(
     val fastingReminderTime: String = "maghrib",
     /** Which days the reminder mentions. */
     val fastingReminderDays: Set<String> = setOf("monday", "thursday", "white", "arafah", "ashura", "shawwal"),
+    /** The iqama (the second call) — minutes after the adhan; 0 = off. */
+    val iqamaMinutes: Int = 0,
+    /** The always-on countdown notification. */
+    val alwaysOnCountdown: Boolean = false,
     /** Vibration on the direct adhan. */
     val vibrate: Boolean = true,
     /** Full-screen lockscreen intent (the alarm experience). */
@@ -78,6 +82,8 @@ object NotificationPrefsStore {
     private const val K_FASTING_ON = "fasting_on"
     private const val K_FASTING_TIME = "fasting_time"
     private const val K_FASTING_DAYS = "fasting_days"
+    private const val K_IQAMA = "iqama_minutes"
+    private const val K_COUNTDOWN = "always_on_countdown"
 
     private fun prefs(context: Context): SharedPreferences =
         context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
@@ -102,6 +108,8 @@ object NotificationPrefsStore {
             fastingReminderDays = p.getStringSet(
                 K_FASTING_DAYS, defaults.fastingReminderDays,
             ) ?: defaults.fastingReminderDays,
+            iqamaMinutes = p.getInt(K_IQAMA, defaults.iqamaMinutes),
+            alwaysOnCountdown = p.getBoolean(K_COUNTDOWN, defaults.alwaysOnCountdown),
             vibrate = p.getBoolean("vibrate", defaults.vibrate),
             fullScreenAlarm = p.getBoolean("fsi", defaults.fullScreenAlarm),
             continuousNotification = p.getBoolean("continuous", defaults.continuousNotification),
@@ -124,6 +132,8 @@ object NotificationPrefsStore {
         e.putBoolean(K_FASTING_ON, n.fastingReminderEnabled)
         e.putString(K_FASTING_TIME, n.fastingReminderTime)
         e.putStringSet(K_FASTING_DAYS, n.fastingReminderDays)
+        e.putInt(K_IQAMA, n.iqamaMinutes)
+        e.putBoolean(K_COUNTDOWN, n.alwaysOnCountdown)
         e.putBoolean("vibrate", n.vibrate)
         e.putBoolean("fsi", n.fullScreenAlarm)
         e.putBoolean("continuous", n.continuousNotification)

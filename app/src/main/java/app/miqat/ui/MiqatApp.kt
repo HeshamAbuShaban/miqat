@@ -110,6 +110,10 @@ enum class WorshipKind(val label: String, val blurb: String) {
 
 @Composable
 fun MiqatApp(state: AppState, fmt: Fmt) {
+    // ONE clock for the whole app (gate 0.2): the hero, the strip, the times
+    // list and the tools all read this same instant — two clocks is how the
+    // location bug happened.
+    val now = rememberNowState()
     var top by remember { mutableStateOf(TopLevel.Home) }
     var sub by remember { mutableStateOf<Route?>(null) }
     var pickerOpen by remember { mutableStateOf(false) }
@@ -151,12 +155,12 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
             when (val route = sub) {
                 null -> when (top) {
                     TopLevel.Home -> HomeScreen(
-                        state, fmt,
+                        state, fmt, now,
                         onOpenTimes = { top = TopLevel.Times },
                         onOpenQibla = { sub = Route.Qibla },
                     )
                     TopLevel.Times -> TimesScreen(
-                        state, fmt,
+                        state, fmt, now,
                         onOpenPrayer = { sub = Route.PrayerDetailArgs(it) },
                         onOpenWorship = { sub = Route.WorshipDetail(it) },
                         onOpenGaps = { sub = Route.Gaps },
@@ -164,7 +168,7 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                         onOpenInterval = { sub = Route.Interval },
                         onOpenSunnah = { sub = Route.Sunnah },
                     )
-                    TopLevel.Calendar -> CalendarScreen(state, fmt, onOpenDay = { y, m, d -> sub = Route.DayDetail(y, m, d) })
+                    TopLevel.Calendar -> CalendarScreen(state, fmt, now, onOpenDay = { y, m, d -> sub = Route.DayDetail(y, m, d) })
                     TopLevel.Settings -> SettingsScreen(state, fmt, onOpen = { r ->
                         sub = when (r) {
                             SettingsRoute.Location -> Route.LocationSettings
@@ -252,11 +256,11 @@ fun rememberNowState(): State<Long> {
 fun HomeScreen(
     state: AppState,
     fmt: Fmt,
+    nowState: State<Long>,
     onOpenTimes: () -> Unit,
     onOpenQibla: () -> Unit = {},
 ) {
     val context = LocalContext.current
-    val nowState = rememberNowState()
     val now = nowState.value
     val (y, m, d) = state.cityDate(now)
     val times = state.times(y, m, d)

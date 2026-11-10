@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -44,6 +45,7 @@ fun minutesOf(hours: Double): Int {
 fun TimesScreen(
     state: AppState,
     fmt: Fmt,
+    nowState: State<Long>,
     onOpenPrayer: (Int) -> Unit,
     onOpenWorship: (WorshipKind) -> Unit,
     onOpenGaps: () -> Unit,
@@ -51,7 +53,6 @@ fun TimesScreen(
     onOpenInterval: () -> Unit,
     onOpenSunnah: () -> Unit,
 ) {
-    val nowState = rememberNowState()
     val now = nowState.value
     val (y, m, d) = state.cityDate(now)
     val (ty, tm, td) = state.cityTomorrow(now)

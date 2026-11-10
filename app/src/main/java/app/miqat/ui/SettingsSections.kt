@@ -181,7 +181,7 @@ fun CalculationSection(state: AppState, fmt: Fmt) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(name, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
-                MinuteStepper(state.adjusts.forIndex(i), { v -> state.updateAdjusts(state.adjusts.withIndex(i, v)) }, fmt = fmt)
+                MinuteStepper(state.adjusts.forIndex(i), { v -> state.updateAdjusts(state.adjusts.withIndex(i, v)) }, -60..60, fmt)
             }
         }
         Spacer(Modifier.height(Space.xl))
@@ -454,6 +454,31 @@ fun NotificationsSection(state: AppState, fmt: Fmt) {
         })
         Divider(Modifier.padding(horizontal = Space.lg))
         ToggleRow("صوت الأذان", null, n.adhanSound) { v -> state.updateNotifications(n.copy(adhanSound = v)) }
+        NavRow(
+            "صلاة الإقامة",
+            if (n.iqamaMinutes <= 0) "معطّلة" else "بعد ${fmt.n(n.iqamaMinutes)} دقيقة من الأذان",
+            onClick = {
+                val options = intArrayOf(0, 10, 15, 20, 30)
+                val next = options[(options.indexOf(n.iqamaMinutes) + 1) % options.size]
+                state.updateNotifications(n.copy(iqamaMinutes = next))
+            },
+        )
+        Divider(Modifier.padding(horizontal = Space.lg))
+        ToggleRow(
+            "العدّاد الدائم",
+            "إشعار مستمر بالمتبقي على شاشة القفل",
+            n.alwaysOnCountdown,
+        ) { v ->
+            state.updateNotifications(n.copy(alwaysOnCountdown = v))
+            app.miqat.core.CountdownController.setEnabled(context, v)
+        }
+        Divider(Modifier.padding(horizontal = Space.lg))
+        NavRow(
+            "إذن البطارية",
+            "يمنع النظام من إيقاف التنبيهات",
+            onClick = { app.miqat.core.CountdownController.openBatterySettings(context) },
+        )
+        Divider(Modifier.padding(horizontal = Space.lg))
         ToggleRow("الاهتزاز", null, n.vibrate) { v -> state.updateNotifications(n.copy(vibrate = v)) }
         ToggleRow("إشعار ملء الشاشة", "تنبيه يوقف الساعة بنقرة", n.fullScreenAlarm) { v -> state.updateNotifications(n.copy(fullScreenAlarm = v)) }
         ToggleRow(

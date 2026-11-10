@@ -19,7 +19,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val state = AppState(this)
+        app.miqat.core.AppStateHolder.publish(state)
         val fmt = Fmt(state.display)
+        // the always-on countdown follows the setting
+        if (state.notifications.alwaysOnCountdown) {
+            app.miqat.core.CountdownController.setEnabled(this, true)
+        }
         setContent {
             MiqatTheme(dark = state.display.darkTheme) {
                 Surface(modifier = Modifier.fillMaxSize()) {

@@ -25,8 +25,22 @@ class AdhanService : Service() {
         val notification = NotificationPoster.buildAdhanNotification(this, slot, label)
         startForeground(NotificationPoster.ADHAN_NOTIFICATION_ID, notification)
 
+        // yield to a call: when the audio focus is lost (a call, an alarm), we
+        // stop rather than talk over it (gate 0.4 — no phone permission needed)
+        val focus = AudioFocusGuard(this)
+        val gotFocus = focus.request {
+            Log.i("MiqatAdhan", "audio focus lost — yielding")
+            AdhanPlayer.stop()
+            stopForeground(true)
+            stopSelf()
+        }
+        if (!gotFocus) {
+            Log.i("MiqatAdhan", "no audio focus")
+        }
+
         AdhanPlayer.play(this, pack, slot, version) {
             Log.i("MiqatAdhan", "adhan finished")
+            focus.abandon()
             stopForeground(true)
             stopSelf()
         }

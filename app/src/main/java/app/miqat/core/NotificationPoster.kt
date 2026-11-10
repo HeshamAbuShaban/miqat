@@ -102,17 +102,32 @@ object NotificationPoster {
         }
     }
 
-    fun post(context: Context, kind: NotifyKind, label: String, slot: Int, quiet: Boolean = false) {
+    /** The chip that says: this bound is OUR convention, not a ruling. */
+    const val ESTIMATED = "تقديري بحسب الاصطلاح"
+
+    fun post(
+        context: Context,
+        kind: NotifyKind,
+        label: String,
+        slot: Int,
+        quiet: Boolean = false,
+        estimated: Boolean = false,
+        iqama: Boolean = false,
+    ) {
         val nm = context.getSystemService(NotificationManager::class.java) ?: return
         NotifyChannels.ensure(context)
 
         val prefs = NotificationPrefsStore.load(context)
         val motivational = motivationalText(context)
 
+        val body = bodyFor(kind, label, motivational, prefs) +
+            (if (estimated) "\n" + ESTIMATED else "") +
+            (if (iqama) "\nإقامة الصلاة" else "")
         val builder = NotificationCompat.Builder(context, channelFor(kind))
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(titleFor(kind, label))
-            .setContentText(bodyFor(kind, label, motivational, prefs))
+            .setContentText(body)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
             .setPriority(priorityFor(kind))
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setAutoCancel(true)
@@ -136,7 +151,10 @@ object NotificationPoster {
         )
         builder.setContentIntent(contentIntent)
 
-        if (kind == NotifyKind.DIRECT) {
+        if (kind == NotifyKind.DIRECT && iqama) {
+            // the iqama is a call, not the adhan: a plain sound, no recitation
+            if (!quiet) builder.setDefaults(NotificationCompat.DEFAULT_SOUND)
+        } else if (kind == NotifyKind.DIRECT) {
             if (!quiet && prefs.adhanSound) builder.setDefaults(NotificationCompat.DEFAULT_SOUND)
             if (!quiet && prefs.vibrate) builder.setVibrate(longArrayOf(0, 400, 200, 400))
             builder.setGroup(GROUP_DIRECT)
@@ -203,7 +221,7 @@ object NotificationPoster {
 
     private fun titleFor(kind: NotifyKind, label: String) = when (kind) {
         NotifyKind.PREPARATORY -> "اقترب وقت $label"
-        NotifyKind.DIRECT -> "حان الآن وقت $label"
+        NotifyKind.DIRECT -> if (label.startsWith("إقامة")) label else "حان الآن وقت $label"
         NotifyKind.REMINDER -> "فات وقت $label"
         NotifyKind.MOTIVATIONAL -> if (label.startsWith("غداً")) label else "ذكرى"
     }

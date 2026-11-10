@@ -170,6 +170,7 @@ fun VerifyScreen(state: AppState, fmt: Fmt, onBack: () -> Unit) {
                                 .clickable {
                                     if (!applied) {
                                         state.updateAdjusts(reconciliation.asAdjusts())
+                                        state.markOfficial(true)
                                         applied = true
                                     }
                                 }

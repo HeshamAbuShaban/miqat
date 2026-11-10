@@ -59,6 +59,14 @@ data class AlarmSpec(
     val label: String,
     /** Trigger time in epoch millis. */
     val atMillis: Long,
+    /**
+     * Is this a CONVENTION (a worship window's bound, computed by our own
+     * rule)? Then the payload must carry «تقديري بحسب الاصطلاح» — a window
+     * bound announced without it is a claim of certainty we do not have.
+     */
+    val estimated: Boolean = false,
+    /** The iqama — the second call, minutes after the adhan. */
+    val iqama: Boolean = false,
 )
 
 object AlarmScheduler {
@@ -119,6 +127,13 @@ object AlarmScheduler {
                 if (at > now) specs.add(AlarmSpec(NotifyKind.DIRECT, i, prayerNames[i], at))
                 val at2 = epochFor(city, offset, now, tomorrowList[i], isTomorrow = true)
                 if (at2 > now) specs.add(AlarmSpec(NotifyKind.DIRECT, i, prayerNames[i], at2))
+                // the iqama — the second call, if the user asked for it
+                if (prefs.iqamaMinutes > 0) {
+                    val iq1 = at + prefs.iqamaMinutes * 60_000L
+                    if (iq1 > now) specs.add(AlarmSpec(NotifyKind.DIRECT, i, "إقامة ${prayerNames[i]}", iq1, iqama = true))
+                    val iq2 = at2 + prefs.iqamaMinutes * 60_000L
+                    if (iq2 > now) specs.add(AlarmSpec(NotifyKind.DIRECT, i, "إقامة ${prayerNames[i]}", iq2, iqama = true))
+                }
             }
         }
 
@@ -177,11 +192,11 @@ object AlarmScheduler {
             }
             val sAt = epochFor(city, offset, now, sahar.startHour, isTomorrow = true)
             if (!sahar.startHour.isNaN() && sAt > now) {
-                specs.add(AlarmSpec(NotifyKind.DIRECT, -2, "وقت الأسحار", sAt))
+                specs.add(AlarmSpec(NotifyKind.DIRECT, -2, "وقت الأسحار", sAt, estimated = true))
             }
             val tAt = epochFor(city, offset, now, night.lastThirdStartHour, isTomorrow = true)
             if (!night.lastThirdStartHour.isNaN() && tAt > now) {
-                specs.add(AlarmSpec(NotifyKind.DIRECT, -3, "الثلث الأخير من الليل", tAt))
+                specs.add(AlarmSpec(NotifyKind.DIRECT, -3, "الثلث الأخير من الليل", tAt, estimated = true))
             }
         }
 
@@ -234,6 +249,8 @@ object AlarmScheduler {
             putExtra("slot", spec.slot)
             putExtra("label", spec.label)
             putExtra("quiet", quiet)
+            putExtra("estimated", spec.estimated)
+            putExtra("iqama", spec.iqama)
         }
         val pi = PendingIntent.getBroadcast(
             context,
@@ -298,6 +315,8 @@ class AlarmReceiver : BroadcastReceiver() {
         val label = intent.getStringExtra("label") ?: "الموعد"
         val slot = intent.getIntExtra("slot", -1)
         val quiet = intent.getBooleanExtra("quiet", false)
+        val estimated = intent.getBooleanExtra("estimated", false)
+        val iqama = intent.getBooleanExtra("iqama", false)
         if (kind == NotifyKind.REMINDER) {
             // the reminder carries the dhikr (with its verified citation)
             val payload = NotificationPoster.reminderPayload(context, slot)

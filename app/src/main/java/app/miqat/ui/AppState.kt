@@ -132,6 +132,27 @@ class AppState(context: Context) {
     /** How long before Fajr the fast begins (the imsak lead) — a setting. */
     var imsakLeadMinutes: Int = 15
 
+    /**
+     * How much the app may claim about the times it shows (gate 0.5): the
+     * method, whether the user adopted an official timetable, and whether the
+     * place needs the high-latitude approximation.
+     */
+    fun confidence(): app.miqat.core.TimeConfidence = app.miqat.core.Confidence.of(
+        method.id,
+        officialAdopted = officialAdopted,
+        highLatitude = kotlin.math.abs(city.lat) >= 45.0 &&
+            method.highLatRule != app.miqat.core.HighLatitudeRule.NONE,
+    )
+
+    /** True once the user has adopted their city's official timetable. */
+    var officialAdopted: Boolean = false
+        private set
+
+    /** Mark the times as the city's official ones (the verification screen). */
+    fun markOfficial(adopted: Boolean) {
+        officialAdopted = adopted
+    }
+
     /** Is daylight saving in force right now for the picked city? */
     val isDst: Boolean
         get() = effectiveZoneId?.let { MiqatData.isDst(appContext, it, System.currentTimeMillis()) } ?: false

@@ -146,7 +146,14 @@ fun PrayerDetailScreen(state: AppState, fmt: Fmt, index: Int, onBack: () -> Unit
             )
             InfoRow("المنطقة الزمنية", "UTC+${fmt.n(state.locationFix.utcOffsetHours.toInt())}")
             InfoRow("الموقع", state.locationFix.source.labelAr)
-            InfoRow("ثقة الحساب", state.confidence.labelAr)
+            val conf = state.confidence()
+            InfoRow("ثقة الحساب", conf.labelAr)
+            Text(
+                conf.noteAr,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = Space.xs),
+            )
 
             if (kotlin.math.abs(state.city.lat) >= 45.0 &&
                 method.highLatRule != app.miqat.core.HighLatitudeRule.NONE

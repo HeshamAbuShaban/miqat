@@ -25,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -69,10 +70,11 @@ import java.util.Calendar
 fun CalendarScreen(
     state: AppState,
     fmt: Fmt,
+    nowState: State<Long>,
     onOpenDay: (Int, Int, Int) -> Unit,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val now = System.currentTimeMillis()
+    val now = nowState.value
     val (cy, cm, _) = state.cityDate(now)
     var year by remember { mutableIntStateOf(cy) }
     var month by remember { mutableIntStateOf(cm) }
