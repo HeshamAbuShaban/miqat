@@ -28,6 +28,12 @@ data class Moment(
     val category: MomentCategory,
     /** Absolute minutes from today's local midnight (may exceed 1440 = tomorrow). */
     val minute: Int,
+    /**
+     * Is this an EVENT the user can act on (a prayer, a window that opens) or
+     * just a boundary (the end of a window)? Only events are worth saying
+     * "the nearest one is…".
+     */
+    val isEvent: Boolean = true,
 ) {
     /** Clock time of day (0..1439) for display. */
     val minuteOfDay: Int get() = ((minute % 1440) + 1440) % 1440
@@ -88,13 +94,13 @@ object Moments {
 
         return (prayers + listOf(
             Moment(DUHA_START, "وقت الضحى", MomentCategory.WORSHIP, duhaStart),
-            Moment(DUHA_END, "نهاية الضحى", MomentCategory.WORSHIP, duhaEnd),
+            Moment(DUHA_END, "نهاية الضحى", MomentCategory.WORSHIP, duhaEnd, isEvent = false),
             Moment(MIDNIGHT, "منتصف الليل", MomentCategory.NIGHT, maghrib + nightLength / 2),
             Moment(LAST_THIRD, "الثلث الأخير", MomentCategory.NIGHT, maghrib + nightLength * 2 / 3),
             Moment(SAHAR_START, "وقت الأسحار", MomentCategory.NIGHT, fajrTomorrow - nightLength / 6),
             // sunnah windows (times only — the texts are sourced separately)
             Moment(SLEEP_START, "وقت النوم", MomentCategory.SUNNAH, minuteOf(times.isha)),
-            Moment(SLEEP_END, "الاستيقاظ", MomentCategory.SUNNAH, fajrTomorrow),
+            Moment(SLEEP_END, "الاستيقاظ", MomentCategory.SUNNAH, fajrTomorrow, isEvent = false),
             Moment(SUHUR_START, "وقت السحور", MomentCategory.SUNNAH, fajrTomorrow - nightLength / 6),
             Moment(QAYLULA_START, "وقت القيلولة", MomentCategory.SUNNAH, minuteOf(times.dhuhr)),
             Moment(QAYLULA_END, "نهاية القيلولة", MomentCategory.SUNNAH, minuteOf(times.asr)),

@@ -41,6 +41,13 @@ data class NotificationPrefs(
     val adhanPack: String = "standard",
     /** Which recording of the pack (each pack ships two). */
     val adhanVersion: Int = 1,
+    // --- the fasting / motivational reminder (the تحفيزية kind) ---
+    /** A nightly nudge about tomorrow's fasting. */
+    val fastingReminderEnabled: Boolean = false,
+    /** When the nudge arrives: "maghrib" (after sunset) or "fajr" (before dawn). */
+    val fastingReminderTime: String = "maghrib",
+    /** Which days the reminder mentions. */
+    val fastingReminderDays: Set<String> = setOf("monday", "thursday", "white", "arafah", "ashura", "shawwal"),
     /** Vibration on the direct adhan. */
     val vibrate: Boolean = true,
     /** Full-screen lockscreen intent (the alarm experience). */
@@ -68,6 +75,9 @@ object NotificationPrefsStore {
     private const val FILE = "notification_prefs"
     private const val K_ADHAN_PACK = "adhan_pack"
     private const val K_ADHAN_VERSION = "adhan_version"
+    private const val K_FASTING_ON = "fasting_on"
+    private const val K_FASTING_TIME = "fasting_time"
+    private const val K_FASTING_DAYS = "fasting_days"
 
     private fun prefs(context: Context): SharedPreferences =
         context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
@@ -87,6 +97,11 @@ object NotificationPrefsStore {
             adhanSound = p.getBoolean("adhan_sound", defaults.adhanSound),
             adhanPack = p.getString(K_ADHAN_PACK, defaults.adhanPack) ?: defaults.adhanPack,
             adhanVersion = p.getInt(K_ADHAN_VERSION, defaults.adhanVersion),
+            fastingReminderEnabled = p.getBoolean(K_FASTING_ON, false),
+            fastingReminderTime = p.getString(K_FASTING_TIME, "maghrib") ?: "maghrib",
+            fastingReminderDays = p.getStringSet(
+                K_FASTING_DAYS, defaults.fastingReminderDays,
+            ) ?: defaults.fastingReminderDays,
             vibrate = p.getBoolean("vibrate", defaults.vibrate),
             fullScreenAlarm = p.getBoolean("fsi", defaults.fullScreenAlarm),
             continuousNotification = p.getBoolean("continuous", defaults.continuousNotification),
@@ -106,6 +121,9 @@ object NotificationPrefsStore {
         e.putBoolean("adhan_sound", n.adhanSound)
         e.putString(K_ADHAN_PACK, n.adhanPack)
         e.putInt(K_ADHAN_VERSION, n.adhanVersion)
+        e.putBoolean(K_FASTING_ON, n.fastingReminderEnabled)
+        e.putString(K_FASTING_TIME, n.fastingReminderTime)
+        e.putStringSet(K_FASTING_DAYS, n.fastingReminderDays)
         e.putBoolean("vibrate", n.vibrate)
         e.putBoolean("fsi", n.fullScreenAlarm)
         e.putBoolean("continuous", n.continuousNotification)

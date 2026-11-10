@@ -57,10 +57,15 @@ Every step cites its donor lead (teardown §).
       packs (donor's ogg sets — licensing review before shipping), ongoing
       countdown notification, full-screen alarm ACTIVITY, iqama/second-call,
       call-pause and DND integration
-- [ ] Full-screen lockscreen alarm (`USE_FULL_SCREEN_INTENT` + slide-to-stop)
-- [ ] Adhan audio packs: ship per-muezzin packs (donor has haramayn/maghrebi/
-      standard + iqama + shahada + hayya-'ala-salah Fajr variant + bird sounds)
-      as downloadable/offline-selectable sets
+- [x] Full-screen lockscreen alarm — DONE 2026-11-10 (`ui/AlarmActivity`:
+      wakes the screen, shows the prayer and its time, stops the call with one
+      tap). REMAINING: slide-to-stop instead of a button, and the second-call
+      (iqama) mode
+- [x] Adhan audio packs — DONE 2026-11-10: the donor's own recordings ship as
+      assets (standard / maghrebi / haramayn, two recordings each), played by a
+      foreground service as one three-part call; the pack and the recording are
+      settings, with a live preview. REMAINING: the iqama / shahada / Fajr
+      variant packs, and the bird sounds
 - [ ] Pause on incoming call (TelephonyCallback), BT headset routing awareness,
       shake-to-stop (donor proves all three worth shipping)
 - [ ] Auto-DND during prayer with restore (donor SilentService), per-prayer granular
@@ -126,8 +131,10 @@ Every step cites its donor lead (teardown §).
       (research-agenda R2)
 - [ ] «Why this time» transparency screen + two warning registers (حتى لا يلبس
       على الناس / توخي وحذر) + offline timetable reconciliation (research-agenda R3)
-- [ ] Calendar: Gregorian + Hijri month views (Compose-native) — v0 calendar
-      rejected by Hesham as «ليس مرضي»; rebuild per R4
+- [x] Calendar — DONE 2026-11-10 (R4): Gregorian + Hijri month grid computed on
+      demand, the month's events listed under it, the day screen carrying the
+      prayers, the gaps and the worship windows. REMAINING: export/share the
+      month as an image, and the regional Hijri presets
 - [ ] Settings tree mirroring donor completeness (per-prayer adjusts, DST,
       silent modes, formats) — donor's 13 preference screens are the checklist;
       add «التوابع» discipline: previews, computation warnings, location
@@ -200,10 +207,11 @@ reminders that **spike the user into action**. Concretely:
       **v0 DONE 2026-11-10**: `WorshipWindows.kt` (duha/night/sahar, NaN-safe)
       + home cards with the council chip; REMAINING: notification profiles +
       settings subtrees + imsak toggle + solar-altitude Duha refinement
-- [ ] **Voluntary-fasting reminder layer** (the engagement spike he wants): Mon/Thu
-      (الاثنين والخميس), white days, Arafah (non-pilgrim), Ashura, six of Shawwal,
-      Muharram — each push phrased as encouragement with the virtue, one-tap
-      "I'm fasting today" acknowledgment that mutes further nudges that day.
+- [x] **Voluntary-fasting reminder layer** — v0 DONE 2026-11-10: the nudge
+      (تحفيزية channel) names tomorrow's fasting after Maghrib or before
+      Fajr, for the pickable days (Mon/Thu, white days, Arafah, Ashura, six of
+      Shawwal). REMAINING: the one-tap "I'm fasting today" acknowledgment that
+      mutes further nudges that day, and Muharram
 - [ ] **Salah reminders with teeth**: the donor's reminder system (AddReminder
       + per-prayer messages in `prayer_events`) as the floor; add escalating
       "gateway" nudges (e.g. wudu prompt, azkar-after-prayer follow-up) — but no

@@ -168,7 +168,7 @@ object NotificationPoster {
         NotifyKind.PREPARATORY -> "اقترب وقت $label"
         NotifyKind.DIRECT -> "حان الآن وقت $label"
         NotifyKind.REMINDER -> "فات وقت $label"
-        NotifyKind.MOTIVATIONAL -> "ذكرى"
+        NotifyKind.MOTIVATIONAL -> if (label.startsWith("غداً")) label else "ذكرى"
     }
 
     private fun bodyFor(

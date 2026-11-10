@@ -146,6 +146,26 @@ object AlarmScheduler {
             }
         }
 
+        // --- the fasting / motivational nudge (the تحفيزية kind) ---
+        if (prefs.kindOn(NotifyKind.MOTIVATIONAL) && prefs.fastingReminderEnabled) {
+            for (dayAhead in 1..7) {
+                val (dy, dm, dd) = cityDateOf(city, offset, now + dayAhead * 86_400_000L)
+                val hijri = Hijri.at(dy, dm, dd)
+                if (!fastingDayMatches(prefs, hijri)) continue
+                val card = IslamicDays.todayCard(hijri) ?: continue
+                val times = PrayerTimes.compute(dy, dm, dd, loc, method)
+                val hour = if (prefs.fastingReminderTime == "fajr") {
+                    times.fajr - 20.0 / 60.0
+                } else {
+                    times.maghrib + 20.0 / 60.0
+                }
+                val at = epochFor(city, offset, now, hour, isTomorrow = dayAhead >= 1)
+                if (at > now) {
+                    specs.add(AlarmSpec(NotifyKind.MOTIVATIONAL, -10, "غداً ${card.first}", at))
+                }
+            }
+        }
+
         // --- worship windows (الضحى / الأسحار / الثلث الأخير) ---
         val night = WorshipWindows.night(today.maghrib, tomorrow.fajr)
         val duha = WorshipWindows.duha(today.sunrise, today.dhuhr)
@@ -184,6 +204,18 @@ object AlarmScheduler {
 
     private const val REQUEST_CANCEL = 9000
     private const val REQUEST_BASE = 9100
+
+    /** Does the user want a nudge about this Islamic day? */
+    private fun fastingDayMatches(prefs: NotificationPrefs, h: IslamicDay): Boolean {
+        val days = prefs.fastingReminderDays
+        if (days.contains("white") && IslamicDays.isWhiteDays(h)) return true
+        if (days.contains("arafah") && IslamicDays.isDayOfArafah(h)) return true
+        if (days.contains("ashura") && IslamicDays.isAshura(h)) return true
+        if (days.contains("shawwal") && IslamicDays.isSixOfShawwal(h)) return true
+        if (days.contains("monday") && IslamicDays.isMondayThursday(h) && h.weekday == 2) return true
+        if (days.contains("thursday") && IslamicDays.isMondayThursday(h) && h.weekday == 5) return true
+        return false
+    }
 
     /** Is this instant inside the user's quiet window (city wall clock)? */
     private fun quietActive(prefs: NotificationPrefs, epoch: Long, offset: Double): Boolean {

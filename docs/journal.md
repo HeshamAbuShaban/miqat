@@ -3,6 +3,38 @@
 > One dated entry per working session (see AGENTS.md). Next agent: read ROADMAP top
 > unfinished step, then this.
 
+## 2026-11-10 (5) — Overnight run: adhan audio, alarm screen, calendar, fasting nudges, numbers audit
+
+Hesham went to sleep and gave a standing order: keep going, no questions, make
+everything customizable, make the light mode good, the donor's audio is allowed,
+and work on the calendar.
+
+- **The adhan is real now**: the donor's own recordings ship as assets
+  (standard / maghrebi / haramayn, each with two recordings), a FOREGROUND
+  service plays the three segments as one call (`USAGE_ALARM`), and a
+  lock-screen **AlarmActivity** meets the user with the prayer's name, its time
+  and one obvious way to stop it. Verified live: `MediaPlayer state:started`.
+  Settings gained: the pack, the recording (١/٢), a real preview, the sound,
+  the vibration and the full-screen switch.
+- **Numbers audit**: every visible number now goes through `NumFmt` — the
+  Arabic-Indic ↔ Latin toggle and the 12/24-hour toggle apply everywhere
+  (prayers, gaps, the calendar, the detail sheet, the moment picker). The
+  12-hour mode follows the clock everywhere, including the ticking countdown.
+- **Light mode**: verified by screenshot — warm paper, dark ink, the amber
+  accent only on the live element.
+- **Calendar (R4)**: the month grid now lists the month's EVENTS under it (the
+  dots are explained), the day screen carries the prayers, the gaps and the
+  worship windows, and there is a "back to this month" affordance. The grid is
+  a plain seven-column block — no lazy viewport, so no dead band (unslop).
+- **Fasting nudges** (the تحفيزية kind): the app can remind you about
+  tomorrow's fasting — after Maghrib or before Fajr — for Monday/Thursday, the
+  white days, Arafah, Ashura and the six of Shawwal. The days are pickable.
+- **Quiet hours are adjustable** (two 30-minute steppers), the qibla line lost
+  its Latin digits and its middle-dot, and the home's "nearest" line now names
+  the next EVENT (a boundary like the end of a Duha window is no longer
+  presented as something to wait for).
+- 27/27 unit tests green; parity unchanged.
+
 ## 2026-11-10 (4) — Skills applied + R8–R12 (urgency, gaps, intervals, location, sunnah)
 
 Hesham's second brief (and a nudge to actually USE the skills): the remaining

@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -361,6 +362,42 @@ fun NotificationsSection(state: AppState, fmt: Fmt) {
             "المحتوى التحفيزي: فضائل الصيام وأيام الإسلام",
             n.kindOn(NotifyKind.MOTIVATIONAL),
         ) { v -> state.updateNotifications(n.copy(kindEnabled = n.kindEnabled + (NotifyKind.MOTIVATIONAL to v))) }
+        Divider(Modifier.padding(horizontal = Space.lg, vertical = Space.sm))
+        SectionLabel("تذكير الصيام", Modifier.padding(horizontal = Space.lg))
+        ToggleRow(
+            "تنبيه صيام الغد",
+            "ذكرى الصيام بعد المغرب أو قبل الفجر",
+            n.fastingReminderEnabled,
+        ) { v -> state.updateNotifications(n.copy(fastingReminderEnabled = v)) }
+        NavRow(
+            "وقت التنبيه",
+            if (n.fastingReminderTime == "fajr") "قبل الفجر" else "بعد المغرب",
+            onClick = {
+                state.updateNotifications(
+                    n.copy(fastingReminderTime = if (n.fastingReminderTime == "fajr") "maghrib" else "fajr")
+                )
+            },
+        )
+        Divider(Modifier.padding(horizontal = Space.lg))
+        listOf(
+            "monday" to "الاثنين",
+            "thursday" to "الخميس",
+            "white" to "أيام البيض (١٣–١٥)",
+            "arafah" to "يوم عرفة",
+            "ashura" to "عاشوراء",
+            "shawwal" to "ستّ من شوال",
+        ).forEach { (key, label) ->
+            ToggleRow(
+                label,
+                null,
+                n.fastingReminderDays.contains(key),
+            ) { on ->
+                val next = n.fastingReminderDays.toMutableSet()
+                if (on) next.add(key) else next.remove(key)
+                state.updateNotifications(n.copy(fastingReminderDays = next))
+            }
+        }
+        Divider(Modifier.padding(horizontal = Space.lg, vertical = Space.sm))
         ToggleRow(
             "المحتوى التحفيزي مرفق بالإشعارات الأخرى",
             "يظهر آخر المحتوى المقدم مع الإشعار المباشر",
@@ -400,12 +437,21 @@ fun NotificationsSection(state: AppState, fmt: Fmt) {
         ToggleRow("إشعار ملء الشاشة", "تنبيه يوقف الساعة بنقرة", n.fullScreenAlarm) { v -> state.updateNotifications(n.copy(fullScreenAlarm = v)) }
         ToggleRow(
             "ساعات الهدوء",
-            "من ٢٢:٠٠ إلى ٠٥:٠٠ — لا إشعارات",
+            if (n.quietFromMinute < 0) "معطّلة" else
+                "من ${fmt.hhmm(n.quietFromMinute)} إلى ${fmt.hhmm(n.quietToMinute)} — لا إشعارات",
             n.quietFromMinute >= 0,
         ) { v ->
             state.updateNotifications(
                 n.copy(quietFromMinute = if (v) 22 * 60 else -1, quietToMinute = if (v) 5 * 60 else -1)
             )
+        }
+        if (n.quietFromMinute >= 0) {
+            QuietHourRow("من", n.quietFromMinute) { m ->
+                state.updateNotifications(n.copy(quietFromMinute = m))
+            }
+            QuietHourRow("إلى", n.quietToMinute) { m ->
+                state.updateNotifications(n.copy(quietToMinute = m))
+            }
         }
         Spacer(Modifier.height(Space.xl))
     }
@@ -515,6 +561,47 @@ fun AwarenessSection(state: AppState, fmt: Fmt) {
             }
         }
         Spacer(Modifier.height(Space.xl))
+    }
+}
+
+/** One edge of the quiet window, in 30-minute steps. */
+@Composable
+private fun QuietHourRow(label: String, minute: Int, onChange: (Int) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = Space.lg, vertical = Space.xs),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                "−",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(Radius.control))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .clickable { onChange(((minute - 30 + 1440) % 1440)) }
+                    .padding(horizontal = 16.dp, vertical = 2.dp),
+            )
+            Text(
+                "%02d:%02d".format(minute / 60, minute % 60),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier.width(72.dp),
+            )
+            Text(
+                "+",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(Radius.control))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .clickable { onChange((minute + 30) % 1440) }
+                    .padding(horizontal = 16.dp, vertical = 2.dp),
+            )
+        }
     }
 }
 

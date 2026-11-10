@@ -49,13 +49,13 @@ fun SettingsScreen(
         SectionLabel("الموقع", Modifier.padding(horizontal = Space.lg, vertical = Space.sm))
         NavRow(
             "المدينة",
-            "${state.city.ar.ifBlank { state.city.en }} · ${state.city.countryCode} · UTC+${fmt.n(state.utcOffset.toInt())}",
+            "${state.city.ar.ifBlank { state.city.en }}، ${state.city.countryCode}، UTC+${fmt.n(state.utcOffset.toInt())}",
             onClick = { onOpen(SettingsRoute.Location) },
         )
         Divider(Modifier.padding(horizontal = Space.lg))
         NavRow(
             "التحقق من الموقع",
-            "إحداثيات ${fmt.decimal(state.city.lat, 4)}، ${fmt.decimal(state.city.lon, 4)} · ${methodNameAr(state.method.id)}",
+            "إحداثيات ${fmt.decimal(state.city.lat, 4)}، ${fmt.decimal(state.city.lon, 4)}، ${methodNameAr(state.method.id)}",
             onClick = { onOpen(SettingsRoute.Location) },
         )
         Divider(Modifier.padding(horizontal = Space.lg))
@@ -63,7 +63,7 @@ fun SettingsScreen(
         SectionLabel("الحساب", Modifier.padding(horizontal = Space.lg, vertical = Space.sm))
         NavRow(
             "طريقة الحساب",
-            "${methodNameAr(method.id)} · زاوية الفجر ${fmt.decimalUnit(method.fajrAngle, 1, "°")}",
+            "${methodNameAr(method.id)}، زاوية الفجر ${fmt.decimalUnit(method.fajrAngle, 1, "°")}",
             onClick = { onOpen(SettingsRoute.Calculation) },
         )
         Divider(Modifier.padding(horizontal = Space.lg))
@@ -97,7 +97,7 @@ fun SettingsScreen(
         SectionLabel("الاستعداد", Modifier.padding(horizontal = Space.lg, vertical = Space.sm))
         NavRow(
             "الاستعداد والتنبيه",
-            "تنبيه مبكر ${fmt.n(state.display.urgencySoonMinutes)} د · المدد المعروضة",
+            "تنبيه مبكر ${fmt.n(state.display.urgencySoonMinutes)} د، والمدد المعروضة",
             onClick = { onOpen(SettingsRoute.Awareness) },
         )
         Divider(Modifier.padding(horizontal = Space.lg))
@@ -105,7 +105,7 @@ fun SettingsScreen(
         SectionLabel("التقويم", Modifier.padding(horizontal = Space.lg, vertical = Space.sm))
         NavRow(
             "التقويم الهجري",
-            "تعديل ${fmt.n(state.display.hijriOffsetDays)} يوم · أم القرى",
+            "تعديل ${fmt.n(state.display.hijriOffsetDays)} يوم، على تقويم أم القرى",
             onClick = { onOpen(SettingsRoute.Calendar) },
         )
         Divider(Modifier.padding(horizontal = Space.lg))

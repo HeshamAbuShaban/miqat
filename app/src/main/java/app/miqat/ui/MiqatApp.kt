@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.sp
 import app.miqat.core.Appointment
 import app.miqat.core.DayClock
 import app.miqat.core.LocalPrayerTimes
+import app.miqat.core.Moments
 import app.miqat.core.Urgency
 import app.miqat.core.UrgencyRules
 import app.miqat.core.Hijri
@@ -355,33 +356,28 @@ fun HomeScreen(state: AppState, fmt: Fmt, onOpenTimes: () -> Unit) {
         }
         Divider()
 
-        // the nearest worship window — its own screen, one line here
-        val (ty, tm, td) = state.cityTomorrow(now)
-        val tomorrowTimes = state.times(ty, tm, td)
-        val night = WorshipWindows.night(maghrib = times.maghrib, fajrNext = tomorrowTimes.fajr)
-        val duha = WorshipWindows.duha(sunrise = times.sunrise, dhuhr = times.dhuhr)
-        val sahar = WorshipWindows.sahar(maghrib = times.maghrib, fajrNext = tomorrowTimes.fajr)
+        // the nearest moment of ANY kind — the next prayer, the next window,
+        // whatever comes first (the app's one piece of "intelligence" on home)
+        val (ty2, tm2, td2) = state.cityTomorrow(now)
+        val tomorrowTimes = state.times(ty2, tm2, td2)
+        val timeline = rememberTimeline(state, now)
         val nowMinutes = minutesOf(nowHour)
-        val nextWindow = listOf(
-            WindowOption("وقت الضحى", duha.startHour, duha.endHour),
-            WindowOption("منتصف الليل", night.midnightHour, night.midnightHour),
-            WindowOption("الثلث الأخير", night.lastThirdStartHour, night.lastThirdStartHour),
-            WindowOption("وقت الأسحار", sahar.startHour, sahar.endHour),
-        ).filter { !it.start.isNaN() }
-            .minByOrNull { (minutesOf(it.start) - nowMinutes + 1440) % 1440 }
+        val nearest = timeline
+            .filter { it.isEvent }
+            .minByOrNull { Moments.until(it, nowMinutes) }
 
-        if (nextWindow != null) {
+        if (nearest != null) {
             Row(
                 Modifier.fillMaxWidth().padding(vertical = Space.md),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column {
-                    Text("أقرب وقت", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(nextWindow.label, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
+                    Text("الأقرب", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(nearest.labelAr, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
                 }
                 Text(
-                    fmt.hhmm(minutesOf(nextWindow.start)),
+                    fmt.hhmm(nearest.minuteOfDay),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.secondary,
                 )
@@ -398,7 +394,7 @@ fun HomeScreen(state: AppState, fmt: Fmt, onOpenTimes: () -> Unit) {
         ) {
             Text("القبلة", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(
-                "${app.miqat.core.NumFmt.decimal(bearing, 1, fmt.ar)}° · " +
+                "${fmt.decimalUnit(bearing, 1, "°")}، " +
                     (if (km < 1.0) "أقل من ١ كم" else "${fmt.n(km.toInt())} كم"),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface,
