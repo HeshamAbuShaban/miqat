@@ -31,10 +31,12 @@ import app.miqat.R
 
 // --- brand palette ---------------------------------------------------------
 
-val Gold = Color(0xFFEAC964)          // the wordmark gold — primary accent
+val Gold = Color(0xFFE8C46A)          // the wordmark gold — primary accent
+val Saffron = Color(0xFFFFB25C)       // the live moment (the sun, the urgency)
+val Plum = Color(0xFF2A1B33)          // the night
 val GoldDim = Color(0xFF8A7530)
 val Cream = Color(0xFFF8E7AE)
-val Amber = Color(0xFFFFB74D)         // "the moment" colour (next prayer)
+val Amber = Color(0xFFFFB25C)         // "the moment" colour (next prayer)
 val Teal = Color(0xFF7FD0C8)
 val Blue = Color(0xFF5A74E8)
 val Sunset = Color(0xFFFF7A59)
@@ -56,20 +58,20 @@ object Radius {
 }
 
 // dark scheme
-val NightBg = Color(0xFF0B1020)
-val NightSurface = Color(0xFF121830)
-val NightSurfaceHigh = Color(0xFF141B33)
-val NightOutline = Color(0xFF232B4A)
-val NightText = Color(0xFFE9EDFB)
+val NightBg = Color(0xFF0A0D1C)
+val NightSurface = Color(0xFF12172B)
+val NightSurfaceHigh = Color(0xFF1A2138)
+val NightOutline = Color(0xFF28304C)
+val NightText = Color(0xFFEDEBE3)
 val NightTextDim = Color(0xFF98A2C4)
 
 // light scheme (paper, not white — the brand reads as ink on warm paper)
-val PaperBg = Color(0xFFF7F3E8)
-val PaperSurface = Color(0xFFFFFDF7)
-val PaperSurfaceHigh = Color(0xFFEFE8D8)
-val PaperOutline = Color(0xFFD8CEB6)
-val InkText = Color(0xFF14161F)
-val InkTextDim = Color(0xFF4E5468)
+val PaperBg = Color(0xFFF6F1E4)
+val PaperSurface = Color(0xFFFFFCF4)
+val PaperSurfaceHigh = Color(0xFFEFE7D4)
+val PaperOutline = Color(0xFFD6CBB2)
+val InkText = Color(0xFF16181F)
+val InkTextDim = Color(0xFF5A5F72)
 
 private val DarkColors = darkColorScheme(
     primary = Gold,

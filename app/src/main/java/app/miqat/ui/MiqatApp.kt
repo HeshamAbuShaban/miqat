@@ -48,6 +48,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -473,18 +474,19 @@ private fun HeroCard(
     Column(
         Modifier
             .fillMaxWidth()
-            .background(
-                scheme.surface,
-                RoundedCornerShape(Radius.hero),
-            )
+            .background(scheme.surface, RoundedCornerShape(Radius.hero))
             .padding(Space.lg),
     ) {
-        Canvas(Modifier.fillMaxWidth().height(72.dp)) {
+        // THE DAY-SKY — the app's one rich moment: the arc is a horizon, the
+        // sky above it, and the sun travelling where the day actually is.
+        Canvas(Modifier.fillMaxWidth().height(150.dp)) {
             val w = size.width
-            val bottom = size.height - 8f
-            val p0 = Offset(w * 0.08f, bottom)
-            val p2 = Offset(w * 0.92f, bottom)
-            val p1 = Offset(w * 0.5f, 6f)
+            val h = size.height
+            val horizon = h - 16f
+            val p0 = Offset(w * 0.07f, horizon)
+            val p2 = Offset(w * 0.93f, horizon)
+            val p1 = Offset(w * 0.5f, 10f)
+
             fun pointAt(t: Float): Offset {
                 val mt = 1 - t
                 return Offset(
@@ -492,36 +494,98 @@ private fun HeroCard(
                     mt * mt * p0.y + 2 * mt * t * p1.y + t * t * p2.y,
                 )
             }
+
+            val sky = Path().apply {
+                moveTo(p0.x, p0.y)
+                quadraticBezierTo(p1.x, p1.y, p2.x, p2.y)
+                lineTo(p2.x, horizon)
+                lineTo(p0.x, horizon)
+                close()
+            }
+            // the sky's palette follows the theme: night above a dark app,
+            // first light above the dawn-paper one
+            val nightSky = scheme.background.luminance() < 0.5f
             drawPath(
-                Path().apply {
-                    moveTo(p0.x, p0.y)
-                    quadraticBezierTo(p1.x, p1.y, p2.x, p2.y)
-                },
-                scheme.outline,
-                style = Stroke(6f, cap = StrokeCap.Round),
+                sky,
+                Brush.verticalGradient(
+                    if (nightSky) {
+                        listOf(
+                            Color(0xFF0E1428),
+                            Color(0xFF1E1836),
+                            Color(0xFF4A2A3A),
+                            Color(0xFF8A5533).copy(alpha = .65f),
+                        )
+                    } else {
+                        listOf(
+                            Color(0xFFBBD3E8),
+                            Color(0xFFD9DCEB),
+                            Color(0xFFF0DCC4),
+                            Color(0xFFF3C98F).copy(alpha = .8f),
+                        )
+                    },
+                    startY = 0f,
+                    endY = horizon,
+                ),
             )
-            // the live sweep: from Fajr to now
-            val mins = times.list.map { ((it + 0.5 / 60) % 24.0 + 24.0) % 24.0 * 60 }
+
+            // the stars, still out above the horizon
+            val stars = listOf(
+                0.16f to 0.18f, 0.28f to 0.10f, 0.41f to 0.22f, 0.55f to 0.08f,
+                0.67f to 0.19f, 0.78f to 0.12f, 0.88f to 0.24f, 0.36f to 0.31f,
+                0.62f to 0.30f, 0.10f to 0.30f,
+            )
+            stars.forEachIndexed { i, (fx, fy) ->
+                val p = pointAt(fx)
+                val alpha = 0.30f + 0.35f * ((i % 3) / 2f)
+                drawCircle(
+                    (if (scheme.background.luminance() < 0.5f) Color(0xFFF3E9D2) else Color(0xFF6B6455)).copy(alpha = alpha),
+                    radius = if (i % 4 == 0) 2.2f else 1.4f,
+                    center = Offset(p.x, p.y * (fy * 2.2f)),
+                )
+            }
+
+            // the ground
+            drawRect(
+                if (scheme.background.luminance() < 0.5f) Color(0xFF070912) else Color(0xFFD8CDB4),
+                topLeft = Offset(0f, horizon),
+                size = androidx.compose.ui.geometry.Size(w, h - horizon),
+            )
+
+            // the rim — the horizon line
+            val rim = Path().apply {
+                moveTo(p0.x, p0.y)
+                quadraticBezierTo(p1.x, p1.y, p2.x, p2.y)
+            }
+            drawPath(
+                rim,
+                if (scheme.background.luminance() < 0.5f) Color(0xFF6E5A3A) else Color(0xFFA98C4E),
+                style = Stroke(width = 2.5f, cap = StrokeCap.Round),
+            )
+
+            // where the sun is now
+            val mins = times.list.map { ((it + 0.5 / 60.0) % 24.0 + 24.0) % 24.0 * 60 }
             val dayStart = mins[0]
             val dayEnd = mins[5].let { if (it < dayStart) it + 1440 else it }
             val nowMin = nowHour * 60
             val f = (((nowMin - dayStart) / (dayEnd - dayStart)).coerceIn(0.0, 1.0)).toFloat()
-            val tEnd = 0.08f + 0.84f * f
-            val sweep = Path()
-            val steps = 36
-            for (i in 0..steps) {
-                val t = tEnd * i / steps
-                val pt = pointAt(t)
-                if (i == 0) sweep.moveTo(pt.x, pt.y) else sweep.lineTo(pt.x, pt.y)
-            }
-            drawPath(sweep, scheme.tertiary, style = Stroke(6f, cap = StrokeCap.Round))
+            val sun = pointAt(0.07f + 0.86f * f)
+
+            drawCircle(Color(0xFFFFB25C).copy(alpha = .18f), radius = 26f, center = sun)
+            drawCircle(Color(0xFFFFB25C).copy(alpha = .35f), radius = 15f, center = sun)
+            drawCircle(Color(0xFFFFE0A8), radius = 8.5f, center = sun)
+
+            // the prayer ticks
             listOf(0f, 0.24f, 0.47f, 0.68f, 0.86f, 1f).forEachIndexed { i, f2 ->
                 val c = pointAt(f2)
                 val isNext = seg != null && seg.next.key == PRAYER_KEY[i] && !seg.nextIsTomorrow
-                drawCircle(if (isNext) scheme.tertiary else scheme.onSurfaceVariant.copy(alpha = .55f), 6f, c)
+                drawCircle(
+                    if (isNext) Color(0xFFE8C46A) else Color(0xFF8E8672),
+                    radius = if (isNext) 5f else 3.5f,
+                    center = c,
+                )
             }
-            drawCircle(scheme.primary, 10f, pointAt(tEnd))
         }
+
         Spacer(Modifier.height(Space.sm))
         if (seg != null) {
             val urgency = if (state.display.urgencyEnabled) {
@@ -563,5 +627,6 @@ internal val PRAYER_KEY = listOf("fajr", "sunrise", "dhuhr", "asr", "maghrib", "
 /** A worship-window candidate for the "nearest window" line on home. */
 internal data class WindowOption(val label: String, val start: Double, val end: Double)
 
+/** The six times as a list (the order the app uses everywhere). */
 internal val LocalPrayerTimes.list: List<Double>
     get() = listOf(fajr, sunrise, dhuhr, asr, maghrib, isha)
