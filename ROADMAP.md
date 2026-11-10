@@ -36,7 +36,9 @@ Every step cites its donor lead (teardown §).
 - [x] Cities bundled offline: `assets/cities.tsv.gz` — 218,032 cities (EN/AR,
       lat/lon/tz, per-city default method, 4.1 MB) + `Cities.kt` search loader
       (v0 linear scan; Room/indexing decision below)
-- [ ] Room/indexed storage migration (v0 loader is whole-file lazy + scan)
+- [x] Indexed storage — DONE 2026-11-10 as **prebuilt SQLite asset, no Room**
+      (decisions 2026-11-10 (2)): `assets/cities-v2.db` + `CityStore.kt`,
+      copy-on-first-open, async first frame, DB-backed ranked search
 - [ ] Own tz table (donor `timezone`/`zone` design) instead of trusting ICU —
       keeps old-device correctness
 - [ ] Seasonal corrections table (schema mirroring donor `qibla`, cleaner columns)
@@ -74,16 +76,32 @@ Every step cites its donor lead (teardown §).
 
 ## S5 — UI — direction LOCKED 2026-11-07: «قوس اليوم» (decisions.md)
 
-- [ ] **Day-Arc color system** over Material 3: palette follows the prayer of the
+- [x] **Day-Arc color system** over Material 3: palette follows the prayer of the
       moment — Fajr cool night blue → Duha bright → Asr amber → Maghrib sunset →
       Isha deep navy; dark-first, dynamic color as base, restrained accents
+      (v0 hardcoded palette live)
 - [ ] ONE hero: next-prayer countdown; all S9 features land as contextual cards on
       the same home (fasting today / Arafah / last-third) — never new screens
 - [ ] Compose + Material 3, dark/light/dynamic; Pixel-stock benchmark
+- [x] **R1 dual clocks** — DONE 2026-11-10: remaining PRIMARY + elapsed
+      SECONDARY, HH:MM:SS ticking (1 Hz aligned ticker, leaf-scoped
+      recomposition), `DayClock.kt` + tests; city-wall-clock correctness
+      (device tz never trusted for a picked city)
+- [x] **R2 rich search rows** — local-time-now + distance per row, ranked
+      prefix-first (v0; Arabic normalization still open below)
+- [x] **R3 «why this time» sheet v1** — displayed-vs-computed-seconds,
+      method/angles/modes/margins/seasonal-window/high-lat provenance,
+      guardrail line «حتى لا يلبس على الناس»; R3b register copy shipped for
+      high-latitude (R3a manual-adjust register lands with the settings pass)
+- [x] **R5 worship-window cards v0** — الضحى (own window, distinct from
+      الشروق), الأسحار (cited Uthmanic ayah only, guardrail), منتصف الليل +
+      الثلث الأخير, all «تقديري بحسب الاصطلاح» (council chip);
+      `WorshipWindows.kt` + tests
 - [ ] RTL-first (Arabic typography: Cairo display type — donor bundles it), full
       a11y pass (donor has none)
-- [x] **Mock first**: home as interactive HTML, reviewed with Hesham (icons v2
-      gold wordmark direction pending his pick; alarm/widget next)
+- [x] **Mock first**: home as interactive HTML, reviewed with Hesham (icon DONE
+      2026-11-10: variant ٢ gold wordmark + arc-point, commit `de919cd`;
+      alarm/widget mocks next)
 - [x] Compose home v0: Day-Arc hero + countdown + contextual cards + city picker
       (MainActivity; palette hardcoded until the theme system lands)
 - [ ] Widgets re-imagined (Glance; donor's 3 widgets + analog clock = parity bar)
@@ -144,7 +162,10 @@ reminders that **spike the user into action**. Concretely:
       night, Duha/الضحى time (solar-altitude thresholds, distinct from Shurūq),
       sunrise/sunset fast boundaries (imsak vs fajr toggle), الأسحار/istighfar
       window — all first-class with own notification profile + settings
-      (research-agenda R5; donor has NONE of these — «زوائد غابت» verified)
+      (research-agenda R5; donor has NONE of these — «زوائد غابت» verified).
+      **v0 DONE 2026-11-10**: `WorshipWindows.kt` (duha/night/sahar, NaN-safe)
+      + home cards with the council chip; REMAINING: notification profiles +
+      settings subtrees + imsak toggle + solar-altitude Duha refinement
 - [ ] **Voluntary-fasting reminder layer** (the engagement spike he wants): Mon/Thu
       (الاثنين والخميس), white days, Arafah (non-pilgrim), Ashura, six of Shawwal,
       Muharram — each push phrased as encouragement with the virtue, one-tap

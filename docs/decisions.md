@@ -2,6 +2,21 @@
 
 > One line per decision; newest first. `applicationId` `app.miqat` freezes at release.
 
+## 2026-11-10 (5) — Settings v1 names: `UserSettings` + `PrayerAdjusts`
+
+- `UserSettings` — SharedPreferences wrapper (F-Droid clean, no DataStore yet):
+  selected city + per-prayer manual minute-adjusts; persisted selected city
+  fixes the «resets to Makkah on every launch» gap.
+- `PrayerAdjusts(fajr, sunrise, dhuhr, asr, maghrib, isha)` — user minutes per
+  slot (donor `adjust_min_*` parity). Applied in the UI layer AFTER
+  `PrayerTimes.compute` (engine untouched — margins stay ihtiyat, adjusts are
+  user override). The detail sheet shows engine value vs adjusted value with
+  the R3a register badge «تعديل يدوي على هذا الوقت» when ≠ 0 (both values
+  rule, council copy).
+- Settings entry point: gear in the header → `SettingsSheet` v0 (location block
+  with coords/tz + adjusts steppers). The full settings tree (S5) grows from
+  this sheet, mirroring the donor's 13-screen completeness checklist (R6).
+
 ## 2026-11-10 (4) — Long-run build session: entity names LOCKED before code
 
 - `DayClock` — dual-clock computation (R1): given a day's appointed times + now,

@@ -3,6 +3,44 @@
 > One dated entry per working session (see AGENTS.md). Next agent: read ROADMAP top
 > unfinished step, then this.
 
+## 2026-11-10 (2) — LONG-RUN BUILD: R1/R2/R3/R5 v0 shipped + verified on emulator
+
+His direction: free models only for the council, then «start the long run of
+building and completing everything you have». Done in one run (3 commits):
+
+- **Names locked first** (decisions 2026-11-10 (4)): `DayClock`, `Appointment`,
+  `ClockSegment`, `WorshipWindows`, `DuhaWindow`/`NightInfo`/`SaharWindow`,
+  `TimeDetailSheet`. Quran text gate: only the cited Uthmanic fragment ships.
+- **R1 `DayClock.kt`** — dual clocks: remaining PRIMARY / elapsed SECONDARY,
+  seconds precision, wraparound + NaN-safe; 1 Hz aligned ticker at Home scope,
+  leaves read `State.value` (council: recomposition scoping is the real cost).
+  Hero + the two live rows tick; city wall clock derived from UTC+offset
+  (device tz never trusted — this fixed a latent correctness bug in "now"/date).
+- **R5 `WorshipWindows.kt`** — Duha (sunrise+20 → dhuhr−20), night portions
+  (Maghrib→Fajr, midnight + last third), الأسحار (last sixth → Fajr); all
+  «تقديري بحسب الاصطلاح» chip (council wording — bare «تقديري» is the wrong
+  register). Cards live on home; الأسحار carries ﴿…وَبِٱلْأَسْحَارِ
+  هُمْ يَسْتَغْفِرُونَ﴾ [الذاريات ١٨] only — Muslim 2702 out until verified.
+- **R3 `TimeDetailSheet`** — tap any prayer row: المعروض (round-half-up) vs
+  المحسوب (floor seconds) + method/angles/modes/margins/seasonal window/
+  high-lat rule/tz; R3b register («حساب تقريبي في هذه المنطقة») for |lat|≥45;
+  guardrail line for «حتى لا يلبس على الناس».
+- **R2 rich picker rows** — local-time-now + distance-from-selected per result.
+- **Qibla «0 km» nit fixed** («أقل من ١ كم»); `Qibla.distanceKm` gained a
+  4-arg haversine overload (additive; parity re-run: 87.78% @ ±1m unchanged).
+- **Council (free models, 2 of 3 seats ran)**: engineering
+  (deepseek-v4.1-flash-free) + fiqh-copy (minimax-m3.1-flash-free) — verdicts
+  adopted and recorded in research-agenda.md appendix; IA seat failed on
+  subagent routing (account funds) — rerun later. The engineering seat's
+  «biggest risk» line is now the S3 gate: users forgive a plain UI, never a
+  missed Fajr → alarm delivery + honest degradation is the reliability work.
+- **20/20 unit tests green** (10 new: DayClock 6, WorshipWindows 4 — including
+  two arithmetic bugs caught in my own expected values: 19.3 h = 19:18, 9.2 h =
+  33120 s). Parity: 87.78% @ ±1m unchanged. Verified live: ticking hero
+  (0:16:05 → 0:15:47 across screenshots), detail sheet, rich picker.
+- Commits: `d41f06b` (core), `d0e64ea` (UI). **Still awaiting push** (needs his
+  PAT): de919cd, 93bbe42, 8b5d2d9, d41f06b, d0e64ea + this docs commit.
+
 ## 2026-11-10 — S2 shipped + icon shipped + research agenda (his «سيئة وفقيرة» brief)
 
 - **Icon DONE, committed (`de919cd`)**: his pick = variant ٢ (gold wordmark + arc

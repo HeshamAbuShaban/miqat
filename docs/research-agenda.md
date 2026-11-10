@@ -313,3 +313,45 @@ Cross-cutting, applies to R3/R4/R5/R6:
 3. **R3 why-this-time + adjustment warnings** — «حتى لا يلبس على الناس» is his
    starred demand.
 4. R6 matrix → then R7 redesign pass with unslop audit. R2 rides the S5 pass.
+
+---
+
+## Appendix — council verdicts, 2026-11-10 (free-model pass, Hesham's direction)
+
+Two seats ran; the IA fresh-eyes seat (R7) failed on subagent model routing
+(account funds) — rerun later. Verdicts and what we did with them:
+
+**Engineering seat (`deepseek-v4.1-flash-free`) — ADAPT, largely adopted:**
+- ADOPTED (live): 1 Hz aligned ticker (`delay(1000 - now % 1000)`), ticker owned
+  at Home scope, ticking leaves read `State.value` so recomposition stays scoped;
+  no `withFrameNanos` clock coupling.
+- ADOPTED into R6 spec: **4+1 NotificationChannels** (prep/direct/reminder/
+  motivational/countdown), NOT 4×6 per-prayer channels (unusable, irreversible
+  in system settings); per-prayer granularity lives in-app.
+- ADOPTED into S3 spec: exact-alarm story = `USE_EXACT_ALARM` (33+) +
+  `SCHEDULE_EXACT_ALARM` with `maxSdkVersion=32`, `canScheduleExactAlarms()`
+  guard with honest «قد تتأخر حتى ١٥ دقيقة» degradation, `setAlarmClock()` for
+  the direct adhan, boot/tz/date re-arm, no battery-optimization exemption
+  requests; pre-26 fallback = priority/sound/vibration from prefs at build time.
+- TODO queue: recompute "now" on ACTION_TIME_CHANGED/TIMEZONE_CHANGED/TIME_TICK
+  (wall-clock jumps); tabular figures (`tnum`) when Arabic-Indic digits land (R7).
+- His biggest risk, recorded: **the countdown is a promise — users forgive a
+  plain UI, never a missed Fajr**; alarm delivery + honest degradation is the
+  S3 reliability gate, not the ticking.
+
+**Fiqh-copy seat (`minimax-m3.1-flash-free`) — ADAPT, adopted:**
+- ADOPTED (live): chip **«تقديري بحسب الاصطلاح»** (bare «تقديري» reads as
+  engine-uncertainty — the wrong register); labels «وقت الأسحار» (NOT السحور —
+  that is the pre-dawn meal, gets its own card later), «الثلث الأخير من الليل».
+- ADOPTED (live): Uthmanic rendering ﴿…وَبِٱلْأَسْحَارِ هُمْ يَسْتَغْفِرُونَ﴾
+  [الذاريات ١٨] with the fragment ellipsis; Muslim 2702 stays out until verified.
+- ADOPTED as copy deck for the S5 settings pass: register (a) badge «تعديل يدوي
+  على هذا الوقت» + both-values rule; register (b) badge «حساب تقريبي في هذه
+  المنطقة» + named-cause sentence (shipped in the detail sheet for high lat).
+- BLOCKING requirement carried into S3: the «تقديري بحسب الاصطلاح» qualifier
+  rides **every** notification/widget payload of a window bound — a reminder
+  must never arrive dressed as a ruling.
+- RESOLVED spec conflict: v1 ships the ±20-min Duha / last-sixth Sahar
+  conventions; solar-altitude thresholds stay an R5 research item.
+- His biggest mislead risk, recorded: the qualifier lost on the way out of the
+  card (notification/widget) — hence the blocking rule above.
