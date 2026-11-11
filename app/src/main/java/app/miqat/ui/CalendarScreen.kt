@@ -1,5 +1,8 @@
 package app.miqat.ui
 
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +30,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -87,6 +91,10 @@ fun CalendarScreen(
         )
     }
     val cityToday = state.cityDate(now)
+    // the swipe: the month follows the finger and turns at the end (in RTL,
+    // dragging to the LEFT is the next month)
+    var swipe by remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
+    val swipeScope = androidx.compose.runtime.rememberCoroutineScope()
     val window = remember(axis, year, month, d.hijriOffsetDays, cityToday) {
         app.miqat.core.CalendarWindows.build(
             context = axis,
@@ -161,6 +169,27 @@ fun CalendarScreen(
                         .padding(horizontal = Space.md, vertical = 6.dp),
                 )
             }
+            Spacer(Modifier.weight(1f))
+            // «اليوم» — always visible: the calendar never yanks the user back,
+            // but the way back is one tap
+            val onToday = window.spineYear == cityToday.first &&
+                (axis == app.miqat.core.CalendarContext.GREGORIAN ||
+                    axis == app.miqat.core.CalendarContext.ACTS)
+            Text(
+                "اليوم",
+                style = MaterialTheme.typography.labelMedium,
+                color = if (onToday) MaterialTheme.colorScheme.onSurfaceVariant
+                else MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(Radius.chip))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .clickable {
+                        val anchor = state.cityDate(now)
+                        year = anchor.first
+                        month = anchor.second
+                    }
+                    .padding(horizontal = Space.md, vertical = 6.dp),
+            )
         }
         Spacer(Modifier.height(Space.sm))
 
@@ -214,6 +243,47 @@ fun CalendarScreen(
 
         // the month grid — the spine's days, with the turn marked
         val all = List<app.miqat.core.CalendarCell?>(window.leadBlanks) { null } + window.days
+        Column(
+            Modifier
+                .pointerInput(Unit) {
+                    detectHorizontalDragGestures(
+                        onHorizontalDrag = { change, amount ->
+                            change.consume()
+                            swipe += amount
+                        },
+                        onDragEnd = {
+                            val w = size.width.toFloat()
+                            if (kotlin.math.abs(swipe) > w * 0.3f) {
+                                // RTL: dragging LEFT is the NEXT month
+                                stepMonth(if (swipe < 0f) 1 else -1)
+                            }
+                            swipeScope.launch {
+                                val from = swipe
+                                androidx.compose.animation.core.animate(
+                                    initialValue = from,
+                                    targetValue = 0f,
+                                    animationSpec = androidx.compose.animation.core.tween(180),
+                                ) { value, _ -> swipe = value }
+                            }
+                        },
+                        onDragCancel = {
+                            swipeScope.launch {
+                                val from = swipe
+                                androidx.compose.animation.core.animate(
+                                    initialValue = from,
+                                    targetValue = 0f,
+                                    animationSpec = androidx.compose.animation.core.tween(180),
+                                ) { value, _ -> swipe = value }
+                            }
+                        },
+                    )
+                }
+                .graphicsLayer {
+                    // the grid follows the finger; the month turns at the end
+                    translationX = swipe
+                    alpha = 1f - (kotlin.math.abs(swipe) / (size.width * 0.45f)).coerceAtMost(0.45f)
+                },
+        ) {
         all.chunked(7).forEach { week ->
             Row(Modifier.fillMaxWidth()) {
                 week.forEach { cell ->
@@ -235,6 +305,7 @@ fun CalendarScreen(
                 }
                 repeat(7 - week.size) { Box(Modifier.weight(1f)) }
             }
+        }
         }
 
         Spacer(Modifier.height(Space.md))
@@ -355,7 +426,7 @@ private fun DayCell(
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(Radius.row))
-            .background(if (cell.isToday) scheme.primaryContainer else scheme.surface)
+            .background(if (cell.isToday) scheme.primaryContainer else androidx.compose.ui.graphics.Color.Transparent)
             .clickable { onClick() }
             .padding(vertical = 5.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

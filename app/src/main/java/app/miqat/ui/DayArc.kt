@@ -53,6 +53,26 @@ object DayArc {
         return x to y
     }
 
+    /**
+     * The six prayer ticks at their REAL times (0 = the Fajr, 1 = the Isha) —
+     * the hero and the widget both read these, so the two can never disagree
+     * about where a prayer sits on the horizon (the widget council, 2026-11-11).
+     */
+    fun tickParams(
+        minutesOfDay: List<Double>,
+        fajrMinute: Double,
+        ishaMinute: Double,
+    ): List<Float> {
+        var isha = ishaMinute
+        if (isha < fajrMinute) isha += 1440.0
+        val span = (isha - fajrMinute).coerceAtLeast(1.0)
+        return minutesOfDay.map { m ->
+            var mm = m
+            if (mm < fajrMinute) mm += 1440.0
+            (((mm - fajrMinute) / span).coerceIn(0.0, 1.0)).toFloat()
+        }
+    }
+
     /** The arc's parameter for the next prayer (by its index in the ticks). */
     fun tickFor(prayerIndex: Int): Float =
         if (prayerIndex in TICKS.indices) TICKS[prayerIndex] else TICKS.last()

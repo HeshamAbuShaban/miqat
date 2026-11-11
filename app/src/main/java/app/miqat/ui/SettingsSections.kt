@@ -1,6 +1,15 @@
 package app.miqat.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.PaintingStyle
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -128,7 +137,14 @@ fun LocationSection(state: AppState, fmt: Fmt, onPickCity: () -> Unit) {
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(Modifier.height(Space.xl))
+        
+        Spacer(Modifier.height(Space.md))
+        ToggleRow(
+            "أظهر المدينة في الأداة",
+            "اسم مدينتك في ودجت الشاشة الرئيسية — يظهر فقط حين تأتي المواقيت من المدينة نفسها، لا من تحديد الموقع",
+            state.display.widgetShowCity,
+        ) { v -> state.updateDisplay(state.display.copy(widgetShowCity = v)) }
+Spacer(Modifier.height(Space.xl))
     }
 }
 
@@ -797,6 +813,116 @@ fun AppearanceSection(state: AppState, fmt: Fmt) {
             if (d.use12h) "ص / م" else "24 ساعة",
             d.use12h,
         ) { v -> state.updateDisplay(d.copy(use12h = v)) }
+
+        Spacer(Modifier.height(Space.lg))
+        SettingsScreenTitle("الهُوية", "لونُ التطبيق ورسمُه — اختر ما يشبهك")
+
+        // the accent — the "ours" colour, and the ONLY role that moves
+        Text(
+            "لونُ التطبيق",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Spacer(Modifier.height(Space.sm))
+        Row(horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
+            Accent.entries.forEach { accent ->
+                val selected = d.accent == accent.name
+                Column(
+                    Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(Radius.card))
+                        .background(MaterialTheme.colorScheme.surface)
+                        .clickable { state.updateDisplay(d.copy(accent = accent.name)) }
+                        .padding(Space.md),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Box(
+                        Modifier
+                            .size(26.dp)
+                            .clip(CircleShape)
+                            .background(Color(accent.dark)),
+                    )
+                    Spacer(Modifier.height(Space.xs))
+                    Text(
+                        accent.labelAr,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (selected) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+        Spacer(Modifier.height(Space.lg))
+
+        // the hero's illustration — the app's one rich moment, in two forms
+        Text(
+            "رسمُ الشاشة الرئيسية",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Spacer(Modifier.height(Space.sm))
+        Row(horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
+            val accentColour = MaterialTheme.colorScheme.primary
+            val dimColour = MaterialTheme.colorScheme.onSurfaceVariant
+            HeroStyle.entries.forEach { hero ->
+                val selected = d.heroStyle == hero.name
+                Column(
+                    Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(Radius.card))
+                        .background(MaterialTheme.colorScheme.surface)
+                        .clickable { state.updateDisplay(d.copy(heroStyle = hero.name)) }
+                        .padding(Space.md),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    // a tiny sketch of each drawing
+                    Canvas(Modifier.size(34.dp)) {
+                        val line = Stroke(width = 2.2f, cap = StrokeCap.Round)
+                        val lineColour = if (selected) accentColour else dimColour
+                        when (hero) {
+                            HeroStyle.ARC -> {
+                                val path = Path().apply {
+                                    moveTo(size.width * 0.08f, size.height * 0.78f)
+                                    quadraticTo(
+                                        size.width * 0.5f, size.height * 0.08f,
+                                        size.width * 0.92f, size.height * 0.78f,
+                                    )
+                                }
+                                drawPath(path, lineColour, style = line)
+                                drawCircle(accentColour, 3f, Offset(size.width * 0.86f, size.height * 0.72f))
+                            }
+                            HeroStyle.DIAL -> {
+                                drawCircle(
+                                    color = lineColour,
+                                    radius = size.minDimension * 0.4f,
+                                    center = Offset(size.width / 2f, size.height / 2f),
+                                    style = line,
+                                )
+                                drawArc(
+                                    color = accentColour,
+                                    startAngle = 90f, sweepAngle = 90f, useCenter = false,
+                                    topLeft = Offset(size.width * 0.1f, size.height * 0.1f),
+                                    size = androidx.compose.ui.geometry.Size(size.width * 0.8f, size.height * 0.8f),
+                                    style = Stroke(width = 3f),
+                                )
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(Space.xs))
+                    Text(
+                        hero.labelAr,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (selected) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        hero.noteAr,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.outline,
+                    )
+                }
+            }
+        }
         Spacer(Modifier.height(Space.xl))
     }
 }

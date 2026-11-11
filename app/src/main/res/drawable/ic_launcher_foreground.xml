@@ -10,7 +10,7 @@
               android:startX="0" android:startY="30"
               android:endX="0" android:endY="56">
               <item android:offset="0.0" android:color="#F8E7AE"/>
-              <item android:offset="0.45" android:color="#EAC964"/>
+              <item android:offset="0.45" android:color="#E8C46A"/>
               <item android:offset="0.78" android:color="#C9962E"/>
               <item android:offset="1.0" android:color="#A97B22"/>
           </gradient>
@@ -18,7 +18,7 @@
     </path>
     <path
         android:pathData="M36,79 Q54,63 72,79"
-        android:strokeColor="#EAC964" android:strokeWidth="1.6"
+        android:strokeColor="#E8C46A" android:strokeWidth="1.6"
         android:strokeLineCap="round"/>
     <path
         android:pathData="M51.2,74.04a2.8,2.8 0 1,1 5.6,0a2.8,2.8 0 1,1 -5.6,0"

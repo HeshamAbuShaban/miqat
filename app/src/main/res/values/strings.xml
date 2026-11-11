@@ -7,9 +7,12 @@
     <!-- The home-screen widget: the next prayer and what is left of it. -->
     <string name="widget_label">الميقات — الموعد التالي</string>
     <string name="widget_description">موعد الصلاة التالي وكم بقي عليه، فوق أفق اليوم.</string>
-    <!-- The launcher's preview: the numbers carry the LTR isolate so the run
-         never renders reversed inside the RTL panel. -->
-    <string name="widget_preview_prayer">المغرب</string>
-    <string name="widget_preview_countdown">⁦٠:١٢:٤٤⁩</string>
-    <string name="widget_preview_meta">القاهرة · ⁦٥:٠١⁩ م</string>
+    <!-- The layout's own sample values (the picker shows the SAME layout
+         the widget runs; the provider overwrites these at runtime). The
+         countdown is minutes — a widget that cannot keep seconds true does
+         not print them. Numbers carry the LTR isolate so the run never
+         renders reversed inside the RTL panel. -->
+    <string name="widget_sample_prayer">العصر</string>
+    <string name="widget_sample_countdown">⁦٤٥⁩ د</string>
+    <string name="widget_sample_meta">⁦٣:١٨⁩ م</string>
 </resources>

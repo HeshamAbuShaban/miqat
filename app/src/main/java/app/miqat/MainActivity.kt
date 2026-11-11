@@ -30,7 +30,10 @@ class MainActivity : ComponentActivity() {
             // once froze the digits and the 12/24h switch until the next
             // launch (the advisory council, 2026-11-11)
             val fmt = remember(state.display) { Fmt(state.display) }
-            MiqatTheme(dark = state.display.darkTheme) {
+            MiqatTheme(
+                dark = state.display.darkTheme,
+                accent = app.miqat.ui.Accent.of(state.display.accent),
+            ) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     MiqatApp(state, fmt)
                 }

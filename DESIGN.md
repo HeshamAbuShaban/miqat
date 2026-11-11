@@ -176,6 +176,37 @@ minimum gaps. Hover exists only on pointer devices and never carries meaning.
 A font scale of 2.0 must never clip: the countdown scales down, it never wraps.
 Landscape: the hero compresses, the chrome does not reorder.
 
+## 8b. The Widget (the hero, miniaturised)
+
+The widget is the app's hero at a smaller size — same sky, same horizon,
+same ticks, same type scale, same words. Not a donor widget in our colours.
+
+- **Always night.** The widget owns no theme of its own: the night palette
+  (`#060B1C` panel, the sky's night bands, gold/saffron marks) even in light
+  mode — a dark object ON the home screen, never a hole in it.
+- **The horizon fills the row.** The bitmap is rendered at the panel's REAL
+  width (from `OPTION_APPWIDGET_MIN_WIDTH`), never a fixed size letterboxed
+  into a third of the panel. The sky band grows with the panel (`weight=1`).
+- **The ticks are the prayers' REAL times** — `DayArc.tickParams`, the same
+  numbers the hero reads. One loud tick (the next prayer, saffron), the
+  sunrise saffron, the rest pale. The sun hides at night; the stars take over.
+- **The countdown is minutes, never seconds** — a widget that cannot keep
+  seconds true must not print them. Type: name 22sp, countdown 30sp,
+  caption 13sp, Cairo + `tnum`, centred, as the hero centres its type.
+- **The tick must survive everything.** The widget's OWN minute alarm
+  (`app.miqat.action.WIDGET_TICK` — never the protected system `TIME_TICK`),
+  re-armed on update, resize, enable and boot. The urgency tokens apply:
+  ≤15 min saffron, ≤5 min sunset.
+- **The city is opt-in and honest** («أظهر المدينة في الأداة», default off;
+  shown only when the times actually come from that city — never under a
+  GPS fix). No other private fact (coordinates, qibla, fasting state) ever
+  reaches the home screen.
+- **The preview is the widget.** `previewLayout` is the SAME layout file;
+  its static sky sits on DayArc's own quadratic, so the picture cannot
+  drift from the widget it advertises.
+- **Tokens live in `res/values/colors.xml`** (`miqat_*`) — no hex literals
+  in the layout, no drift between files.
+
 ## 9. Agent Prompt Guide
 
 **Quick colours**: bg `#060B1C`/`#F2ECDC` · surface `#0E1526`/`#FFFCF4` ·

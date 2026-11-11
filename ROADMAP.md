@@ -135,14 +135,21 @@ Every step cites its donor lead (teardown §).
       alarm/widget mocks next)
 - [x] Compose home v0: Day-Arc hero + countdown + contextual cards + city picker
       (MainActivity; palette hardcoded until the theme system lands)
-- [x] Widgets re-imagined — DONE 2026-11-11: ONE widget (the donor shipped
-      three), no new dependency: the platform's AppWidgetProvider + RemoteViews,
-      and the SAME horizon the hero draws (`ui/DayArc.kt` → the bitmap in
-      `ui/widget/ArcRenderer.kt`). It says the one thing a widget should —
-      the next prayer and the countdown — with the app's own palette, digits
-      and 12/24h preference, and it ticks on a minute alarm (the donor's
-      TIME_TICK trick). REMAINING: a second size (a 2×1 "just the next
-      prayer"), and the clock face variant.
+- [x] Widgets re-imagined — DONE 2026-11-11, TRUE 2026-11-12: ONE widget
+      (the donor shipped three), no new dependency, and the SAME hero the
+      app draws: the sky follows the hour, the horizon fills the panel's
+      real width, the ticks sit at the prayers' real times (`DayArc.tickParams`),
+      Cairo + tnum, type 22/30/13sp. The design council measured the old
+      widget: the countdown stood 30 min stale (the tick was armed on
+      `onEnabled` alone and used the protected system `TIME_TICK` — the alarm
+      was simply never there), the horizon letterboxed into 33% of the panel,
+      ink covered 3.1%. Now the countdown ticks on the widget's OWN alarm
+      re-armed on update/resize/enable/boot (verified live and across a
+      reboot), prints minutes never seconds, and the preview is the SAME
+      layout on DayArc's own quadratic. The clock-face variant is KILLED
+      (the horizon IS the clock face; the roadmap idea is stale). REMAINING:
+      the 2×1 compact size (the council's rail design), `previewImage` for
+      API 24–30, the keyguard layout.
 - [x] Dual clocks everywhere — DONE 2026-11-11 (home, the times screen, the
       acts' rows and each act's own screen): the remaining is primary, the
       elapsed is secondary, and every feature keeps its own line and its own

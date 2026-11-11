@@ -375,6 +375,12 @@ class BootReceiver : BroadcastReceiver() {
             Intent.ACTION_TIME_CHANGED,
             Intent.ACTION_TIMEZONE_CHANGED,
             Intent.ACTION_DATE_CHANGED -> AlarmScheduler.reschedule(context)
+            else -> {}
+        }
+        // the widget's minute tick is armed here as well: after a reboot the
+        // countdown would otherwise stand still until the app is opened
+        if (intent.action != null) {
+            app.miqat.ui.widget.MiqatWidgetProvider.armAndRefresh(context)
         }
     }
 }

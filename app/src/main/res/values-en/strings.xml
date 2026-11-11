@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Miqat</string>
+    <string name="widget_label">Miqat — Next Prayer</string>
+    <string name="widget_description">The next prayer and how long is left, over the horizon of the day.</string>
+    <string name="widget_sample_prayer">Asr</string>
+    <string name="widget_sample_countdown">⁦45⁩ m</string>
+    <string name="widget_sample_meta">⁦3:18⁩ PM</string>
 </resources>

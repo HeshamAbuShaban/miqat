@@ -81,6 +81,9 @@ data class DisplayPrefs(
     val calendarShowGregorian: Boolean = true,
     /** The calendar's day cells carry the event dot. */
     val calendarShowEvents: Boolean = true,
+    /** The widget names the city — ONLY when the user opted in and the
+     *  times actually come from that city (never under a GPS fix). */
+    val widgetShowCity: Boolean = false,
     /** Which prayer the calendar's month table shows (0 = Fajr). */
     val calendarPrayer: Int = 0,
     /** The calendar's month table is visible. */
@@ -100,6 +103,9 @@ data class DisplayPrefs(
     /** What the calendar is organized around (the Gregorian, the Hijri, or
      *  the acts of worship). */
     val calendarContext: String = "HIJRI",
+    /** The identity the user chose (the accent) and the hero's illustration. */
+    val accent: String = "GOLD",
+    val heroStyle: String = "ARC",
 )
 
 object UserSettings {
@@ -125,6 +131,7 @@ object UserSettings {
     private const val K_CAL_HIJRI = "cal_hijri"
     private const val K_CAL_GREG = "cal_greg"
     private const val K_CAL_EVENTS = "cal_events"
+    private const val K_WIDGET_CITY = "widget_show_city"
     private const val K_CAL_PRAYER = "cal_prayer"
     private const val K_CAL_TABLE = "cal_table"
     private const val K_SHOW_REMINDER = "show_reminder"
@@ -134,6 +141,8 @@ object UserSettings {
     private const val K_TIMER_IQAMA = "timer_iqama"
     private const val K_HOME_DENSITY = "home_density"
     private const val K_CAL_CONTEXT = "calendar_context"
+    private const val K_ACCENT = "accent"
+    private const val K_HERO_STYLE = "hero_style"
     private const val K_IMSAK_LEAD = "imsak_lead_minutes"
     private const val K_OFFICIAL = "official_adopted"
     private const val K_USE_GPS = "use_gps"
@@ -229,6 +238,7 @@ object UserSettings {
             calendarShowHijri = p.getBoolean(K_CAL_HIJRI, true),
             calendarShowGregorian = p.getBoolean(K_CAL_GREG, true),
             calendarShowEvents = p.getBoolean(K_CAL_EVENTS, true),
+            widgetShowCity = p.getBoolean(K_WIDGET_CITY, false),
             calendarPrayer = p.getInt(K_CAL_PRAYER, 0),
             calendarShowTable = p.getBoolean(K_CAL_TABLE, true),
             showDailyReminder = p.getBoolean(K_SHOW_REMINDER, true),
@@ -237,6 +247,8 @@ object UserSettings {
             showTimerElapsed = p.getBoolean(K_TIMER_ELAPSED, true),
             showTimerIqama = p.getBoolean(K_TIMER_IQAMA, true),
             calendarContext = p.getString(K_CAL_CONTEXT, "HIJRI") ?: "HIJRI",
+            accent = p.getString(K_ACCENT, "GOLD") ?: "GOLD",
+            heroStyle = p.getString(K_HERO_STYLE, "ARC") ?: "ARC",
             homeDensity = runCatching {
                 HomeDensity.valueOf(p.getString(K_HOME_DENSITY, HomeDensity.BALANCED.name) ?: "")
             }.getOrDefault(HomeDensity.BALANCED),
@@ -289,6 +301,7 @@ object UserSettings {
             .putBoolean(K_CAL_HIJRI, d.calendarShowHijri)
             .putBoolean(K_CAL_GREG, d.calendarShowGregorian)
             .putBoolean(K_CAL_EVENTS, d.calendarShowEvents)
+            .putBoolean(K_WIDGET_CITY, d.widgetShowCity)
             .putInt(K_CAL_PRAYER, d.calendarPrayer)
             .putBoolean(K_CAL_TABLE, d.calendarShowTable)
             .putBoolean(K_SHOW_REMINDER, d.showDailyReminder)
@@ -298,6 +311,8 @@ object UserSettings {
             .putBoolean(K_TIMER_IQAMA, d.showTimerIqama)
             .putString(K_HOME_DENSITY, d.homeDensity.name)
             .putString(K_CAL_CONTEXT, d.calendarContext)
+            .putString(K_ACCENT, d.accent)
+            .putString(K_HERO_STYLE, d.heroStyle)
             .apply()
     }
 }

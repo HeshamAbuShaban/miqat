@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The picker's sample sky — drawn on DayArc's OWN quadratic (the same
+     constants as the runtime renderer: LEFT .07, RIGHT .93, apex .07), so
+     the picture cannot drift from the widget it advertises. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="320dp"
+    android:height="96dp"
+    android:viewportWidth="320"
+    android:viewportHeight="96">
+
+    <!-- the night sky: the hour's four bands, top → horizon -->
+    <path android:pathData="M0,0 L320,0 L320,96 L0,96 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0" android:startY="0"
+                android:endX="0" android:endY="96"
+                android:type="linear">
+                <item android:offset="0" android:color="#FF070E1F" />
+                <item android:offset="0.34" android:color="#FF101E42" />
+                <item android:offset="0.68" android:color="#FF1C3164" />
+                <item android:offset="1" android:color="#FF2B4682" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- the stars -->
+    <path android:fillColor="#C3CCE2"
+        android:pathData="M29,19 m-1.4,0 a1.4,1.4 0 1,1 2.8,0 a1.4,1.4 0 1,1 -2.8,0 M77,42 m-1.4,0 a1.4,1.4 0 1,1 2.8,0 a1.4,1.4 0 1,1 -2.8,0 M122,12 m-1.4,0 a1.4,1.4 0 1,1 2.8,0 a1.4,1.4 0 1,1 -2.8,0 M176,29 m-1.4,0 a1.4,1.4 0 1,1 2.8,0 a1.4,1.4 0 1,1 -2.8,0 M218,15 m-1.4,0 a1.4,1.4 0 1,1 2.8,0 a1.4,1.4 0 1,1 -2.8,0 M266,36 m-1.4,0 a1.4,1.4 0 1,1 2.8,0 a1.4,1.4 0 1,1 -2.8,0 M298,23 m-1.4,0 a1.4,1.4 0 1,1 2.8,0 a1.4,1.4 0 1,1 -2.8,0" />
+
+    <!-- the ground under the sky -->
+    <path android:fillColor="#010206"
+        android:pathData="M0,79.72 L320,79.72 L320,96 L0,96 Z" />
+
+    <!-- the horizon: the whole line, thin -->
+    <path
+        android:pathData="M297.6,78.72 Q160,17.28 22.4,78.72"
+        android:strokeColor="#93A3CC"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+
+    <!-- the travelled part: gold → saffron, the day's walked path -->
+    <path
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:pathData="M297.6,78.72 L291.37,76 L285.15,73.41 L278.92,70.95 L272.69,68.61 L266.47,66.39 L260.24,64.3 L254.02,62.34 L247.79,60.5 L241.56,58.79 L235.34,57.21 L229.11,55.75 L222.88,54.42 L216.66,53.21 L210.43,52.13 L204.2,51.17 L197.98,50.34 L191.75,49.64 L185.52,49.06 L179.3,48.6 L173.07,48.28 L166.85,48.08 L160.62,48 L154.39,48.05 L148.17,48.23">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:startX="297.6" android:startY="0"
+                android:endX="148.17" android:endY="0"
+                android:type="linear">
+                <item android:offset="0" android:color="#FFE8C46A" />
+                <item android:offset="1" android:color="#FFFFB25C" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- the prayer ticks at the sample day's times: sunrise saffron, the
+         next prayer (العصر) the one loud tick, the rest pale -->
+    <path android:fillColor="#C3CCE2"
+        android:pathData="M297.6,78.72 m-3.2,0 a3.2,3.2 0 1,1 6.4,0 a3.2,3.2 0 1,1 -6.4,0 M168.26,48.11 m-3.2,0 a3.2,3.2 0 1,1 6.4,0 a3.2,3.2 0 1,1 -6.4,0 M60.93,63.93 m-3.2,0 a3.2,3.2 0 1,1 6.4,0 a3.2,3.2 0 1,1 -6.4,0 M22.4,78.72 m-3.2,0 a3.2,3.2 0 1,1 6.4,0 a3.2,3.2 0 1,1 -6.4,0" />
+    <path android:fillColor="#FFB25C"
+        android:pathData="M231.55,56.31 m-3.2,0 a3.2,3.2 0 1,1 6.4,0 a3.2,3.2 0 1,1 -6.4,0 M110.46,51.98 m-5,0 a5,5 0 1,1 10,0 a5,5 0 1,1 -10,0" />
+
+    <!-- the sun, where the day is -->
+    <path android:fillColor="#3CFFB25C"
+        android:pathData="M148.17,48.23 m-13,0 a13,13 0 1,1 26,0 a13,13 0 1,1 -26,0" />
+    <path android:fillColor="#6EFFB25C"
+        android:pathData="M148.17,48.23 m-7.5,0 a7.5,7.5 0 1,1 15,0 a7.5,7.5 0 1,1 -15,0" />
+    <path android:fillColor="#FFFFE0A8"
+        android:pathData="M148.17,48.23 m-4.2,0 a4.2,4.2 0 1,1 8.4,0 a4.2,4.2 0 1,1 -8.4,0" />
+</vector>

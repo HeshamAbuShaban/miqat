@@ -1,3 +1,49 @@
+## 2026-11-12 — The widget made true (مجلس التصميم's verdict, measured)
+
+The widget council measured the old widget on a live launcher and found:
+the countdown **30 minutes stale** (the tick was armed on `onEnabled` alone
+and asked for the **protected** system `TIME_TICK` — `dumpsys alarm` had no
+alarm for us at all), the horizon letterboxed into **33% of the panel** (a
+fixed 520×150 bitmap behind a 40dp `fitCenter` slot), ink covering **3.1%**,
+a tick template that lied about the prayers' positions, tomorrow's Fajr
+printed with today's clock time, the city named even under a GPS fix, system
+type instead of Cairo, and a preview whose sunrise/maghrib ticks were SWAPPED
+(linear vs quadratic mapping).
+
+Phase 1 shipped and was verified live:
+
+- the widget's OWN minute alarm (`app.miqat.action.WIDGET_TICK`), re-armed on
+  update, resize, enable and boot — `dumpsys alarm` shows it, the countdown
+  ticked ١:٢٤→١:٢٢ on screen, and it survived a reboot (the emulator's clock
+  resets to 00:36 on boot; the widget answered «٤:١٢» to «٤:٤٨ ص», exact);
+- `ArcRenderer` is now the hero, miniaturised: the hour's sky bands + stars +
+  ground, the horizon at the panel's REAL width, the ticks from the new
+  `DayArc.tickParams` (the hero and the widget read the same numbers), one
+  loud saffron tick (the next prayer), the sunrise saffron, the sun hidden at
+  night;
+- the countdown is minutes, never seconds; urgency colours (≤15 saffron,
+  ≤5 sunset); Cairo + tnum; name 22sp / countdown 30sp / caption 13sp,
+  centred as the hero centres its type;
+- tomorrow's Fajr carries tomorrow's clock time under «غداً»; the city is
+  opt-in («أظهر المدينة في الأداة», default off) and only when the times come
+  from that city — never under a GPS fix;
+- ONE layout for widget and preview (`previewLayout=@layout/widget_miqat`),
+  its sample sky drawn on DayArc's own quadratic — the drifting
+  `widget_arc_static`/`widget_miqat_preview` are deleted; the token hexes
+  live in `res/values/colors.xml` only;
+- the launcher icon's gold/bg corrected to the palette (`#E8C46A`/`#060B1C`).
+
+The identity round also landed: `Accent` (الذهبي/الفيروزي/الزمردي — only the
+«ours» role moves; the legend never does), `HeroStyle` (القوس/الحلقة) —
+the user's ask: «تتيح تغيير الألوان من الإعدادات … وحتى الرسومات التوضيحية
+تنشء شيء ممتاز يمكن التبديل إليه في الإعدادات». And the calendar got its
+first comfort: the month follows the finger (foundation drag, no new
+dependency) and turns at 30% with a 180ms settle; cells breathe (only today
+is filled); a persistent «اليوم» chip sits in the toolbar.
+
+The clock-face variant is killed (the horizon IS the clock face). Guards:
+contrast 0 failing pairs, TZ convention holds, 53/53 tests.
+
 ## 2026-11-11 — THE COLOUR, measured: the cards had no edge, the compass had invisible ticks
 
 The founder asked for a council pass on the colours. The colour council

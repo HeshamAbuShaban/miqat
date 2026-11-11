@@ -87,6 +87,7 @@
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="app.miqat.action.WIDGET_STATE_CHANGED" />
+                <action android:name="app.miqat.action.WIDGET_TICK" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"

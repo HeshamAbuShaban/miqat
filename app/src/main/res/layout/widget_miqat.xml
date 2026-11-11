@@ -1,22 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The widget — ONE panel: the horizon, the next prayer, the countdown.
-     The palette is fixed here (the widget has no theme of its own): the app's
-     dark tokens — lapis night, gold, dim text. -->
+<!-- THE WIDGET LAYOUT — the app's hero at a smaller size (the widget
+     council, 2026-11-11). The sky is a band that GROWS with the panel
+     (weight=1) and spans its full width; the type follows DESIGN.md §3:
+     name 22sp, countdown 30sp, caption 13sp — centred, as the hero centres
+     its type. Every colour is a named token from res/values/colors.xml.
+     The texts are the picker's sample values; the provider overwrites them
+     at runtime, so preview and widget are ONE layout that cannot drift. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center_vertical"
+    android:gravity="center_horizontal"
     android:background="@drawable/widget_bg"
-    android:padding="14dp"
+    android:padding="10dp"
     android:layoutDirection="rtl">
 
     <ImageView
         android:id="@+id/widget_arc"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:scaleType="fitCenter"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:scaleType="fitXY"
+        android:src="@drawable/widget_sky_preview"
         android:contentDescription="@null" />
 
     <TextView
@@ -24,25 +30,37 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
-        android:textColor="#E8C46A"
-        android:textSize="16sp"
+        android:gravity="center"
+        android:fontFamily="@font/cairo_regular"
+        android:textColor="@color/miqat_gold"
+        android:textSize="22sp"
+        android:text="@string/widget_sample_prayer"
         android:includeFontPadding="false" />
 
     <TextView
         android:id="@+id/widget_countdown"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:textColor="#EDEBE3"
-        android:textSize="24sp"
+        android:layout_marginTop="1dp"
+        android:gravity="center"
+        android:fontFamily="@font/cairo_regular"
+        android:fontFeatureSettings="tnum"
+        android:textColor="@color/miqat_text"
+        android:textSize="30sp"
+        android:text="@string/widget_sample_countdown"
         android:includeFontPadding="false" />
 
     <TextView
         android:id="@+id/widget_meta"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:textColor="#9AA0B8"
-        android:textSize="11sp"
+        android:layout_marginTop="1dp"
+        android:gravity="center"
+        android:fontFamily="@font/cairo_regular"
+        android:fontFeatureSettings="tnum"
+        android:textColor="@color/miqat_text_dim"
+        android:textSize="13sp"
+        android:text="@string/widget_sample_meta"
+        android:maxLines="1"
         android:includeFontPadding="false" />
 </LinearLayout>

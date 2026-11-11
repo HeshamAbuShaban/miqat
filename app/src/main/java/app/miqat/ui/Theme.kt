@@ -70,13 +70,14 @@ val PaperOutline = Color(0xFFD6CBB2)
 val InkText = Color(0xFF16181F)
 val InkTextDim = Color(0xFF5A5F72)
 
-private val DarkColors = darkColorScheme(
-    primary = Gold,
-    onPrimary = Color(0xFF241C00),
+/** The dark scheme for a chosen accent — only the "ours" role moves. */
+private fun darkColors(accent: Accent) = darkColorScheme(
+    primary = Color(accent.dark),
+    onPrimary = Color(accent.darkOn),
     // the containers are LAPIS, not mud: a brown container behind the gold
     // composites to dirt (the palette's one hard rule)
-    primaryContainer = Color(0xFF16213F),
-    onPrimaryContainer = Gold,
+    primaryContainer = Color(accent.darkContainer),
+    onPrimaryContainer = Color(accent.darkOnContainer),
     secondary = Teal,
     onSecondary = Color(0xFF00312C),
     tertiary = Amber,
@@ -97,11 +98,12 @@ private val DarkColors = darkColorScheme(
     onError = Color(0xFF060B1C),
 )
 
-private val LightColors = lightColorScheme(
-    primary = Color(0xFF6F5610),
-    onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFDEE6F4),
-    onPrimaryContainer = Color(0xFF2A3A5C),
+/** The light scheme for a chosen accent. */
+private fun lightColors(accent: Accent) = lightColorScheme(
+    primary = Color(accent.light),
+    onPrimary = Color(accent.lightOn),
+    primaryContainer = Color(accent.lightContainer),
+    onPrimaryContainer = Color(accent.lightOnContainer),
     secondary = Color(0xFF1F6A62),
     onSecondary = Color(0xFFFFFFFF),
     // the saffron, darkened for paper: #B4600C failed AA as body text (4.43)
@@ -163,14 +165,18 @@ object Space {
 }
 
 @Composable
-fun MiqatTheme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
+fun MiqatTheme(
+    dark: Boolean = isSystemInDarkTheme(),
+    accent: Accent = Accent.GOLD,
+    content: @Composable () -> Unit,
+) {
     // The app is ARABIC-FIRST: the layout direction is RTL regardless of the
     // device locale. Without this, an en-US device renders the Arabic UI
     // mirrored (prayer order reversed, nav bar wrong) — the "mixed language"
     // slop Hesham called out. Direction is a property of the PRODUCT.
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
         MaterialTheme(
-            colorScheme = if (dark) DarkColors else LightColors,
+            colorScheme = if (dark) darkColors(accent) else lightColors(accent),
             typography = MiqatType,
             content = content,
         )
