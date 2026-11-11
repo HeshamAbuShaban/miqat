@@ -69,8 +69,7 @@ fun TasbihScreen(onBack: () -> Unit) {
                 Column(
                     Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(Radius.card))
-                        .background(scheme.surface)
+                        .cardSurface(RoundedCornerShape(Radius.card))
                         .padding(Space.md),
                 ) {
                     Text(

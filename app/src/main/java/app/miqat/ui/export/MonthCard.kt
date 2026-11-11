@@ -63,16 +63,12 @@ object MonthCard {
     fun rows(
         state: AppState,
         fmt: Fmt,
-        year: Int,
-        month: Int,
+        days: List<Triple<Int, Int, Int>>,
         prayer: Int,
     ): List<Row> {
         val out = ArrayList<Row>(31)
         var previous: Int? = null
-        val days = java.util.Calendar.getInstance().apply {
-            clear(); set(year, month - 1, 1)
-        }.getActualMaximum(java.util.Calendar.DAY_OF_MONTH)
-        for (day in 1..days) {
+        for ((year, month, day) in days) {
             val t = state.times(year, month, day).list[prayer]
             val minute = (((t % 24.0) + 24.0) % 24.0 * 60.0).roundToInt()
             val hijri = Hijri.at(year, month, day, state.display.hijriOffsetDays)
@@ -117,11 +113,12 @@ object MonthCard {
         context: Context,
         state: AppState,
         fmt: Fmt,
-        year: Int,
-        month: Int,
+        days: List<Triple<Int, Int, Int>>,
         prayer: Int,
         rows: List<Row>,
     ): Bitmap {
+        val year = days.firstOrNull()?.first ?: 0
+        val month = days.firstOrNull()?.second ?: 1
         val height = HEADER + rows.size * ROW + FOOTER
         val bmp = Bitmap.createBitmap(WIDTH, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)

@@ -18,10 +18,10 @@ import app.miqat.ui.DayArc
 object ArcRenderer {
 
     // the palette (the app's dark tokens — the widget is always the night sky)
-    private const val HAIRLINE = 0xFF2C3A5C.toInt()
+    private const val HAIRLINE = 0xFF93A3CC.toInt()
     private const val GOLD = 0xFFE8C46A.toInt()
     private const val SAFFRON = 0xFFFFB25C.toInt()
-    private const val TICK = 0xFF8E8672.toInt()
+    private const val TICK = 0xFFC3CCE2.toInt()
 
     /**
      * @param travelled the day's progress (0..1 along the arc)

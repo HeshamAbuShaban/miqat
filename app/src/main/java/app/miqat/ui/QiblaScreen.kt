@@ -185,7 +185,7 @@ private fun CompassRose(
             brush = Brush.verticalGradient(
                 // the app's own night sky — the compass had a violet/plum
                 // gradient, the family the palette bans (it muddies)
-                Sky.bands(SkyPhase.NIGHT, dark = true),
+                Sky.bands(SkyPhase.NIGHT),
                 startY = center.y - radius,
                 endY = center.y + radius,
             ),
@@ -216,7 +216,7 @@ private fun CompassRose(
                 val a = Math.toRadians((deg - 90).toDouble())
                 val outer = radius
                 val inner = radius - if (major) 16f else 7f
-                val c = if (major) Color(0xFFE6E2D6) else Color(0x8A93B8)
+                val c = if (major) Color(0xFFE6E2D6) else Sky.tick
                 drawLine(
                     color = c,
                     start = Offset(

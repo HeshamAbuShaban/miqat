@@ -34,16 +34,13 @@ import app.miqat.R
 val Gold = Color(0xFFE8C46A)          // the wordmark gold — primary accent
 val Saffron = Color(0xFFFFB25C)       // the live moment (the sun, the urgency)
 val Lapis = Color(0xFF101B36)         // the sky's mid-band — lapis ink, never violet
-val GoldDim = Color(0xFF8A7530)
 val Cream = Color(0xFFF8E7AE)
 val Amber = Color(0xFFFFB25C)         // "the moment" colour (next prayer)
 val Teal = Color(0xFF7FD0C8)
-val Blue = Color(0xFF5A74E8)
 val Sunset = Color(0xFFFF7A59)
-val Crimson = Color(0xFFE5484D)
 
 // urgency (the app reacts as the appointed time approaches — «اقترب الموعد»)
-val UrgencySoon = Color(0xFFFFB74D)     // amber — the same gold as the brand
+val UrgencySoon = Color(0xFFFFB25C)     // saffron — the same token as the sun
 val UrgencyImminent = Color(0xFFFF7A59) // sunset — warmer, louder, still calm
 
 /** Radius scale (nested radii add up): chips 6, controls 10, rows 12, cards 14,
@@ -92,32 +89,36 @@ private val DarkColors = darkColorScheme(
     onSurface = NightText,
     surfaceVariant = NightSurfaceHigh,
     onSurfaceVariant = NightTextDim,
-    outline = NightOutline,
-    outlineVariant = Color(0xFF1A2140),
-    error = Crimson,
-    onError = Color(0xFF2B0608),
+    // the outline is now VISIBLE (1.42:1 was an edge that was not there)
+    outline = Color(0xFF33426B),
+    outlineVariant = Color(0xFF232C4C),
+    // no red in this palette: doubt is dim + a chip (DESIGN.md §2)
+    error = Color(0xFFEDEBE3),
+    onError = Color(0xFF060B1C),
 )
 
 private val LightColors = lightColorScheme(
-    primary = Color(0xFF7A5F13),
+    primary = Color(0xFF6F5610),
     onPrimary = Color(0xFFFFFFFF),
     primaryContainer = Color(0xFFDEE6F4),
     onPrimaryContainer = Color(0xFF2A3A5C),
     secondary = Color(0xFF1F6A62),
     onSecondary = Color(0xFFFFFFFF),
-    tertiary = Color(0xFFB4600C),        // the same saffron, darkened for paper
+    // the saffron, darkened for paper: #B4600C failed AA as body text (4.43)
+    tertiary = Color(0xFF96500A),
     onTertiary = Color(0xFFFFFFFF),
-    tertiaryContainer = Color(0xFFFFE3C2),
+    // the containers are lapis — never a tan that composites to dirt
+    tertiaryContainer = Color(0xFFDEE6F4),
     onTertiaryContainer = Color(0xFF2B1800),
-    background = PaperBg,
+    background = Color(0xFFF2ECDC),
     onBackground = InkText,
     surface = PaperSurface,
     onSurface = InkText,
-    surfaceVariant = PaperSurfaceHigh,
+    surfaceVariant = Color(0xFFE9DEC4),
     onSurfaceVariant = InkTextDim,
-    outline = PaperOutline,
-    outlineVariant = Color(0xFFE6DEC8),
-    error = Color(0xFFB3261E),
+    outline = Color(0xFFC0B392),
+    outlineVariant = Color(0xFFDFD5BC),
+    error = Color(0xFF16181F),
     onError = Color(0xFFFFFFFF),
 )
 

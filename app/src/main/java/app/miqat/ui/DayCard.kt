@@ -55,8 +55,7 @@ fun DayCard(
     Column(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(Radius.panel))
-            .background(scheme.surface)
+            .cardSurface(RoundedCornerShape(Radius.panel))
             .padding(Space.lg),
     ) {
         // both dates, equal weight — the Hijri and the Gregorian are one day

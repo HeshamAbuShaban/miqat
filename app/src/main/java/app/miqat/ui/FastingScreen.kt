@@ -114,8 +114,7 @@ fun FastingScreen(
         Column(
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(Radius.panel))
-                .background(scheme.surface)
+                .cardSurface(RoundedCornerShape(Radius.panel))
                 .padding(Space.lg),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -146,7 +145,7 @@ fun FastingScreen(
                 }
                 drawPath(
                     arc,
-                    scheme.outline,
+                    Sky.rim,
                     style = Stroke(width = 2f, cap = StrokeCap.Round),
                 )
 
@@ -219,8 +218,7 @@ fun FastingScreen(
                         Column(
                             Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(Radius.card))
-                                .background(scheme.surface)
+                                .cardSurface(RoundedCornerShape(Radius.card))
                                 .padding(Space.md),
                         ) {
                             Text(
@@ -277,8 +275,7 @@ fun FastingScreen(
         Column(
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(Radius.panel))
-                .background(scheme.surface)
+                .cardSurface(RoundedCornerShape(Radius.panel))
                 .padding(Space.lg),
         ) {
             Text(
@@ -306,8 +303,7 @@ fun FastingScreen(
         Column(
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(Radius.panel))
-                .background(scheme.surface)
+                .cardSurface(RoundedCornerShape(Radius.panel))
                 .padding(Space.lg),
         ) {
             Text(
@@ -360,8 +356,7 @@ fun FastingScreen(
         Column(
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(Radius.panel))
-                .background(scheme.surface)
+                .cardSurface(RoundedCornerShape(Radius.panel))
                 .padding(Space.lg),
         ) {
             Text(

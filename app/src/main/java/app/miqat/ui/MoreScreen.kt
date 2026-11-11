@@ -122,8 +122,7 @@ fun MoreScreen(
                     Column(
                         Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(Radius.card))
-                            .background(scheme.surface)
+                            .cardSurface(RoundedCornerShape(Radius.card))
                             .clickable { onOpen(tile.target) }
                             .padding(Space.md),
                     ) {

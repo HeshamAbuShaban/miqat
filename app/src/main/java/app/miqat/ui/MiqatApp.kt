@@ -582,8 +582,7 @@ private fun HeroCard(
     Column(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(Radius.hero))
-            .background(scheme.surface),
+            .cardSurface(RoundedCornerShape(Radius.hero)),
     ) {
         // the sky — to the card's edge
         Canvas(
@@ -619,7 +618,7 @@ private fun HeroCard(
             drawPath(
                 sky,
                 Brush.verticalGradient(
-                    Sky.bands(skyPhase, nightSky),
+                    Sky.bands(skyPhase),
                     startY = 0f,
                     endY = horizon,
                 ),
@@ -637,7 +636,7 @@ private fun HeroCard(
                     val p = pointAt(fx)
                     val alpha = (0.30f + 0.35f * ((i % 3) / 2f)) * starStrength
                     drawCircle(
-                        (if (nightSky) Color(0xFFF3E9D2) else Color(0xFF6B6455)).copy(alpha = alpha),
+                        Sky.tick.copy(alpha = alpha),
                         radius = if (i % 4 == 0) 2.2f else 1.4f,
                         center = Offset(p.x, p.y * (fy * 2.2f)),
                     )
@@ -646,7 +645,7 @@ private fun HeroCard(
 
             // the ground
             drawRect(
-                Sky.ground(skyPhase, nightSky),
+                Sky.ground,
                 topLeft = Offset(0f, horizon),
                 size = androidx.compose.ui.geometry.Size(w, h - horizon),
             )
@@ -660,7 +659,7 @@ private fun HeroCard(
             val night = nightSky
             drawPath(
                 rim,
-                Sky.rim(skyPhase, night),
+                Sky.rim,
                 style = Stroke(width = 2f, cap = StrokeCap.Round),
             )
             val travelled = Path()
@@ -689,9 +688,9 @@ private fun HeroCard(
                 val isSun = index == 1
                 drawCircle(
                     when {
-                        isNext -> Color(0xFFE8C46A)
+                        isNext -> Sky.sunMark
                         isSun -> Sky.sunMark
-                        else -> Color(0xFF8E8672)
+                        else -> Sky.tick
                     },
                     radius = if (isNext) 5f else if (isSun) 3.2f else 3f,
                     center = c,

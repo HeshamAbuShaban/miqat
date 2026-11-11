@@ -96,6 +96,11 @@ fun CalendarScreen(
             today = cityToday,
         )
     }
+    // the days the GRID shows — the strip, the ledger and the export read them
+    // (they used to read the Gregorian anchor, and so described another month)
+    val windowDays = remember(window) {
+        window.days.map { Triple(it.gregorianYear, it.gregorianMonth, it.gregorianDay) }
+    }
     // the step: a Hijri month in the Hijri context, a Gregorian month in the
     // Gregorian contexts
     fun stepMonth(delta: Int) {
@@ -239,10 +244,9 @@ fun CalendarScreen(
         PrayerStrip(
             state = state,
             fmt = fmt,
-            year = year,
-            month = month,
+            days = windowDays,
             prayer = stripPrayer,
-            onPick = { stripPrayer = it },
+            onPick = { stripPrayer = it; state.updateDisplay(d.copy(calendarPrayer = it)) },
             onLongPress = { yearOpen = true },
         )
 
@@ -290,20 +294,20 @@ fun CalendarScreen(
             MonthLedger(
                 state = state,
                 fmt = fmt,
-                year = year,
-                month = month,
+                days = windowDays,
                 prayer = stripPrayer,
+                title = window.titleAr,
                 onOpenDay = { day ->
                     ledgerOpen = false
-                    onOpenDay(year, month, day)
+                    onOpenDay(windowDays.first().first, windowDays.first().second, day)
                 },
                 onShare = {
                     // the month's ledger, as a card you can share
                     val rows = app.miqat.ui.export.MonthCard.rows(
-                        state, fmt, year, month, stripPrayer,
+                        state, fmt, windowDays, stripPrayer,
                     )
                     val bitmap = app.miqat.ui.export.MonthCard.render(
-                        context, state, fmt, year, month, stripPrayer, rows,
+                        context, state, fmt, windowDays, stripPrayer, rows,
                     )
                     app.miqat.ui.export.MonthShare.share(
                         context,
@@ -434,18 +438,15 @@ private fun IconButton(icon: androidx.compose.ui.graphics.vector.ImageVector, de
 private fun PrayerStrip(
     state: AppState,
     fmt: Fmt,
-    year: Int,
-    month: Int,
+    days: List<Triple<Int, Int, Int>>,
     prayer: Int,
     onPick: (Int) -> Unit,
     onLongPress: () -> Unit,
 ) {
     val scheme = MaterialTheme.colorScheme
-    val cal = Calendar.getInstance().apply { clear(); set(year, month - 1, 1) }
-    val days = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
-    val points: List<Int> = remember(year, month, prayer, state.city.calcMethod, state.display.methodOverride, state.adjusts) {
-        (1..days).map { day ->
-            val t = state.times(year, month, day).list[prayer]
+    val points: List<Int> = remember(days, prayer, state.city.calcMethod, state.display.methodOverride, state.adjusts) {
+        days.map { (y, m, d) ->
+            val t = state.times(y, m, d).list[prayer]
             ((((t % 24.0) + 24.0) % 24.0) * 60).toInt()
         }
     }
@@ -456,8 +457,7 @@ private fun PrayerStrip(
     Column(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(Radius.card))
-            .background(scheme.surface)
+            .cardSurface(RoundedCornerShape(Radius.card))
             .padding(Space.md),
     ) {
         Row(
@@ -517,19 +517,17 @@ private fun PrayerStrip(
 private fun MonthLedger(
     state: AppState,
     fmt: Fmt,
-    year: Int,
-    month: Int,
+    days: List<Triple<Int, Int, Int>>,
     prayer: Int,
+    title: String,
     onOpenDay: (Int) -> Unit,
     onShare: () -> Unit = {},
 ) {
     val scheme = MaterialTheme.colorScheme
-    val cal = Calendar.getInstance().apply { clear(); set(year, month - 1, 1) }
-    val days = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
-    val rows = remember(year, month, prayer, state.city.calcMethod, state.display.methodOverride, state.adjusts) {
-        (1..days).map { day ->
-            val t = state.times(year, month, day).list[prayer]
-            day to (((t % 24.0) + 24.0) % 24.0 * 60).toInt()
+    val rows = remember(days, prayer, state.city.calcMethod, state.display.methodOverride, state.adjusts) {
+        days.map { (y, m, d) ->
+            val t = state.times(y, m, d).list[prayer]
+            d to (((t % 24.0) + 24.0) % 24.0 * 60).toInt()
         }
     }
     var prev by remember { mutableStateOf<Int?>(null) }
@@ -540,7 +538,7 @@ private fun MonthLedger(
             .padding(horizontal = Space.lg),
     ) {
         Text(
-            "دفتر الشهر — ${PRAYER_NAMES[prayer]} في ${fmt.n(month)}/${fmt.n(year)}",
+            "دفتر الشهر — ${PRAYER_NAMES[prayer]} في $title",
             style = MaterialTheme.typography.titleMedium,
             color = scheme.onSurface,
             modifier = Modifier.padding(bottom = Space.sm),

@@ -1,3 +1,39 @@
+## 2026-11-11 — THE COLOUR, measured: the cards had no edge, the compass had invisible ticks
+
+The founder asked for a council pass on the colours. The colour council
+computed every pair the app renders (WCAG 2.1, not by eye) and found:
+
+- **THE CARDS HAD NO EDGE.** `DESIGN.md` has always said «Card: radius 14,
+  fill surface, **1dp outline**» — but the code never drew the outline, and
+  the page→card step is 1.07:1. The hero was a rectangle with no perceptible
+  boundary: the single cheapest-looking thing in the app. Now every card
+  draws its edge (`Modifier.cardSurface`), and the outline token was lifted
+  from `#26314F` (1.42:1 — an edge that was not there) to `#33426B` (1.85:1).
+- **36 COMPASS TICKS WERE PAINTED AT ALPHA ZERO.** `Color(0x8A93B8)` is six
+  hex digits, so Compose read it as ARGB with alpha `0x00` — the rose's minor
+  ticks were not dim, they did not exist.
+- **THE HORIZON WAS INVISIBLE IN THE APP'S ONE RICH MOMENT.** The rim was
+  1.06:1 against the day sky, the prayer ticks 1.69:1 at sunset, the gold
+  path 3.66:1. The sky is now ONE palette (never a theme variant), with the
+  marks measured against every phase: the rim `#93A3CC` (3.6:1), the tick
+  `#C3CCE2` (5.6:1), the path 5.4:1. And the sunset's blue→ember ramp now
+  desaturates BEFORE the hue turns, so the interpolation never crosses the
+  banned violet.
+- **THE LIGHT THEME FAILED AA AS BODY TEXT** (the saffron at 4.43:1 in four
+  places) and its day sky had a 1.02 band step — no gradient, only a colour
+  change. Corrected: the saffron `#96500A`, the raised panel `#E9DEC4`, the
+  gold `#6F5610`, the page `#F2ECDC`; the sky is now the same in both themes.
+- **THE PALETTE WAS WRITTEN IN FOUR PLACES THAT DISAGREED** — `DESIGN.md`,
+  the theme, the widget's XML and the launcher icon were teaching three
+  different golds. The design system's file is now rewritten to the values
+  the code actually uses.
+- **THE SEMANTICS ARE NOW FOUR, NOT SIX**: gold = ours (chosen), saffron = now
+  (the clock), teal = a window (a span), cream = an occasion or a caution.
+
+**And the claim in `DESIGN.md` is now true**: `tools/verify_contrast.py`
+computes every pair the app renders in both schemes — **0 failing pairs**
+(it found 7 before, including the light theme's body text).
+
 ## 2026-11-11 — THE CALENDAR: an explicit axis, and the truth about the title
 
 Hesham on the calendar: «هو صراحة يحتاج مزيد ومزيد من الجهود في عرض وتحكم وإفادة… hij يحمل العنوان للشهر الذي مبتدأ به، وإذا دخل آخر في حيز الـ٣٠ يوم الميلادي يصبح العنوان مشاركًا لجزء من حقيقته وآخر من الشهر الذي يليه! وهذا خطأ… ولا يعني أن تجعل الميلادي ثانويًا أن تهمشه لأنّه للأسف منتشر، ولكن الأفضل في سياق التحكم… أن يجعل طريقة تبرز سياقًا معينًا سواء على الصعيد الميلادي والهجري أو على صعيد الطاعات الأخرى».

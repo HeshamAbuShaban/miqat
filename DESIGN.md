@@ -25,18 +25,31 @@
 
 | Token | Dark | Light | Role |
 |---|---|---|---|
-| `bg` | `#060B1C` | `#F6F1E4` | page (lapis night / dawn paper) |
+| `bg` | `#060B1C` | `#F2ECDC` | page (lapis night / dawn paper) |
 | `surface` | `#0E1526` | `#FFFCF4` | cards, rows |
-| `surfaceHigh` | `#1B2542` | `#EFE7D4` | raised: pressed, pill, sheet header |
-| `outline` | `#26314F` | `#D6CBB2` | 1dp separators, card edges |
-| `gold` | `#E8C46A` | `#8A6A16` | brand, needle, next-prayer tick, focus ring |
-| `saffron` | `#FFB25C` | `#B4600C` | the live moment: the sun, "now" |
-| `teal` | `#6FCFC4` | `#1F6A62` | qibla direction, worship windows, the fast band |
+| `surfaceHigh` | `#1B2542` | `#E9DEC4` | raised: pressed, pill, sheet header |
+| `outline` | `#33426B` | `#C0B392` | 1dp card edge, the hairline, the switch's border |
+| `outlineVariant` | `#232C4C` | `#DFD5BC` | the faint hairline inside a card |
+| `gold` (`primary`) | `#E8C46A` | `#6F5610` | **chosen / ours**: the brand, the active destination, the selection, today's cell, the focus ring, the app's own marks |
+| `saffron` (`tertiary`) | `#FFB25C` | `#96500A` | **now / the clock**: the sun, the next prayer's tick, the countdown, the "now" dot |
+| `teal` (`secondary`) | `#7FD0C8` | `#1F6A62` | **a window**: a span of time given to an act — never a number, never a marker |
+| `cream` (`onTertiaryContainer`) | `#F8E7AE` | `#6E5A3C` | **an occasion, or a caution**: the Eids, the rites, the warnings, the citations' notes |
 | `text` | `#EDEBE3` | `#16181F` | primary text |
-| `textDim` | `#9AA0B8` | `#5A5F72` | secondary text, inactive nav, citations |
+| `dim` | `#98A2C4` | `#5A5F72` | secondary text, inactive nav, citations |
 
+- The four meanings are strict: **gold = ours, saffron = now, teal = a window,
+  cream = an occasion**. The sun is saffron (the clock), a worship window is
+  teal (a span), the next prayer's tick is saffron (it is the clock), and the
+  month's occasion is cream (it is an occasion, not a warning).
+- **Every card draws its 1dp `outline` edge.** The page→card step is only
+  1.07:1, so without the edge the cards have no perceptible boundary — the
+  single cheapest-looking thing in the app.
+- The contrast is not a claim: `tools/verify_contrast.py` computes every pair
+  the app renders, in both schemes, and it must pass.
 - The violet family (`#2A1B33`, `#1E1836`) is **banned** — it composites to mud
-  between blue and magenta. **Gold and saffron are the only warm hues.**
+  between blue and magenta, and the interpolation must not cross it either
+  (the sunset desaturates BEFORE the hue turns). **Gold and saffron are the
+  only warm hues.**
 - Hue means something, never decoration. There is no red token: doubt is
   `textDim` plus a chip, never an error colour.
 - The sky's mid-band is lapis ink `#101B36`; the horizon glow is `#8A5533` at
@@ -67,20 +80,26 @@ only if it is bundled locally; if it is not available, Cairo stays alone.
 
 ## 3b. The Sky (the hero's phases)
 
-The sky is a FUNCTION OF THE HOUR, not a fixed gradient — four phases from
-the day's real sunrise and sunset:
+The sky is a FUNCTION OF THE HOUR — never of the theme. One palette, both
+schemes: a night sky does not become a pale blue because the phone is in light
+mode. The bands (top → horizon) and the ground:
 
-| Phase | Dark bands (top → horizon) |
-|---|---|
-| ليل NIGHT | `#04070F` · `#0B1226` · `#141E3C` · `#1E2A4C` |
-| فجر DAWN | `#050912` · `#101B36` · `#24304A` · `#7A5A42` |
-| نهار DAY | `#0B1226` · `#18244A` · `#27365C` · `#41527C` |
-| غروب SUNSET | `#080D1E` · `#182348` · `#5A4560` · `#8A5533` |
+| Phase | b0 | b1 | b2 | b3 (the glow) | ground |
+|---|---|---|---|---|---|
+| ليل NIGHT | `#070E1F` | `#101E42` | `#1C3164` | `#2B4682` | `#010206` |
+| فجر DAWN | `#070E20` | `#111E40` | `#28334B` | `#5D432C` | `#010206` |
+| نهار DAY | `#070E1E` | `#121E3E` | `#21325A` | `#3A4966` | `#010206` |
+| غروب SUNSET | `#080E20` | `#121E3E` | `#39322A` | `#6A3D27` | `#010206` |
 
-The stars fade in the night and out at dawn; the sun's mark (saffron
-`#FFB25C`) means "the sun" everywhere (the sunrise tick, the rail's "now"
-dot). The sky BLEEDS to the hero card's edge — it is the card, not a
-rectangle inside it.
+**The marks on the sky** (one token each, shared with the widget and the
+exported card): the rim `#93A3CC` (steel — the horizon line, 3.6:1 against
+every phase), the prayer tick `#C3CCE2` (pale, 5.6:1), the travelled path
+gold `#E8C46A` → saffron `#FFB25C` (5.4:1), the sun `#FFB25C` with a `#FFE0A8`
+core. Every mark clears 3:1 against every band it touches.
+
+The stars are the pale token at a fading alpha (1.0 at night → 0.45 at dawn →
+0.2 at sunset → 0 in the day). The sky BLEEDS to the hero card's edge — it is
+the card, not a rectangle inside it.
 
 ## 3c. The navigation (five destinations, our own glyphs)
 
@@ -159,10 +178,13 @@ Landscape: the hero compresses, the chrome does not reorder.
 
 ## 9. Agent Prompt Guide
 
-**Quick colours**: bg `#060B1C`/`#F6F1E4` · surface `#0E1526`/`#FFFCF4` ·
-surfaceHigh `#1B2542`/`#EFE7D4` · outline `#26314F`/`#D6CBB2` · gold
-`#E8C46A`/`#8A6A16` · saffron `#FFB25C`/`#B4600C` · teal `#6FCFC4`/`#1F6A62` ·
-text `#EDEBE3`/`#16181F` · textDim `#9AA0B8`/`#5A5F72`.
+**Quick colours**: bg `#060B1C`/`#F2ECDC` · surface `#0E1526`/`#FFFCF4` ·
+surfaceHigh `#1B2542`/`#E9DEC4` · outline `#33426B`/`#C0B392` · gold
+`#E8C46A`/`#6F5610` · saffron `#FFB25C`/`#96500A` · teal `#7FD0C8`/`#1F6A62` ·
+cream `#F8E7AE`/`#6E5A3C` · text `#EDEBE3`/`#16181F` · dim `#98A2C4`/`#5A5F72`.
+
+**The four meanings**: gold = ours (chosen), saffron = now (the clock), teal =
+a window (a span), cream = an occasion or a caution.
 
 1. "Build the home hero: a 150dp quadratic arc as the horizon; the sky above it
    a vertical gradient `bg` → `#101B36` → `#24304A` → `#8A5533`@55%; stars; a dark

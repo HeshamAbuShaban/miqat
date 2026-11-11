@@ -1,6 +1,7 @@
 package app.miqat.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -77,6 +78,23 @@ fun BigCountdown(
         color = color,
         modifier = modifier,
     )
+}
+
+/**
+ * A CARD — the fill, the radius, and the 1dp edge.
+ *
+ * The design system has always said «Card: radius 14, fill surface, 1dp
+ * outline» — but the code never drew the outline, and the page→card step is
+ * 1.07:1, so the cards had no perceptible edge. That is the single cheapest-
+ * looking thing in the app (the colour council, 2026-11-11).
+ */
+@Composable
+fun Modifier.cardSurface(shape: RoundedCornerShape): Modifier {
+    val scheme = MaterialTheme.colorScheme
+    return this
+        .clip(shape)
+        .background(scheme.surface)
+        .border(1.dp, scheme.outline, shape)
 }
 
 /** Number rendering bound to the user's display prefs (never mixed systems). */
