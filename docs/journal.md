@@ -1,3 +1,26 @@
+## 2026-11-11 — THE MONTH EXPORT: the ledger, as a card you can share
+
+The roadmap has asked for the month's export since the first week. It is not
+a screenshot: it is a **designed page** — the app's own palette, the wordmark,
+the same horizon as the hero, and the honesty the app keeps everywhere.
+
+- `ui/export/MonthCard.kt` renders it: the header (the wordmark, the city,
+  the Hijri month, the prayer), the rows (the Gregorian day, the Hijri day,
+  the time, and the change from the day before), and the foot — the
+  confidence and the method.
+- The «تقديري بحسب الاصطلاح» chip appears on the card **only when the times
+  really are an estimate**. A published method has nothing to apologise for;
+  printing the chip there would be the same slop the app refuses elsewhere.
+- The Arabic is drawn with the platform's own text engine (so the shaping and
+  the bidi order are the platform's, not a guess) in the bundled Cairo.
+- Sharing goes through the platform's `FileProvider` — no dependency, no
+  permission, and the file lives in the cache and goes away.
+
+Verified on the emulator: the card comes out with the Arabic-Indic digits in
+the right order («٤:٤١ ص»), the sun sitting ON the horizon, the day's change
+(+١ د) and the honest foot («محسوب — محسوب بطريقة معتمدة» · «القاهرة · طريقة
+الحساب: egypt»).
+
 ## 2026-11-11 — THE WIDGET: the next prayer on the home screen
 
 The donor shipped three widgets; we ship ONE, and it says the one thing a

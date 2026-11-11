@@ -68,6 +68,18 @@
         </receiver>
 
         <!-- The home-screen widget: the next prayer over the day's horizon. -->
+        <!-- The shared month card (the FileProvider grants read access for
+             the share sheet only — nothing is written outside the cache). -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
         <receiver
             android:name=".ui.widget.MiqatWidgetProvider"
             android:exported="true"

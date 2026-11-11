@@ -219,10 +219,33 @@ fun CalendarScreen(
             sheetState = rememberModalBottomSheetState(),
             containerColor = MaterialTheme.colorScheme.surface,
         ) {
-            MonthLedger(state, fmt, year, month, stripPrayer) { day ->
-                ledgerOpen = false
-                onOpenDay(year, month, day)
-            }
+            MonthLedger(
+                state = state,
+                fmt = fmt,
+                year = year,
+                month = month,
+                prayer = stripPrayer,
+                onOpenDay = { day ->
+                    ledgerOpen = false
+                    onOpenDay(year, month, day)
+                },
+                onShare = {
+                    // the month's ledger, as a card you can share
+                    val rows = app.miqat.ui.export.MonthCard.rows(
+                        state, fmt, year, month, stripPrayer,
+                    )
+                    val bitmap = app.miqat.ui.export.MonthCard.render(
+                        context, state, fmt, year, month, stripPrayer, rows,
+                    )
+                    app.miqat.ui.export.MonthShare.share(
+                        context,
+                        bitmap,
+                        "دفتر ${PRAYER_NAMES[stripPrayer]} — " +
+                            app.miqat.ui.export.MonthCard.hijriMonthLabel(year, month) +
+                            " ${fmt.n(year)} · ${state.city.ar.ifBlank { state.city.en }}",
+                    )
+                },
+            )
         }
     }
     if (yearOpen) {
@@ -431,6 +454,7 @@ private fun MonthLedger(
     month: Int,
     prayer: Int,
     onOpenDay: (Int) -> Unit,
+    onShare: () -> Unit = {},
 ) {
     val scheme = MaterialTheme.colorScheme
     val cal = Calendar.getInstance().apply { clear(); set(year, month - 1, 1) }
@@ -454,6 +478,13 @@ private fun MonthLedger(
             color = scheme.onSurface,
             modifier = Modifier.padding(bottom = Space.sm),
         )
+        // share the month as a card
+        NavRow(
+            "مشاركة دفتر الشهر",
+            "صورة واحدة فيها كل أيام الشهر — تُرسل كما هي",
+            onShare,
+        )
+        Divider(Modifier.padding(horizontal = Space.lg))
         rows.forEach { (day, minute) ->
             val delta = prev?.let { minute - it }
             prev = minute
