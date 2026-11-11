@@ -1,3 +1,69 @@
+## 2026-11-11 — THE DESIGN CAMPAIGN: phase 1 (the home) + phase 2 (الصيام)
+
+The founder asked for the design/UX to reach 8.8/10, and for the councils to
+drive it. Three councils ran in parallel (the design, the advisory, the models)
+and their verdicts are in this entry and in `docs/decisions.md`.
+
+**What the design council found (and it was right):**
+
+- The hero's prayer ticks were **hard-coded** — the app's signature visual was
+  decorative, not a fact. Now every tick sits at its prayer's REAL time.
+- The sky was a **fixed** gradient (a brown band whatever the hour). Now the
+  sky is a function of the day: the lapis night, the dawn, the day, the sunset
+  — and the stars come out only when it is dark.
+- The sky sat **inside** the card as a rectangle. Now it bleeds to the card's
+  edge (the sky IS the card).
+- The hierarchy was **inverted**: the prayer's name at 14sp under a 45sp
+  number. Now the name is the question (24sp) and the number the answer
+  (46sp), with the seconds smaller and quieter.
+- The home was **nine stacked blocks** with eight hairlines. Now it is four
+  zones: the identity, the occasion band, the hero (with the day's shape in
+  its foot — «بعد ذلك»), the day-rail, the reading card.
+- Two settings switches **did nothing** (`showNearestMoment`,
+  `showPrayerStrip`) — they were never read. Now they drive the qibla line and
+  the rail.
+- The prayer detail printed the **raw Latin method id** («makkah») in an
+  Arabic UI. Now it prints the Arabic name and the id.
+- The arc read **left-to-right** — in an Arabic app the day must read from
+  the right. The hero, the widget and the new rail all read right-to-left now.
+
+**PHASE 2 — الصيام (the fasting), the content gap the founder named.** A
+Muslim's fasting day had no home: the imsak and the iftar were two moments on
+a timeline. Now there is a screen with the fast's own arc (the same shape,
+but the span is the fast), its countdown, the four anchors as a 2×2 grid
+(الإمساك · الفجر · الإفطار · فجر الغد), «ليلك» (the suhur's window and the
+last third), the catalogue of the voluntary fasts, and the texts they rest on.
+It is the THIRD tab, and the navigation's icons are now drawn from the app's
+own geometry (`ui/BrandGlyph.kt`) instead of Material's Home/List/DateRange/
+Settings.
+
+**The models council audited every citation and found real damage.** It
+scanned two hadith corpora (Bukhari, Muslim, Tirmidhi, Abu Dawud, Nasa'i,
+Ibn Majah, Malik) and the Uthmani Qur'an:
+
+- **Ten strings in the app's own voice were RULINGS** («مستحبّ»، «لا صيام
+  اليوم»، «كفّارة سنتين — لغير الحاجّ»). All are gone: every line that names
+  a fasting day now quotes its narration with its number.
+- **«أيام التشريق — لا صيام اليوم» was factually wrong** (they are days of
+  eating and drinking — Muslim 1141).
+- The founder's «atarabi 'ammah qabla ssalat…», «لَا تَصُومُوا حَتَّى
+  تَطْلِعَ الشَّمْسُ» and «أقربوا إلى الله أكثر» have **ZERO hits** in the
+  seven canonical collections — they are not printed.
+- «صيام يوم عرفة لغير الحاج» has **zero hits** — the «لغير الحاج» is dropped;
+  the narration is printed as Muslim 1162, and the pilgrim's exception is
+  printed separately as Tirmidhi 751.
+- The Ramadan-qiyam hadith «Bukhari 201 / Muslim 746» was **the wrong
+  hadith** (201 is the wudu one) — the correct numbers are Bukhari 4836,
+  Nasa'i 1644, Ibn Majah 1419.
+- The imsak's 15-minute lead is **our convention, not a text** — so the day
+  card now carries «تقديري بحسب الاصطلاح» next to it.
+- The **Hijri date is tabular, not a sighting** — so «تاريخ هجري تقديري —
+  يمكن ضبطه» now sits wherever a Hijri date is printed (the home, the
+  calendar, the exported card).
+- The acts catalog's fasting act had NO source; it now carries the verified
+  pair (Bukhari 1919 for the imsak, Bukhari 1957 for the iftar), and the
+  qaylula's quote got the ellipsis the corpus requires.
+
 ## 2026-11-11 — The acts' own clocks, the changelog, and the store copy
 
 **The acts carry their own two clocks now.** R1 asks for the dual clock

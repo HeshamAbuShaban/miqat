@@ -76,8 +76,10 @@ val InkTextDim = Color(0xFF5A5F72)
 private val DarkColors = darkColorScheme(
     primary = Gold,
     onPrimary = Color(0xFF241C00),
-    primaryContainer = Color(0xFF3A2F10),
-    onPrimaryContainer = Cream,
+    // the containers are LAPIS, not mud: a brown container behind the gold
+    // composites to dirt (the palette's one hard rule)
+    primaryContainer = Color(0xFF16213F),
+    onPrimaryContainer = Gold,
     secondary = Teal,
     onSecondary = Color(0xFF00312C),
     tertiary = Amber,
@@ -99,8 +101,8 @@ private val DarkColors = darkColorScheme(
 private val LightColors = lightColorScheme(
     primary = Color(0xFF7A5F13),
     onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFF3E4B4),
-    onPrimaryContainer = Color(0xFF2A2000),
+    primaryContainer = Color(0xFFDEE6F4),
+    onPrimaryContainer = Color(0xFF2A3A5C),
     secondary = Color(0xFF1F6A62),
     onSecondary = Color(0xFFFFFFFF),
     tertiary = Color(0xFFB4600C),        // the same saffron, darkened for paper

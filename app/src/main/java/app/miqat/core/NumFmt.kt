@@ -42,6 +42,19 @@ object NumFmt {
         }
     }
 
+    /** "H:MM" without the ص/م suffix — for the diagrams (the day-rail). */
+    fun hhmmShort(minutesOfDay: Int, arabicIndic: Boolean, use12h: Boolean): String {
+        val m = ((minutesOfDay % (24 * 60)) + 24 * 60) % (24 * 60)
+        val h24 = m / 60
+        val mm = m % 60
+        return if (use12h) {
+            val h12 = when { h24 % 12 == 0 -> 12 else -> h24 % 12 }
+            ltr(digits("%d:%02d".format(h12, mm), arabicIndic))
+        } else {
+            ltr(digits("%02d:%02d".format(h24, mm), arabicIndic))
+        }
+    }
+
     /**
      * "H:MM:SS" — a DURATION (the ticking countdown). No ص/م suffix: a
      * duration is not a moment of the day, so «1:11:40 ص» was a lie about

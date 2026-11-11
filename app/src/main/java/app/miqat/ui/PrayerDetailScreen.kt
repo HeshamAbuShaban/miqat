@@ -107,7 +107,7 @@ fun PrayerDetailScreen(state: AppState, fmt: Fmt, index: Int, onBack: () -> Unit
                 color = MaterialTheme.colorScheme.onBackground,
             )
             Spacer(Modifier.height(Space.xs))
-            InfoRow("الطريقة", method.id)
+            InfoRow("الطريقة", "${methodNameAr(method.id)} · ${method.id}")
             InfoRow("زاوية الفجر", fmt.decimalUnit(method.fajrAngle, 1, "°"))
             InfoRow(
                 "المغرب",

@@ -115,6 +115,12 @@ fun CalendarScreen(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                // the calendar is tabular (Umm al-Qura), not a sighting
+                Text(
+                    app.miqat.core.IslamicDays.HIJRI_APPROX,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline,
+                )
             }
             IconButton(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "الشهر التالي") {
                 month++; if (month > 12) { month = 1; year++ }

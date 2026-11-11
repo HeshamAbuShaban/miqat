@@ -127,6 +127,12 @@ fun DayCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = scheme.secondary,
             )
+            Spacer(Modifier.height(Space.xs))
+            Text(
+                "الإمساك ماضٍ بقدر إعداداتك قبل الفجر — ${app.miqat.core.NotificationPoster.ESTIMATED}",
+                style = MaterialTheme.typography.labelSmall,
+                color = scheme.onSurfaceVariant,
+            )
         }
     }
 }
@@ -263,7 +269,7 @@ fun hajjRite(h: IslamicDay): String? = when {
 
 private fun riteNote(h: IslamicDay): String = when {
     h.hMonth == 12 && h.hDay == 8 -> "بداية أيام التشريق"
-    h.hMonth == 12 && h.hDay == 9 -> "صيامه كفارة سنتين لغير الحاج"
+    h.hMonth == 12 && h.hDay == 9 -> "صيام يوم عرفة — رواه مسلم ١١٦٢"
     h.hMonth == 12 && h.hDay in 10..12 -> "من بعد الزوال"
     else -> ""
 }

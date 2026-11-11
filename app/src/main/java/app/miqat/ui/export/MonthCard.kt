@@ -40,6 +40,7 @@ object MonthCard {
     private const val DIM = 0xFF9AA0B8.toInt()
     private const val GOLD = 0xFFE8C46A.toInt()
     private const val SAFFRON = 0xFFFFB25C.toInt()
+    private const val MaterialThemeDim = 0xFF6E7893.toInt()
 
     private const val WIDTH = 1080
     private const val MARGIN = 56f
@@ -147,6 +148,13 @@ object MonthCard {
             WIDTH - MARGIN,
             206f,
             meta,
+        )
+        // the honesty: the Hijri date is tabular, not a sighting
+        canvas.drawText(
+            app.miqat.core.IslamicDays.HIJRI_APPROX,
+            WIDTH - MARGIN,
+            240f,
+            paint(MaterialThemeDim, 22f, regular),
         )
 
         // the horizon: the same shape as the app's (a small mark, not a picture)

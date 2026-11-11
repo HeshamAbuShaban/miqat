@@ -27,19 +27,64 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import app.miqat.core.DisplayPrefs
 import app.miqat.core.NumFmt
+
+/**
+ * THE BIG COUNTDOWN — the hero's number, as one object.
+ *
+ * The seconds are smaller and quieter than the minutes: a ticking clock that
+ * shouts in three weights is three clocks. The digits keep the tabular
+ * figures, so the number never reflows its neighbours.
+ */
+@Composable
+fun BigCountdown(
+    text: String,
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
+    val annotated = remember(text, color) {
+        buildAnnotatedString {
+            val idx = text.lastIndexOf(':')
+            if (idx > 0) {
+                append(text.substring(0, idx + 1))
+                withStyle(SpanStyle(fontSize = 28.sp, color = color.copy(alpha = .62f))) {
+                    append(text.substring(idx + 1))
+                }
+            } else {
+                append(text)
+            }
+        }
+    }
+    Text(
+        text = annotated,
+        style = MaterialTheme.typography.displayMedium.copy(
+            fontSize = 46.sp,
+            fontFeatureSettings = TabularFigures,
+        ),
+        color = color,
+        modifier = modifier,
+    )
+}
 
 /** Number rendering bound to the user's display prefs (never mixed systems). */
 class Fmt(val prefs: DisplayPrefs) {
     val ar: Boolean get() = prefs.arabicIndicDigits
     fun hhmm(minutes: Int) = NumFmt.hhmm(minutes, ar, prefs.use12h)
+    /** A clock time without the ص/م suffix — for diagrams (the day-rail). */
+    fun hhmmShort(minutes: Int) = NumFmt.hhmmShort(minutes, ar, prefs.use12h)
     /** A DURATION (the ticking countdown) — never carries a ص/م suffix. */
     fun hms(seconds: Long) = NumFmt.hms(seconds, ar)
 

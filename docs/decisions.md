@@ -1,3 +1,34 @@
+## 2026-11-11 — The design campaign: the councils' verdicts, phase 1 & 2
+
+Three councils (مجلس النماذج · مجلس التصميم · المجلس الاستشاري) audited the
+app and their verdicts became decisions:
+
+1. **The home is a COMPOSITION, not a list.** Four zones: the identity, the
+   occasion band, THE HERO (with «بعد ذلك» in its foot), the day-rail and the
+   reading card. Cut: the six-column strip (the rail says it better), the
+   "الأقرب" row (it is «بعد ذلك»), the night-markers line (the sunrise is a
+   tick), the full-width hairlines.
+2. **The day reads right-to-left** — in an Arabic app the arc, the rail and
+   the widget all start at the right.
+3. **The prayer ticks sit at their real times.** The signature visual must be
+   a fact, not a drawing.
+4. **The sky tells the hour** — four phases (night / dawn / day / sunset), the
+   stars only when it is dark.
+5. **The name is the question, the number is the answer** — the prayer's name
+   is the larger element; the seconds are smaller than the minutes.
+6. **الصيام is a first-class act** — its own tab, its own arc, its four
+   anchors, its night, its catalogue of voluntary fasts.
+7. **The navigation's icons are the app's own** (`ui/BrandGlyph.kt`) — five
+   destinations, drawn from the app's geometry; Material's Home/List/
+   DateRange/Settings are gone.
+8. **The app states times and quotes narrations; it never rules.** Every
+   fasting line carries the text it rests on. No «مستحبّ», no «كفّارة»,
+   no «لا صيام اليوم».
+9. **The imsak is our convention** and says so; the iftar is the sunset and
+   does not.
+10. **The Hijri date says it is tabular** — «تاريخ هجري تقديري — يمكن ضبطه»
+    wherever it is printed.
+
 ## 2026-11-11 — The timers: one clock, one line per feature
 
 Hesham (2026-11-11): «the main timer needs work, its worngly putting time

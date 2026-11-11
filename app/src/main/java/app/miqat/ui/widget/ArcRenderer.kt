@@ -34,6 +34,7 @@ object ArcRenderer {
         val h = height.toFloat()
         val baseY = h - 3f
         val apexY = h * DayArc.APEX
+        // RTL: the day reads from the right (the Fajr) to the left (the Isha)
 
         // the horizon: the whole line, thin
         val rim = Path().apply {
@@ -63,7 +64,7 @@ object ArcRenderer {
         val steps = 40
         val travelledPath = Path()
         for (i in 0..steps) {
-            val t = DayArc.travelled(travelled) * (i.toFloat() / steps)
+            val t = DayArc.travelled(travelled) * i / steps
             val (x, y) = DayArc.point(t, w, h, baseY, apexY)
             if (i == 0) travelledPath.moveTo(x, y) else travelledPath.lineTo(x, y)
         }

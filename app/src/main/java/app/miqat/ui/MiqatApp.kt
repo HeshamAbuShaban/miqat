@@ -52,7 +52,6 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -67,13 +66,17 @@ import app.miqat.core.IslamicDays
 import app.miqat.core.Qibla
 import app.miqat.core.WorshipWindows
 import kotlinx.coroutines.delay
+import androidx.compose.ui.draw.clip
+import app.miqat.core.Moment
+import app.miqat.core.MomentCategory
 
 /** The four top-level destinations — one per CORE, no dumping ground. */
-enum class TopLevel(val label: String, val icon: ImageVector) {
-    Home("الرئيسية", Icons.Default.Home),
-    Times("المواقيت", Icons.Default.List),
-    Calendar("التقويم", Icons.Default.DateRange),
-    Settings("الإعدادات", Icons.Default.Settings),
+enum class TopLevel(val label: String, val glyph: Glyph) {
+    Home("الرئيسية", Glyph.HORIZON),
+    Times("المواقيت", Glyph.TICKS),
+    Fasting("الصيام", Glyph.BRACKET),
+    Calendar("التقويم", Glyph.CELL),
+    Settings("الإعدادات", Glyph.GRID),
 }
 
 /** Sub-routes pushed on top of a top-level destination (their own screens). */
@@ -137,7 +140,13 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                     NavigationBarItem(
                         selected = top == dest && sub == null,
                         onClick = { top = dest; sub = null },
-                        icon = { Icon(dest.icon, contentDescription = dest.label) },
+                        icon = {
+                            BrandGlyph(
+                                kind = dest.glyph,
+                                active = top == dest && sub == null,
+                                size = 22.dp,
+                            )
+                        },
                         label = { Text(dest.label, fontSize = 11.sp) },
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -170,6 +179,7 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                         onOpenInterval = { sub = Route.Interval },
                         onOpenSunnah = { sub = Route.Sunnah },
                     )
+                    TopLevel.Fasting -> FastingScreen(state, fmt, now)
                     TopLevel.Calendar -> CalendarScreen(state, fmt, now, onOpenDay = { y, m, d -> sub = Route.DayDetail(y, m, d) })
                     TopLevel.Settings -> SettingsScreen(state, fmt, onOpen = { r ->
                         sub = when (r) {
@@ -257,6 +267,21 @@ fun rememberNowState(): State<Long> {
  * HOME — the hero and the context, nothing else. Every extra item was moved to
  * its own screen (Times / Calendar / Settings) because the v1 home was a stack.
  */
+/**
+ * HOME — a COMPOSITION, not a list (the design council, 2026-11-11).
+ *
+ * Four zones, and the day's essentials fit in one screen:
+ *  1. the identity (the city + the Hijri date),
+ *  2. the occasion band (only on a special day),
+ *  3. THE HERO — the sky, the next prayer, its countdown, and the foot
+ *     («بعد ذلك»: the shape of the rest of the day),
+ *  4. the day-rail — the day's proportions, and the reading card.
+ *
+ * What was CUT (and why): the six-column prayer strip (the rail says it
+ * better), the "الأقرب" row (it is «بعد ذلك» now), the night-markers line
+ * (the sunrise is a tick on the rail), and the qibla line (it is a tile in
+ * «المزيد», not a fact on the home).
+ */
 @Composable
 fun HomeScreen(
     state: AppState,
@@ -278,6 +303,8 @@ fun HomeScreen(
         nowHour,
         state.notifications.iqamaMinutes,
     )
+    val timeline = rememberTimeline(state, now)
+    val nowMinutes = (nowHour * 60).toInt()
 
     Column(
         Modifier
@@ -286,7 +313,8 @@ fun HomeScreen(
             .padding(horizontal = Space.lg),
     ) {
         Spacer(Modifier.height(Space.md))
-        // identity row: place + hijri date
+
+        // 1 — the identity: the place and the day
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -307,27 +335,30 @@ fun HomeScreen(
                     )
                 }
             }
-            Text(
-                Hijri.label(Hijri.today(now, state.display.hijriOffsetDays), fmt.ar),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    Hijri.label(Hijri.today(now, state.display.hijriOffsetDays), fmt.ar),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                // the calendar is tabular, not a sighting — say so
+                Text(
+                    app.miqat.core.IslamicDays.HIJRI_APPROX,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline,
+                )
+            }
         }
-        Spacer(Modifier.height(Space.lg))
 
-        // THE hero — one only
-        HeroCard(state, fmt, times, timers, nowHour)
-
-        Spacer(Modifier.height(Space.md))
-
-        // the day's context, if any (Islamic day)
+        // 2 — the occasion band (only on a day that has one)
         IslamicDays.todayCard(Hijri.today(now, state.display.hijriOffsetDays))?.let { (title, sub) ->
+            Spacer(Modifier.height(Space.md))
             Row(
                 Modifier
                     .fillMaxWidth()
                     .background(
                         MaterialTheme.colorScheme.surfaceVariant,
-                        RoundedCornerShape(14.dp),
+                        RoundedCornerShape(Radius.row),
                     )
                     .padding(Space.md),
                 verticalAlignment = Alignment.CenterVertically,
@@ -343,49 +374,33 @@ fun HomeScreen(
                     Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-            Spacer(Modifier.height(Space.md))
         }
 
-        // the TIMER LINES — each feature on its own line, with its own clock
-        if (state.display.showAwarenessStrip) {
-            TimerLines(
-                state = state,
-                fmt = fmt,
-                nowMillis = now,
-                timers = timers,
-            )
-            Spacer(Modifier.height(Space.md))
-        }
+        Spacer(Modifier.height(Space.lg))
 
-        // today's times — one compact strip, the schedule at a glance
-        Spacer(Modifier.height(Space.md))
-        Text(
-            "مواقيت اليوم",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        // 3 — THE hero: the one rich moment
+        HeroCard(
+            state = state,
+            fmt = fmt,
+            times = times,
+            timers = timers,
+            nowHour = nowHour,
+            nowMinutes = nowMinutes,
+            upcoming = upcomingMoments(timeline, nowMinutes),
         )
-        Spacer(Modifier.height(Space.xs))
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            PRAYER_NAMES.forEachIndexed { i, name ->
-                val isNext = timers.nextPrayer == name && !timers.nextIsTomorrow
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        name,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (isNext) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(
-                        fmt.hhmm(minutesOf(times.list[i])),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = if (isNext) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface,
-                    )
-                }
-            }
+
+        Spacer(Modifier.height(Space.xl))
+
+        // 4 — the day-rail: the day's proportions (and the sunrise, a tick)
+        if (state.display.showPrayerStrip) {
+            DayRail(
+                times = times,
+                fmt = fmt,
+                nextIndex = nextPrayerIndex(timers),
+                nowMinute = nowMinutes.toDouble(),
+            )
+            Spacer(Modifier.height(Space.xl))
         }
-        Divider()
 
         // the daylight-saving notice — the clock will change, and that moves
         // every prayer's wall-clock time with it
@@ -400,8 +415,8 @@ fun HomeScreen(
                     val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
                         timeInMillis = transition.atMillis
                     }
-                    val d = cal.get(Calendar.DAY_OF_MONTH)
-                    val m = cal.get(Calendar.MONTH) + 1
+                    val dd = cal.get(Calendar.DAY_OF_MONTH)
+                    val mm = cal.get(Calendar.MONTH) + 1
                     Row(
                         Modifier
                             .fillMaxWidth()
@@ -421,48 +436,18 @@ fun HomeScreen(
                         Text(
                             "تغيّر التوقيت ${transition.directionAr}: الساعة " +
                                 "${DstTransition.fmtHours(kotlin.math.abs(transition.deltaHours))} " +
-                                "يوم ${fmt.n(d)}/${fmt.n(m)} — فتتغيّر مواعيد الصلوات في تلك الليلة.",
+                                "يوم ${fmt.n(dd)}/${fmt.n(mm)} — فتتغيّر مواعيد الصلوات في تلك الليلة.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
-                    Spacer(Modifier.height(Space.md))
+                    Spacer(Modifier.height(Space.lg))
                 }
             }
         }
 
-        // the nearest moment of ANY kind — the next prayer, the next window,
-        // whatever comes first (the app's one piece of "intelligence" on home)
-        val (ty2, tm2, td2) = state.cityTomorrow(now)
-        val tomorrowTimes = state.times(ty2, tm2, td2)
-        val timeline = rememberTimeline(state, now)
-        val nowMinutes = minutesOf(nowHour)
-        // the nearest appointment the user can ACT on — a fasting boundary
-        // (الإمساك) is not one of them
-        val nearest = timeline
-            .filter { it.isEvent && it.category != app.miqat.core.MomentCategory.FASTING }
-            .minByOrNull { Moments.until(it, nowMinutes) }
-
-        if (nearest != null) {
-            Row(
-                Modifier.fillMaxWidth().padding(vertical = Space.md),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column {
-                    Text("الأقرب", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(nearest.labelAr, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
-                }
-                Text(
-                    fmt.hhmm(nearest.minuteOfDay),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.secondary,
-                )
-            }
-            Divider()
-        }
-
-        // the DAILY REMINDER — one verse, with its source
+        // the reading card — one verse a day, with its source. Deliberately
+        // quiet: it is the last thing on the screen, not a headline.
         if (state.display.showDailyReminder) {
             val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
             cal.timeInMillis = now
@@ -473,65 +458,81 @@ fun HomeScreen(
             Column(
                 Modifier
                     .fillMaxWidth()
-                    .padding(vertical = Space.md),
+                    .clip(RoundedCornerShape(Radius.card))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(Space.lg),
             ) {
                 Text(
                     verse,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
+                Spacer(Modifier.height(Space.xs))
                 Text(
                     source,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            Divider()
+            Spacer(Modifier.height(Space.lg))
         }
 
-        // the NIGHT MARKERS — the day's edges
-        if (state.display.showNightMarkers) {
-            val night = WorshipWindows.night(maghrib = times.maghrib, fajrNext = tomorrowTimes.fajr)
+        // the qibla — a tile, not a fact: one tap to the compass
+        if (state.display.showNearestMoment) {
+            val bearing = Qibla.bearing(state.city.lat, state.city.lon)
+            val km = Qibla.distanceKm(state.city.lat, state.city.lon)
             Row(
-                Modifier.fillMaxWidth().padding(vertical = Space.md),
+                Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpenQibla() }
+                    .padding(vertical = Space.md),
                 horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    "الشروق ${fmt.hhmm(minutesOf(times.sunrise))} · الغروب ${fmt.hhmm(minutesOf(times.maghrib))}",
-                    style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = TabularFigures),
+                    "القبلة",
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    "الثلث الأخير ${fmt.hhmm(minutesOf(night.lastThirdStartHour))}",
-                    style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = TabularFigures),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    "${fmt.decimalUnit(bearing, 1, "°")}، " +
+                        (if (km < 1.0) "أقل من ١ كم" else "${fmt.n(km.toInt())} كم"),
+                    style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = TabularFigures),
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
             }
-            Divider()
-        }
-
-        // qibla — one line, and it opens the COMPASS
-        val bearing = Qibla.bearing(state.city.lat, state.city.lon)
-        val km = Qibla.distanceKm(state.city.lat, state.city.lon)
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .clickable { onOpenQibla() }
-                .padding(vertical = Space.md),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text("القبلة", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(
-                "${fmt.decimalUnit(bearing, 1, "°")}، " +
-                    (if (km < 1.0) "أقل من ١ كم" else "${fmt.n(km.toInt())} كم"),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
         }
         Spacer(Modifier.height(Space.xxl))
     }
 }
 
+/** The next three appointments of the day — «بعد ذلك». */
+private fun upcomingMoments(timeline: List<Moment>, nowMinutes: Int): List<Moment> =
+    timeline
+        .filter {
+            it.minute > nowMinutes &&
+                it.isEvent &&
+                it.category != MomentCategory.FASTING &&
+                it.kind != Moments.SUNRISE
+        }
+        .sortedBy { it.minute }
+        .take(3)
+
+/** The index of the next prayer among the six (for the rail's gold tick). */
+private fun nextPrayerIndex(timers: app.miqat.core.Timers): Int {
+    val name = timers.nextPrayer ?: return 0
+    val i = PRAYER_NAMES.indexOf(name)
+    return if (i in 0 until PRAYER_NAMES.size) i else 0
+}
+
+/**
+ * THE HERO — the app's one rich moment.
+ *
+ * The sky bleeds to the card's edge (it IS the card, not a rectangle inside
+ * it); the prayer's name is the big element (the number is the answer, the
+ * name is the question); the seconds are smaller than the minutes (the clock
+ * reads as one object); and the foot carries the day's shape — «بعد ذلك».
+ */
 @Composable
 private fun HeroCard(
     state: AppState,
@@ -539,22 +540,42 @@ private fun HeroCard(
     times: app.miqat.core.LocalPrayerTimes,
     timers: app.miqat.core.Timers,
     nowHour: Double,
+    nowMinutes: Int,
+    upcoming: List<Moment>,
 ) {
     val scheme = MaterialTheme.colorScheme
+    // the sky's phase — from the day's REAL sunrise and sunset
+    val skyPhase = Sky.phaseOf(
+        nowHour,
+        sunriseHour = ((times.sunrise % 24.0) + 24.0) % 24.0,
+        maghribHour = ((times.maghrib % 24.0) + 24.0) % 24.0,
+    )
+    // the prayer ticks ON their real times (the arc is a fact, not a drawing)
+    val fajrMinute = minutesOf(times.fajr)
+    val ishaMinute = minutesOf(times.isha)
+    val tickParams = times.list.map {
+        DayArc.parameterFor(minutesOf(it).toDouble(), fajrMinute.toDouble(), ishaMinute.toDouble())
+    }
+
     Column(
         Modifier
             .fillMaxWidth()
-            .background(scheme.surface, RoundedCornerShape(Radius.hero))
-            .padding(Space.lg),
+            .clip(RoundedCornerShape(Radius.hero))
+            .background(scheme.surface),
     ) {
-        // THE DAY-SKY — the app's one rich moment: the arc is a horizon, the
-        // sky above it, and the sun travelling where the day actually is.
-        Canvas(Modifier.fillMaxWidth().height(150.dp)) {
+        // the sky — to the card's edge
+        Canvas(
+            Modifier
+                .fillMaxWidth()
+                .height(168.dp),
+        ) {
             val w = size.width
             val h = size.height
-            val horizon = h - 16f
-            val p0 = Offset(w * 0.07f, horizon)
-            val p2 = Offset(w * 0.93f, horizon)
+            val horizon = h - 14f
+            // RTL: the day reads from the right — the Fajr at the right end,
+            // the sun setting towards the left
+            val p0 = Offset(w * 0.93f, horizon)
+            val p2 = Offset(w * 0.07f, horizon)
             val p1 = Offset(w * 0.5f, 10f)
 
             fun pointAt(t: Float): Offset {
@@ -572,79 +593,58 @@ private fun HeroCard(
                 lineTo(p0.x, horizon)
                 close()
             }
-            // the sky's palette follows the theme: night above a dark app,
-            // first light above the dawn-paper one
             val nightSky = scheme.background.luminance() < 0.5f
             drawPath(
                 sky,
                 Brush.verticalGradient(
-                    if (nightSky) {
-                        listOf(
-                            Color(0xFF060B1C),
-                            Color(0xFF101B36),
-                            Color(0xFF24304A),
-                            Color(0xFF8A5533).copy(alpha = .55f),
-                        )
-                    } else {
-                        listOf(
-                            Color(0xFFBBD3E8),
-                            Color(0xFFD9DCEB),
-                            Color(0xFFF0DCC4),
-                            Color(0xFFF3C98F).copy(alpha = .8f),
-                        )
-                    },
+                    Sky.bands(skyPhase, nightSky),
                     startY = 0f,
                     endY = horizon,
                 ),
             )
 
-            // the stars, still out above the horizon
-            val stars = listOf(
-                0.16f to 0.18f, 0.28f to 0.10f, 0.41f to 0.22f, 0.55f to 0.08f,
-                0.67f to 0.19f, 0.78f to 0.12f, 0.88f to 0.24f, 0.36f to 0.31f,
-                0.62f to 0.30f, 0.10f to 0.30f,
-            )
-            stars.forEachIndexed { i, (fx, fy) ->
-                val p = pointAt(fx)
-                val alpha = 0.30f + 0.35f * ((i % 3) / 2f)
-                drawCircle(
-                    (if (scheme.background.luminance() < 0.5f) Color(0xFFF3E9D2) else Color(0xFF6B6455)).copy(alpha = alpha),
-                    radius = if (i % 4 == 0) 2.2f else 1.4f,
-                    center = Offset(p.x, p.y * (fy * 2.2f)),
+            // the stars — only when the sky is dark enough to hold them
+            val starStrength = Sky.starAlpha(skyPhase)
+            if (starStrength > 0.01f) {
+                val stars = listOf(
+                    0.16f to 0.18f, 0.28f to 0.10f, 0.41f to 0.22f, 0.55f to 0.08f,
+                    0.67f to 0.19f, 0.78f to 0.12f, 0.88f to 0.24f, 0.36f to 0.31f,
+                    0.62f to 0.30f, 0.10f to 0.30f, 0.47f to 0.34f, 0.83f to 0.33f,
                 )
+                stars.forEachIndexed { i, (fx, fy) ->
+                    val p = pointAt(fx)
+                    val alpha = (0.30f + 0.35f * ((i % 3) / 2f)) * starStrength
+                    drawCircle(
+                        (if (nightSky) Color(0xFFF3E9D2) else Color(0xFF6B6455)).copy(alpha = alpha),
+                        radius = if (i % 4 == 0) 2.2f else 1.4f,
+                        center = Offset(p.x, p.y * (fy * 2.2f)),
+                    )
+                }
             }
 
             // the ground
             drawRect(
-                if (scheme.background.luminance() < 0.5f) Color(0xFF070912) else Color(0xFFD8CDB4),
+                Sky.ground(skyPhase, nightSky),
                 topLeft = Offset(0f, horizon),
                 size = androidx.compose.ui.geometry.Size(w, h - horizon),
             )
 
-            // the rim — the horizon line, in two weights: what the day has
-            // already travelled (gold) and what is left (a hairline). The
-            // progress is read as LENGTH, before any number.
+            // the rim — in two weights: what the day has travelled (gold) and
+            // what is left (a hairline). The progress is read as LENGTH.
             val rim = Path().apply {
                 moveTo(p0.x, p0.y)
                 quadraticBezierTo(p1.x, p1.y, p2.x, p2.y)
             }
-            val night = scheme.background.luminance() < 0.5f
+            val night = nightSky
             drawPath(
                 rim,
-                if (night) Color(0xFF2C3A5C) else Color(0xFFCFC4A6),
+                Sky.rim(skyPhase, night),
                 style = Stroke(width = 2f, cap = StrokeCap.Round),
             )
-            // the travelled part only — the sun's position is computed below,
-            // so the gold path is rebuilt up to it
-            val minsNow = times.list.map { ((it + 0.5 / 60.0) % 24.0 + 24.0) % 24.0 * 60 }
-            val startNow = minsNow[0]
-            val endNow = minsNow[5].let { if (it < startNow) it + 1440 else it }
-            val fNow = (((nowHour * 60 - startNow) / (endNow - startNow)).coerceIn(0.0, 1.0)).toFloat()
-            val tNow = 0.07f + 0.86f * fNow
             val travelled = Path()
             val steps = 40
             for (i in 0..steps) {
-                val t = tNow * i / steps
+                val t = 0.07f + 0.86f * travelledFraction(times, nowHour) * i / steps
                 val pt = pointAt(t)
                 if (i == 0) travelled.moveTo(pt.x, pt.y) else travelled.lineTo(pt.x, pt.y)
             }
@@ -660,32 +660,72 @@ private fun HeroCard(
                 style = Stroke(width = 5f, cap = StrokeCap.Round),
             )
 
-            // where the sun is now
-            val mins = times.list.map { ((it + 0.5 / 60.0) % 24.0 + 24.0) % 24.0 * 60 }
-            val dayStart = mins[0]
-            val dayEnd = mins[5].let { if (it < dayStart) it + 1440 else it }
-            val nowMin = nowHour * 60
-            val f = (((nowMin - dayStart) / (dayEnd - dayStart)).coerceIn(0.0, 1.0)).toFloat()
-            val sun = pointAt(0.07f + 0.86f * f)
-
-            drawCircle(Color(0xFFFFB25C).copy(alpha = .18f), radius = 26f, center = sun)
-            drawCircle(Color(0xFFFFB25C).copy(alpha = .35f), radius = 15f, center = sun)
-            drawCircle(Color(0xFFFFE0A8), radius = 8.5f, center = sun)
-
-            // the prayer ticks
-            listOf(0f, 0.24f, 0.47f, 0.68f, 0.86f, 1f).forEachIndexed { i, f2 ->
-                val c = pointAt(f2)
-                val isNext = timers.nextPrayer == PRAYER_NAMES[i] && !timers.nextIsTomorrow
+            // the prayer ticks — ON their real times
+            tickParams.forEachIndexed { index, p ->
+                val c = pointAt(0.07f + 0.86f * p)
+                val isNext = timers.nextPrayer == PRAYER_NAMES[index] && !timers.nextIsTomorrow
+                val isSun = index == 1
                 drawCircle(
-                    if (isNext) Color(0xFFE8C46A) else Color(0xFF8E8672),
-                    radius = if (isNext) 5f else 3.5f,
+                    when {
+                        isNext -> Color(0xFFE8C46A)
+                        isSun -> Sky.sunMark
+                        else -> Color(0xFF8E8672)
+                    },
+                    radius = if (isNext) 5f else if (isSun) 3.2f else 3f,
                     center = c,
                 )
             }
+
+            // the sun, where the day actually is
+            val sun = pointAt(0.07f + 0.86f * travelledFraction(times, nowHour))
+            drawCircle(Color(0xFFFFB25C).copy(alpha = .18f), radius = 26f, center = sun)
+            drawCircle(Color(0xFFFFB25C).copy(alpha = .35f), radius = 15f, center = sun)
+            drawCircle(Color(0xFFFFE0A8), radius = 8.5f, center = sun)
         }
 
-        Spacer(Modifier.height(Space.sm))
-        if (timers.nextPrayer != null) {
+        // the typographic unit: the caption, the NAME, the number
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Space.lg, vertical = Space.md),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    "الموعد القادم",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = scheme.onSurfaceVariant,
+                )
+                val chip = timers.stateAr
+                if (chip != null) {
+                    Text(
+                        chip,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = scheme.secondary,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(Radius.chip))
+                            .background(scheme.surfaceVariant)
+                            .padding(horizontal = Space.sm, vertical = 3.dp),
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(Space.xs))
+
+            Text(
+                timers.nextPrayer ?: "—",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = 0.sp,
+                ),
+                color = scheme.onSurface,
+            )
+
+            // the countdown — the seconds smaller, so the clock reads as one
             val urgency = if (state.display.urgencyEnabled) {
                 UrgencyRules.of(
                     timers.remainingSeconds,
@@ -698,26 +738,90 @@ private fun HeroCard(
                 Urgency.SOON -> UrgencySoon
                 Urgency.IMMINENT, Urgency.NOW -> UrgencyImminent
             }
-            Text(
-                when (urgency) {
-                    Urgency.NOW -> "حان الآن: ${timers.nextPrayer}"
-                    Urgency.IMMINENT -> "استعدّ لصلاة ${timers.nextPrayer}"
-                    Urgency.SOON -> "اقترب وقت ${timers.nextPrayer}"
-                    Urgency.CALM -> "المتبقي لميقات ${timers.nextPrayer}" +
-                        if (timers.nextIsTomorrow) " (غداً)" else ""
-                },
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (urgency == Urgency.CALM) scheme.onSurfaceVariant else momentColor,
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-            )
-            Text(
-                fmt.hms(timers.remainingSeconds),
-                style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = TabularFigures),
+            BigCountdown(
+                text = fmt.hms(timers.remainingSeconds),
                 color = momentColor,
-                modifier = Modifier.align(Alignment.CenterHorizontally),
+                modifier = Modifier.padding(top = Space.xs),
             )
+            if (timers.nextIsTomorrow) {
+                Text(
+                    "غداً",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = scheme.onSurfaceVariant,
+                )
+            }
+
+            // the elapsed — its own line, and only in the first hour
+            if (state.display.showTimerElapsed && timers.sinceWorthShowing) {
+                Spacer(Modifier.height(Space.xs))
+                Text(
+                    "مرّ من وقت ${timers.currentPrayer} · ${fmt.hms(timers.sinceSeconds)}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = scheme.onSurfaceVariant,
+                )
+            }
+            // the iqama — its own line, its own clock
+            if (state.display.showTimerIqama && timers.iqamaIn != null) {
+                Spacer(Modifier.height(Space.xs))
+                Text(
+                    "إقامة ${timers.iqamaPrayer} · بعد ${fmt.hms(timers.iqamaSeconds)}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = scheme.tertiary,
+                )
+            }
+        }
+
+        // the foot — «بعد ذلك»: the shape of the rest of the day
+        if (upcoming.isNotEmpty()) {
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = Space.lg)
+                    .padding(bottom = Space.md),
+            ) {
+                androidx.compose.material3.HorizontalDivider(
+                    color = scheme.outlineVariant,
+                    modifier = Modifier.padding(bottom = Space.sm),
+                )
+                Text(
+                    "بعد ذلك",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = scheme.onSurfaceVariant,
+                )
+                upcoming.forEach { moment ->
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = Space.xs),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            moment.labelAr,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = scheme.onSurface,
+                        )
+                        Text(
+                            fmt.hhmm(moment.minuteOfDay),
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontFeatureSettings = TabularFigures,
+                            ),
+                            color = scheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
         }
     }
+}
+
+/** The day's progress along the arc (0 = the Fajr, 1 = the Isha). */
+private fun travelledFraction(times: app.miqat.core.LocalPrayerTimes, nowHour: Double): Float {
+    val fajr = minutesOf(times.fajr).toDouble()
+    val isha = minutesOf(times.isha).toDouble().let { if (it < fajr) it + 1440.0 else it }
+    val now = nowHour * 60.0
+    val m = if (now < fajr) now + 1440.0 else now
+    return (((m - fajr) / (isha - fajr).coerceAtLeast(1.0)).coerceIn(0.0, 1.0)).toFloat()
 }
 
 internal val PRAYER_KEY = listOf("fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha")

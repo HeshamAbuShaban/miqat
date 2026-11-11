@@ -47,7 +47,8 @@ object DayArc {
      */
     fun point(t: Float, width: Float, height: Float, baseY: Float, apexY: Float): Pair<Float, Float> {
         val mt = 1f - t
-        val x = mt * mt * (width * LEFT) + 2 * mt * t * (width * 0.5f) + t * t * (width * RIGHT)
+        // RTL: t = 0 (the Fajr) is the RIGHT end, t = 1 (the Isha) the left
+        val x = mt * mt * (width * RIGHT) + 2 * mt * t * (width * 0.5f) + t * t * (width * LEFT)
         val y = mt * mt * baseY + 2 * mt * t * apexY + t * t * baseY
         return x to y
     }
