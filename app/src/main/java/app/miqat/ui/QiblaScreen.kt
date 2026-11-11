@@ -183,11 +183,9 @@ private fun CompassRose(
         // the sky — the one rich moment inside the ring
         drawCircle(
             brush = Brush.verticalGradient(
-                listOf(
-                    Color(0xFF141A33),
-                    Color(0xFF1E1630),
-                    Color(0xFF2A1B2E),
-                ),
+                // the app's own night sky — the compass had a violet/plum
+                // gradient, the family the palette bans (it muddies)
+                Sky.bands(SkyPhase.NIGHT, dark = true),
                 startY = center.y - radius,
                 endY = center.y + radius,
             ),
