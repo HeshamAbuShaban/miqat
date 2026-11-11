@@ -23,42 +23,21 @@ enum class Accent(
     val lightOnContainer: Long,
 ) {
     GOLD(
-        "الذهبي", 0xFFE8C46A, 0xFF241C00, 0xFF16213F, 0xFFE8C46A,
-        0xFF6F5610, 0xFFFFFFFF, 0xFFDEE6F4, 0xFF2A3A5C,
+        "الذهبي", 0xFFE8C46A, 0xFF241C00, 0xFF2C2518, 0xFFF0DCA0,
+        0xFF6F5610, 0xFFFFFFFF, 0xFFF0E7CE, 0xFF4A3A10,
     ),
     TEAL(
-        "الفيروزي", 0xFF7FD0C8, 0xFF00312C, 0xFF10302F, 0xFF7FD0C8,
-        0xFF16655D, 0xFFFFFFFF, 0xFFD9EDE9, 0xFF133F3A,
+        "الفيروزي", 0xFF7FD0C8, 0xFF00312C, 0xFF142A27, 0xFFB8EDE6,
+        0xFF1F6A62, 0xFFFFFFFF, 0xFFDDEDE8, 0xFF123F3A,
     ),
     EMERALD(
-        "الزمردي", 0xFF6FD3A0, 0xFF0C2A1C, 0xFF123226, 0xFF6FD3A0,
-        0xFF2C6B4C, 0xFFFFFFFF, 0xFFDCEFE1, 0xFF1B4432,
+        "الزمردي", 0xFF6FD3A0, 0xFF0C2A1C, 0xFF15291E, 0xFFB9EBCB,
+        0xFF2C6B4C, 0xFFFFFFFF, 0xFFE1EEE3, 0xFF1B4432,
     ),
     ;
 
     companion object {
         fun of(name: String?): Accent =
             entries.firstOrNull { it.name == name } ?: GOLD
-    }
-}
-
-/**
- * THE HERO'S ILLUSTRATION — the app's one rich moment, in more than one form
- * (the founder: «حتى الرسومات التوضيحية … يمكن التبديل إليها في الإعدادات»).
- *
- *  - [ARC] — the horizon: the quadratic arc, the sun on it, the gold travelled
- *    path. The signature.
- *  - [DIAL] — the dial: the day as a circle, the prayers as marks around it,
- *    the sun turning. A quieter, more "instrument" reading.
- */
-enum class HeroStyle(val labelAr: String, val noteAr: String) {
-    ARC("القوس", "أفقُ اليوم"),
-    DIAL("الحلقة", "اليومُ دائرةً"),
-
-    ;
-
-    companion object {
-        fun of(name: String?): HeroStyle =
-            entries.firstOrNull { it.name == name } ?: ARC
     }
 }

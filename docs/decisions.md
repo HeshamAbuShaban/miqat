@@ -1,3 +1,20 @@
+## 2026-11-12 — Unslop: the chrome goes neutral-warm, the strokes become hairlines
+
+The founder rejected the blue cast and the strokes («the blue is shit … the
+strokes are so wacky»). The rules that follow:
+
+1. **Surfaces never read as a colour.** The app's chrome is a warm-ink
+   neutral ramp; blue belongs to the sky alone. The palette's four meanings
+   (gold ours / saffron now / teal window / cream occasion) are unchanged.
+2. **A border is a hairline** (onSurface at ~10%), never a coloured stroke.
+   Depth comes from surface steps, not strokes or shadows.
+3. **The four-phase sky stays the hour's fact** — at low saturation (ink),
+   never a saturated navy.
+4. **The arc is the only hero.** The DIAL experiment is dead; the arc hero
+   and the accent choice stay.
+5. **A colour must mean something** — the fasting arc is teal (a window),
+   not the sky's steel blue borrowed onto a warm surface.
+
 ## 2026-11-11 — The design campaign: the councils' verdicts, phase 1 & 2
 
 Three councils (مجلس النماذج · مجلس التصميم · المجلس الاستشاري) audited the

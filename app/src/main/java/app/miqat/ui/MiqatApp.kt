@@ -402,7 +402,6 @@ fun HomeScreen(
             nowHour = nowHour,
             nowMinutes = nowMinutes,
             upcoming = upcomingMoments(timeline, nowMinutes),
-            heroStyle = app.miqat.ui.HeroStyle.of(state.display.heroStyle),
         )
 
         Spacer(Modifier.height(Space.xl))
@@ -525,7 +524,8 @@ fun HomeScreen(
                 )
             }
         }
-        Spacer(Modifier.height(Space.xxl))
+        // clearance under the floating navigation — nothing ends half-cut
+        Spacer(Modifier.height(96.dp))
     }
 }
 
@@ -549,119 +549,6 @@ private fun nextPrayerIndex(timers: app.miqat.core.Timers): Int {
 }
 
 /**
- * THE DIAL — the hero's other illustration: the day as a circle.
- *
- * The right half is the day (the sun climbs from the Fajr at the top to the
- * Isha at the bottom), the left half is the night, and the gold arc is what
- * the day has travelled. The same facts as the horizon, read as an
- * instrument.
- */
-@Composable
-private fun HeroDial(
-    times: app.miqat.core.LocalPrayerTimes,
-    timers: app.miqat.core.Timers,
-    nowHour: Double,
-    skyPhase: app.miqat.ui.SkyPhase,
-    modifier: Modifier = Modifier,
-) {
-    val scheme = MaterialTheme.colorScheme
-    Canvas(modifier) {
-        val cx = size.width / 2f
-        val cy = size.height / 2f
-        val r = minOf(cx, cy) - 10f
-        val bands = app.miqat.ui.Sky.bands(skyPhase)
-
-        // the disc: the sky's bands as a radial wash
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(bands[3], bands[2], bands[1]),
-                center = Offset(cx, cy - r * 0.2f),
-                radius = r * 1.6f,
-            ),
-            radius = r,
-            center = Offset(cx, cy),
-        )
-        // the night half: a dimmer wash over the left
-        drawArc(
-            brush = Brush.horizontalGradient(
-                colors = listOf(Color(0xFF010206), Color(0xFF070E1F)),
-                startX = cx - r,
-                endX = cx,
-            ),
-            startAngle = 90f,
-            sweepAngle = 180f,
-            useCenter = true,
-            topLeft = Offset(cx - r, cy - r),
-            size = androidx.compose.ui.geometry.Size(r * 2, r * 2),
-        )
-        // a few stars in the night half
-        listOf(
-            0.30f to 0.34f, 0.55f to 0.22f, 0.72f to 0.46f, 0.44f to 0.62f, 0.62f to 0.70f,
-        ).forEach { (fx, fy) ->
-            val a = Math.toRadians((90f + fx * 180f).toDouble())
-            val x = cx + r * kotlin.math.cos(a).toFloat()
-            val y = cy + r * kotlin.math.sin(a).toFloat()
-            drawCircle(app.miqat.ui.Sky.tick.copy(alpha = 0.55f), 1.6f, Offset(x, y))
-        }
-
-        // the rim
-        drawCircle(
-            color = app.miqat.ui.Sky.rim,
-            radius = r,
-            center = Offset(cx, cy),
-            style = Stroke(width = 2f),
-        )
-
-        // the prayer marks, on their real times (the day = the right half)
-        val fajr = minutesOf(times.fajr).toDouble()
-        val isha = minutesOf(times.isha).toDouble().let { if (it < fajr) it + 1440.0 else it }
-        val span = (isha - fajr).coerceAtLeast(1.0)
-        fun angleOf(minute: Double): Float {
-            var m = minute
-            if (m < fajr) m += 1440.0
-            val p = ((m - fajr) / span).coerceIn(0.0, 1.0)
-            return (90f + (p * 180f)).toFloat()
-        }
-        times.list.forEachIndexed { index, hours ->
-            val a = angleOf(minutesOf(hours).toDouble())
-            val rad = Math.toRadians(a.toDouble())
-            val x = cx + (r - 7f) * kotlin.math.cos(rad).toFloat()
-            val y = cy + (r - 7f) * kotlin.math.sin(rad).toFloat()
-            val isNext = timers.nextPrayer == PRAYER_NAMES[index] && !timers.nextIsTomorrow
-            drawCircle(
-                if (isNext) app.miqat.ui.Sky.sunMark else app.miqat.ui.Sky.tick,
-                radius = if (isNext) 4.5f else 2.6f,
-                center = Offset(x, y),
-            )
-        }
-
-        // the travelled arc and the sun
-        val nowMinute = nowHour * 60.0
-        var m = nowMinute
-        if (m < fajr) m += 1440.0
-        val p = ((m - fajr) / span).coerceIn(0.0, 1.0).toFloat()
-        val sunAngle = 90f + p * 180f
-        drawArc(
-            brush = Brush.horizontalGradient(
-                colors = listOf(Color(0xFFE8C46A), Color(0xFFFFB25C)),
-                startX = cx,
-                endX = cx + r,
-            ),
-            startAngle = 90f,
-            sweepAngle = (p * 180f),
-            useCenter = false,
-            topLeft = Offset(cx - r, cy - r),
-            size = androidx.compose.ui.geometry.Size(r * 2, r * 2),
-            style = Stroke(width = 6f, cap = androidx.compose.ui.graphics.StrokeCap.Round),
-        )
-        val rad = Math.toRadians(sunAngle.toDouble())
-        val sun = Offset(cx + r * kotlin.math.cos(rad).toFloat(), cy + r * kotlin.math.sin(rad).toFloat())
-        drawCircle(Color(0xFFFFB25C).copy(alpha = .18f), radius = 22f, center = sun)
-        drawCircle(Color(0xFFFFE0A8), radius = 8f, center = sun)
-    }
-}
-
-/**
  * THE HERO — the app's one rich moment.
  *
  * The sky bleeds to the card's edge (it IS the card, not a rectangle inside
@@ -678,7 +565,6 @@ private fun HeroCard(
     nowHour: Double,
     nowMinutes: Int,
     upcoming: List<Moment>,
-    heroStyle: app.miqat.ui.HeroStyle,
 ) {
     val scheme = MaterialTheme.colorScheme
     // the sky's phase — from the day's REAL sunrise and sunset
@@ -700,17 +586,6 @@ private fun HeroCard(
             .cardSurface(RoundedCornerShape(Radius.hero)),
     ) {
         // the sky — to the card's edge
-        if (heroStyle == app.miqat.ui.HeroStyle.DIAL) {
-            HeroDial(
-                times = times,
-                timers = timers,
-                nowHour = nowHour,
-                skyPhase = skyPhase,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(168.dp),
-            )
-        } else {
         Canvas(
             Modifier
                 .fillMaxWidth()
@@ -828,7 +703,6 @@ private fun HeroCard(
             drawCircle(Color(0xFFFFB25C).copy(alpha = .18f), radius = 26f, center = sun)
             drawCircle(Color(0xFFFFB25C).copy(alpha = .35f), radius = 15f, center = sun)
             drawCircle(Color(0xFFFFE0A8), radius = 8.5f, center = sun)
-        }
         }
 
         // the typographic unit: the caption, the NAME, the number

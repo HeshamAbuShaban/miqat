@@ -54,35 +54,37 @@ object Radius {
     val hero = 20.dp
 }
 
-// dark scheme
-val NightBg = Color(0xFF060B1C)      // lapis night
-val NightSurface = Color(0xFF0E1526)
-val NightSurfaceHigh = Color(0xFF1B2542)
-val NightOutline = Color(0xFF26314F)
-val NightText = Color(0xFFEDEBE3)
-val NightTextDim = Color(0xFF98A2C4)
+// dark scheme — the WARM ink ramp (unslop, 2026-11-12): the chrome is near-
+// black graphite with a warm bias, so the surface never reads as a colour.
+// The blue lives ONLY in the sky (the hero's moment) — a dashboard-wide blue
+// cast was the app's worst tell.
+val NightBg = Color(0xFF141210)      // warm ink — the page
+val NightSurface = Color(0xFF1C1A18) // the card, one quiet step up
+val NightSurfaceHigh = Color(0xFF262421) // raised: chips, the active tab
+val NightOutline = Color(0xFF322F2B) // the hairline — onSurface at ~10%
+val NightText = Color(0xFFEFE9DE)    // warm off-white
+val NightTextDim = Color(0xFFAAA398) // warm grey
 
 // light scheme (paper, not white — the brand reads as ink on warm paper)
-val PaperBg = Color(0xFFF6F1E4)      // dawn paper
-val PaperSurface = Color(0xFFFFFCF4)
-val PaperSurfaceHigh = Color(0xFFEFE7D4)
-val PaperOutline = Color(0xFFD6CBB2)
-val InkText = Color(0xFF16181F)
-val InkTextDim = Color(0xFF5A5F72)
+val PaperBg = Color(0xFFF7F4EE)      // dawn paper
+val PaperSurface = Color(0xFFFDFBF7)
+val PaperSurfaceHigh = Color(0xFFEFE9DF)
+val PaperOutline = Color(0xFFD9D1C2) // the hairline
+val InkText = Color(0xFF1F1B16)
+val InkTextDim = Color(0xFF5E554A)
 
 /** The dark scheme for a chosen accent — only the "ours" role moves. */
 private fun darkColors(accent: Accent) = darkColorScheme(
     primary = Color(accent.dark),
     onPrimary = Color(accent.darkOn),
-    // the containers are LAPIS, not mud: a brown container behind the gold
-    // composites to dirt (the palette's one hard rule)
+    // the containers are warm and dark (the accent's own deep tone)
     primaryContainer = Color(accent.darkContainer),
     onPrimaryContainer = Color(accent.darkOnContainer),
     secondary = Teal,
     onSecondary = Color(0xFF00312C),
     tertiary = Amber,
     onTertiary = Color(0xFF3A2500),
-    tertiaryContainer = Color(0xFF3B2A08),
+    tertiaryContainer = Color(0xFF2C2518),
     onTertiaryContainer = Cream,
     background = NightBg,
     onBackground = NightText,
@@ -90,12 +92,13 @@ private fun darkColors(accent: Accent) = darkColorScheme(
     onSurface = NightText,
     surfaceVariant = NightSurfaceHigh,
     onSurfaceVariant = NightTextDim,
-    // the outline is now VISIBLE (1.42:1 was an edge that was not there)
-    outline = Color(0xFF33426B),
-    outlineVariant = Color(0xFF232C4C),
+    // the card edge is a HAIRLINE (onSurface at ~10%), not a coloured stroke:
+    // the old #33426B drew a blue wireframe around every card
+    outline = NightOutline,
+    outlineVariant = Color(0xFF2A2724),
     // no red in this palette: doubt is dim + a chip (DESIGN.md §2)
-    error = Color(0xFFEDEBE3),
-    onError = Color(0xFF060B1C),
+    error = Color(0xFFEFE9DE),
+    onError = Color(0xFF141210),
 )
 
 /** The light scheme for a chosen accent. */
@@ -109,18 +112,17 @@ private fun lightColors(accent: Accent) = lightColorScheme(
     // the saffron, darkened for paper: #B4600C failed AA as body text (4.43)
     tertiary = Color(0xFF96500A),
     onTertiary = Color(0xFFFFFFFF),
-    // the containers are lapis — never a tan that composites to dirt
-    tertiaryContainer = Color(0xFFDEE6F4),
-    onTertiaryContainer = Color(0xFF2B1800),
-    background = Color(0xFFF2ECDC),
+    tertiaryContainer = Color(0xFFF1E7D6),
+    onTertiaryContainer = Color(0xFF4A2A00),
+    background = PaperBg,
     onBackground = InkText,
     surface = PaperSurface,
     onSurface = InkText,
-    surfaceVariant = Color(0xFFE9DEC4),
+    surfaceVariant = PaperSurfaceHigh,
     onSurfaceVariant = InkTextDim,
-    outline = Color(0xFFC0B392),
-    outlineVariant = Color(0xFFDFD5BC),
-    error = Color(0xFF16181F),
+    outline = PaperOutline,
+    outlineVariant = Color(0xFFE7E0D3),
+    error = Color(0xFFB3261E),
     onError = Color(0xFFFFFFFF),
 )
 

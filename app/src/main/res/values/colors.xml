@@ -1,5 +1,5 @@
 <resources>
-    <color name="ic_launcher_background">#060B1C</color>
+    <color name="ic_launcher_background">#141210</color>
 
     <!-- THE WIDGET'S TOKENS — one source (the widget council, 2026-11-11:
          no hex literals in layouts, no drift between the three files that
@@ -10,11 +10,11 @@
     <color name="miqat_sun_core">#FFE0A8</color>
     <color name="miqat_hairline">#93A3CC</color>
     <color name="miqat_tick">#C3CCE2</color>
-    <color name="miqat_text">#EDEBE3</color>
-    <color name="miqat_text_dim">#98A2C4</color>
+    <color name="miqat_text">#EFE9DE</color>
+    <color name="miqat_text_dim">#AAA398</color>
     <color name="miqat_urgency_soon">#FFB25C</color>
     <color name="miqat_urgency_imminent">#FF7A59</color>
-    <color name="miqat_sky_night_top">#070E1F</color>
-    <color name="miqat_sky_night_bottom">#2B4682</color>
-    <color name="miqat_ground">#010206</color>
+    <color name="miqat_sky_night_top">#0A0B12</color>
+    <color name="miqat_sky_night_bottom">#262C42</color>
+    <color name="miqat_ground">#0B0908</color>
 </resources>

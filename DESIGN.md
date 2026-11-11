@@ -25,25 +25,28 @@
 
 | Token | Dark | Light | Role |
 |---|---|---|---|
-| `bg` | `#060B1C` | `#F2ECDC` | page (lapis night / dawn paper) |
-| `surface` | `#0E1526` | `#FFFCF4` | cards, rows |
-| `surfaceHigh` | `#1B2542` | `#E9DEC4` | raised: pressed, pill, sheet header |
-| `outline` | `#33426B` | `#C0B392` | 1dp card edge, the hairline, the switch's border |
-| `outlineVariant` | `#232C4C` | `#DFD5BC` | the faint hairline inside a card |
+| `bg` | `#141210` | `#F7F4EE` | page — warm ink / dawn paper |
+| `surface` | `#1C1A18` | `#FDFBF7` | cards, rows — one quiet step up |
+| `surfaceHigh` | `#262421` | `#EFE9DF` | raised: pressed, pill, sheet header |
+| `outline` | `#322F2B` | `#D9D1C2` | the hairline (onSurface at ~10%), the switch's border |
+| `outlineVariant` | `#2A2724` | `#E7E0D3` | the faint hairline inside a card |
 | `gold` (`primary`) | `#E8C46A` | `#6F5610` | **chosen / ours**: the brand, the active destination, the selection, today's cell, the focus ring, the app's own marks |
 | `saffron` (`tertiary`) | `#FFB25C` | `#96500A` | **now / the clock**: the sun, the next prayer's tick, the countdown, the "now" dot |
 | `teal` (`secondary`) | `#7FD0C8` | `#1F6A62` | **a window**: a span of time given to an act — never a number, never a marker |
 | `cream` (`onTertiaryContainer`) | `#F8E7AE` | `#6E5A3C` | **an occasion, or a caution**: the Eids, the rites, the warnings, the citations' notes |
 | `text` | `#EDEBE3` | `#16181F` | primary text |
-| `dim` | `#98A2C4` | `#5A5F72` | secondary text, inactive nav, citations |
+| `dim` | `#AAA398` | `#5E554A` | secondary text, inactive nav, citations |
 
 - The four meanings are strict: **gold = ours, saffron = now, teal = a window,
   cream = an occasion**. The sun is saffron (the clock), a worship window is
   teal (a span), the next prayer's tick is saffron (it is the clock), and the
   month's occasion is cream (it is an occasion, not a warning).
-- **Every card draws its 1dp `outline` edge.** The page→card step is only
-  1.07:1, so without the edge the cards have no perceptible boundary — the
-  single cheapest-looking thing in the app.
+- **The chrome is a NEUTRAL warm-ink ramp; the colour lives in the moments**
+  (unslop, 2026-11-12). The blue belongs to the sky alone — a dashboard-wide
+  blue cast (blue-tinted surfaces, `#33426B` strokes around every card) was
+  the app's worst tell. Cards separate by a surface step plus a HAIRLINE
+  (the text colour at ~10%) — never a coloured stroke. Depth comes from
+  surface steps and hairlines, not shadows.
 - The contrast is not a claim: `tools/verify_contrast.py` computes every pair
   the app renders, in both schemes, and it must pass.
 - The violet family (`#2A1B33`, `#1E1836`) is **banned** — it composites to mud
@@ -52,8 +55,8 @@
   only warm hues.**
 - Hue means something, never decoration. There is no red token: doubt is
   `textDim` plus a chip, never an error colour.
-- The sky's mid-band is lapis ink `#101B36`; the horizon glow is `#8A5533` at
-  55% over it.
+- The sky is ink with a warm horizon: the four phases keep their hour
+  meaning, at low saturation (`#0A0B12` → `#262C42` at night).
 
 ## 3. Typography Rules
 

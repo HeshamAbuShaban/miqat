@@ -143,9 +143,12 @@ fun FastingScreen(
                     moveTo(p0.x, p0.y)
                     quadraticBezierTo(p1.x, p1.y, p2.x, p2.y)
                 }
+                // the window arc is TEAL — the palette's meaning for a span
+                // (it used to borrow the sky's steel blue: a cold line on a
+                // warm panel, and a colour that meant nothing)
                 drawPath(
                     arc,
-                    Sky.rim,
+                    scheme.secondary.copy(alpha = 0.55f),
                     style = Stroke(width = 2f, cap = StrokeCap.Round),
                 )
 
@@ -175,7 +178,7 @@ fun FastingScreen(
                 val end = pointAt(1f)
                 drawCircle(Color(0xFFE8C46A), 5f, end)
                 val start = pointAt(0f)
-                drawCircle(scheme.outline, 4f, start)
+                drawCircle(scheme.secondary.copy(alpha = 0.8f), 4f, start)
             }
 
             Spacer(Modifier.height(Space.sm))

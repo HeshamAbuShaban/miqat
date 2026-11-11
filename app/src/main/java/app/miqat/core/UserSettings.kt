@@ -103,9 +103,8 @@ data class DisplayPrefs(
     /** What the calendar is organized around (the Gregorian, the Hijri, or
      *  the acts of worship). */
     val calendarContext: String = "HIJRI",
-    /** The identity the user chose (the accent) and the hero's illustration. */
+    /** The identity the user chose (the accent). */
     val accent: String = "GOLD",
-    val heroStyle: String = "ARC",
 )
 
 object UserSettings {
@@ -142,7 +141,6 @@ object UserSettings {
     private const val K_HOME_DENSITY = "home_density"
     private const val K_CAL_CONTEXT = "calendar_context"
     private const val K_ACCENT = "accent"
-    private const val K_HERO_STYLE = "hero_style"
     private const val K_IMSAK_LEAD = "imsak_lead_minutes"
     private const val K_OFFICIAL = "official_adopted"
     private const val K_USE_GPS = "use_gps"
@@ -248,7 +246,6 @@ object UserSettings {
             showTimerIqama = p.getBoolean(K_TIMER_IQAMA, true),
             calendarContext = p.getString(K_CAL_CONTEXT, "HIJRI") ?: "HIJRI",
             accent = p.getString(K_ACCENT, "GOLD") ?: "GOLD",
-            heroStyle = p.getString(K_HERO_STYLE, "ARC") ?: "ARC",
             homeDensity = runCatching {
                 HomeDensity.valueOf(p.getString(K_HOME_DENSITY, HomeDensity.BALANCED.name) ?: "")
             }.getOrDefault(HomeDensity.BALANCED),
@@ -312,7 +309,6 @@ object UserSettings {
             .putString(K_HOME_DENSITY, d.homeDensity.name)
             .putString(K_CAL_CONTEXT, d.calendarContext)
             .putString(K_ACCENT, d.accent)
-            .putString(K_HERO_STYLE, d.heroStyle)
             .apply()
     }
 }

@@ -1,3 +1,48 @@
+## 2026-11-12 (later) — The unslop pass: the blue leaves the chrome, the hairline replaces the stroke
+
+The founder, looking at the app: «this current design is shit, the blue is
+shit … the major one done with council before was way way better … the
+strokes are so wacky the app isn't comfy nor fancy». He pointed to the
+unslop skill (github.com/heydamir/unslop), now installed in
+`~/.agents/skills/unslop`.
+
+**The direction (five lines, from the product):** an offline companion that
+says when the next appointed time arrives, how far, and why · nocturnal,
+exact, a little warm · ink and lamp-gold at night, not a blue dashboard ·
+the day-sky hero and its arc are the moments (the only place blue belongs —
+a sky is blue) · the arc is the signature.
+
+**What the audit found, and what changed:**
+
+- **The chrome carried the colour.** Near-black surfaces tinted blue
+  (`#060B1C`, `#0E1526`, `#1B2542`, containers `#16213F`) plus a strong
+  `#33426B` stroke around EVERY card — a blue wireframe. Unslop's rule:
+  surfaces stay neutral, the colour lives in the moment. The whole ramp is
+  now WARM ink: bg `#141210`, surface `#1C1A18`, raised `#262421`, text
+  `#EFE9DE`, dim `#AAA398`; the containers are the accent's own deep tone
+  (`#2C2518` gold), never lapis. Light: `#F7F4EE`/`#FDFBF7`/`#EFE9DF`.
+- **The strokes are hairlines now:** `outline = #322F2B` (onSurface at ~10%),
+  `outlineVariant = #2A2724`. The card edge is quiet, the surface step does
+  the work. Contrast guard recalibrated: edge ≥1.25, page divider ≥1.15,
+  faint hairline ≥1.10 — a hairline is not an AA text pair, it only has to
+  exist.
+- **The sky is ink with a warm horizon** (`#0A0B12 → #262C42` at night; the
+  dawn/sunset keep their umber). Less saturation, same hour meaning.
+- **The fasting arc was the last cold line**: it borrowed the sky's steel
+  blue on a warm panel, and its colour meant nothing. A window is TEAL in
+  this legend — the arc and the imsak dot are teal now.
+- **The DIAL hero is killed** (it was my experiment the founder called
+  shit). The arc is the only hero; `HeroStyle` and its settings row are
+  deleted. The accent choice stays (he asked for it).
+- The widget's panel and preview sky follow the warm ink; the home scroll
+  has clearance under the navigation (the day-rail ended half-cut).
+- Design docs: `DESIGN.md` §2 rewritten to the warm ramp and the hairline
+  rule; the launcher icon's background is the warm ink.
+
+**Verified:** dark home, fasting, calendar, times, more, and the light home
+by screenshot; contrast 0 failing pairs in both schemes; 53/53 tests; TZ
+convention holds.
+
 ## 2026-11-12 — The widget made true (مجلس التصميم's verdict, measured)
 
 The widget council measured the old widget on a live launcher and found:

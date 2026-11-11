@@ -40,7 +40,7 @@ object Sky {
      */
     val rim = Color(0xFF93A3CC)      // steel — the horizon line
     val tick = Color(0xFFC3CCE2)      // pale — the prayer ticks
-    val ground = Color(0xFF010206)    // near-black — the ground under the sky
+    val ground = Color(0xFF0B0908)    // warm near-black — the ground under the sky
 
     /**
      * The sky's phase, from the REAL sunrise and sunset of the day.
@@ -62,29 +62,33 @@ object Sky {
      * interpolation never passes through the banned violet.
      */
     fun bands(phase: SkyPhase): List<Color> = when (phase) {
+        // the sky is INK with a warm horizon — the night is deep indigo-ink,
+        // not a saturated navy that paints the whole app blue (unslop: a
+        // surface never reads as a colour; the sky is the one moment where
+        // the blue is allowed, and even here it stays low-saturation)
         SkyPhase.NIGHT -> listOf(
-            Color(0xFF070E1F),
-            Color(0xFF101E42),
-            Color(0xFF1C3164),
-            Color(0xFF2B4682),
+            Color(0xFF0A0B12),
+            Color(0xFF10131F),
+            Color(0xFF191E30),
+            Color(0xFF262C42),
         )
         SkyPhase.DAWN -> listOf(
-            Color(0xFF070E20),
-            Color(0xFF111E40),
-            Color(0xFF28334B),
-            Color(0xFF5D432C),
+            Color(0xFF0A0B12),
+            Color(0xFF121422),
+            Color(0xFF242230),
+            Color(0xFF4A3A2B),
         )
         SkyPhase.DAY -> listOf(
-            Color(0xFF070E1E),
-            Color(0xFF121E3E),
-            Color(0xFF21325A),
-            Color(0xFF3A4966),
+            Color(0xFF0A0B12),
+            Color(0xFF121624),
+            Color(0xFF202A40),
+            Color(0xFF36405A),
         )
         SkyPhase.SUNSET -> listOf(
-            Color(0xFF080E20),
-            Color(0xFF121E3E),
-            Color(0xFF39322A),
-            Color(0xFF6A3D27),
+            Color(0xFF0A0B12),
+            Color(0xFF131320),
+            Color(0xFF2E2527),
+            Color(0xFF5B3726),
         )
     }
 
