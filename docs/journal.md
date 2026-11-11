@@ -3,6 +3,49 @@
 > One dated entry per working session (see AGENTS.md). Next agent: read ROADMAP top
 > unfinished step, then this.
 
+## 2026-11-11 — THE LONG RUN: four council seats, five layers, the app rebuilt
+
+Hesham: «take the wheel, let the council help you» — and named the councils:
+**مجلس النماذج** (the free-model seats), **مجلس التصميم** (the design seats),
+**المجلس الاستشاري** (the adversarial seat). Four seats ran in parallel and their
+verdicts drove the build:
+
+- **Layer 0 — the gates.** the «تقديري بحسب الاصطلاح» qualifier now rides
+  EVERY window-bound payload; ONE clock for the whole app (two clocks is how
+  the location bug happened); the manual-adjust ceiling raised to ±60; the
+  missed-Fajr gate (battery-optimisation deep link, audio-focus yield to a
+  call, the iqama second call, the always-on countdown service); an explicit
+  confidence class per time (مؤكد / محسوب / تقديري).
+- **Layer 1 — the calendar as a worship ledger.** one Hijri number per cell +
+  a fixed three-slot sigil strip (fast / event / rite — shapes, never colour);
+  the day card = a spine where the prayers are points and **the spacing IS the
+  gap**, with the windows as bands behind it, the fast as brackets and the
+  Hajj as a pin; the prayer strip under the grid; the month ledger as a
+  pull-up sheet; the year as an overlay.
+- **Layer 2 — the acts catalog.** `assets/acts-v1.json`: static, versioned,
+  cited content (what it is / why it matters / how it is computed / the source)
+  + the live fields from the engine. The index is a flat time-ordered list;
+  the depth is on each act's own screen. The acts now carry MEANING, not just
+  times — the gap the founder named.
+- **Layer 3 — the craft.** Palette A «لازورد» (the violet family is BANNED:
+  it composites to mud); the hero became a PROPORTIONAL clock — the travelled
+  part of the arc in gold, the rest a hairline, so progress is read as
+  LENGTH before any number; the home's seven lines, every one toggleable
+  («المؤشرات»), including a daily verse with its reference and the night
+  markers.
+- **Layer 4/5 — the daily practice and the tooling.** the tasbih screen over
+  the donor's 21 texts with the council's verified citations; the root
+  `DESIGN.md` (the Stitch format, nine sections) so every future agent builds
+  to the same tokens; `docs/ui-patterns.md` (the admission rule for any
+  third-party UI library); the `anatomy` skill installed for OpenCode,
+  Antigravity, Codex and MiniMax Code on this machine, and the first figure
+  built with it (مِقياس الميقات).
+
+**Also**: the crash of the location rule is fixed and guarded by tests; the
+council's cuts were applied (the separate "nearest act" card, the separate
+motivational channel, the duplicated events list, "which prayer?" as a
+settings prerequisite). 40+ unit tests green, parity unchanged.
+
 ## 2026-11-10 (9) — BUGFIX: the location and its timezone were mixed
 
 Hesham: «the app is talking about 20min left for fajir based on makkah, when I

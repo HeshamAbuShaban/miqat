@@ -468,18 +468,19 @@ fun HomeScreen(
             val reminder = app.miqat.core.DailyReminders.forNow(
                 nowHour, cal.get(Calendar.DAY_OF_YEAR),
             )
+            val (verse, source) = app.miqat.core.DailyReminders.line(reminder)
             Column(
                 Modifier
                     .fillMaxWidth()
                     .padding(vertical = Space.md),
             ) {
                 Text(
-                    reminder.text,
+                    verse,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    reminder.reference,
+                    source,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
