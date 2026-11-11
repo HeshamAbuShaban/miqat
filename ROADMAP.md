@@ -109,10 +109,15 @@ Every step cites its donor lead (teardown §).
       — six real screens, every control effective; method picker is a search
       dialog over the donor's 59 methods
 - [ ] Compose + Material 3, dark/light/dynamic; Pixel-stock benchmark
-- [x] **R1 dual clocks** — DONE 2026-11-10: remaining PRIMARY + elapsed
-      SECONDARY, HH:MM:SS ticking (1 Hz aligned ticker, leaf-scoped
-      recomposition), `DayClock.kt` + tests; city-wall-clock correctness
-      (device tz never trusted for a picked city)
+- [x] **R1 dual clocks** — DONE 2026-11-10, REBUILT 2026-11-11: remaining
+      PRIMARY + elapsed SECONDARY, HH:MM:SS ticking (1 Hz aligned ticker,
+      leaf-scoped recomposition); city-wall-clock correctness (device tz never
+      trusted for a picked city). The model is now `core/Timers.kt` (ONE clock
+      for the app): every feature has its OWN line and its OWN timer — the
+      next prayer in the hero, the elapsed since the prayer that just entered
+      (first hour only), the iqama on its own line. `DayClock.kt` was DELETED
+      (its wrap-around logic is what produced «منذ العشاء ١٢:٤١:٢٠»).
+      REMAINING: the worship windows' own secondary clocks (R1 wants them too)
 - [x] **R2 rich search rows** — local-time-now + distance per row, ranked
       prefix-first (v0; Arabic normalization still open below)
 - [x] **R3 «why this time» sheet v1** — displayed-vs-computed-seconds,

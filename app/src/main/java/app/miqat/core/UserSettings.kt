@@ -72,6 +72,10 @@ data class DisplayPrefs(
     val showNightMarkers: Boolean = true,
     /** The strip of the six prayer times. */
     val showPrayerStrip: Boolean = true,
+    /** The line: «مرّ من وقت X» — the elapsed since the prayer that just came. */
+    val showTimerElapsed: Boolean = true,
+    /** The line: «إقامة X» — the second call, with its own countdown. */
+    val showTimerIqama: Boolean = true,
 )
 
 object UserSettings {
@@ -102,6 +106,8 @@ object UserSettings {
     private const val K_SHOW_REMINDER = "show_reminder"
     private const val K_SHOW_NIGHT = "show_night"
     private const val K_SHOW_STRIP = "show_prayer_strip"
+    private const val K_TIMER_ELAPSED = "timer_elapsed"
+    private const val K_TIMER_IQAMA = "timer_iqama"
     private const val K_USE_GPS = "use_gps"
     private const val K_GPS_LAT = "gps_lat"
     private const val K_GPS_LON = "gps_lon"
@@ -184,6 +190,8 @@ object UserSettings {
             showDailyReminder = p.getBoolean(K_SHOW_REMINDER, true),
             showNightMarkers = p.getBoolean(K_SHOW_NIGHT, true),
             showPrayerStrip = p.getBoolean(K_SHOW_STRIP, true),
+            showTimerElapsed = p.getBoolean(K_TIMER_ELAPSED, true),
+            showTimerIqama = p.getBoolean(K_TIMER_IQAMA, true),
         )
     }
 
@@ -238,6 +246,8 @@ object UserSettings {
             .putBoolean(K_SHOW_REMINDER, d.showDailyReminder)
             .putBoolean(K_SHOW_NIGHT, d.showNightMarkers)
             .putBoolean(K_SHOW_STRIP, d.showPrayerStrip)
+            .putBoolean(K_TIMER_ELAPSED, d.showTimerElapsed)
+            .putBoolean(K_TIMER_IQAMA, d.showTimerIqama)
             .apply()
     }
 }

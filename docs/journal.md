@@ -1,3 +1,42 @@
+## 2026-11-11 — THE TIMERS: the home's clocks, one per feature
+
+Hesham found the home's main timer mixing times: «there must be multiple
+feature in its own line … right now im seeing something like "12:41:20" for
+how much it has been since "someprayer" which is wrong».
+
+**What was actually wrong** (three faults, one cause):
+
+- `DayClock.position` knew ONE day. After the day's last appointment it
+  took "the next" from the same list — so after the Isha it announced
+  today's Fajr and counted from yesterday's Isha. That is where the
+  twelve-hour elapsed came from.
+- The home's strip mixed three clocks on one row (an elapsed, a countdown to
+  a moment of any kind — even الإمساك — and the state chip).
+- The elapsed was a headline, in seconds, for hours on end.
+
+**What I built:**
+
+- `core/Timers.kt` — ONE model on an ABSOLUTE timeline (yesterday's Isha →
+  today → midnight → tomorrow's Fajr), pure and JVM-tested (11 cases).
+- The Isha's window now ends at MIDNIGHT; the gap before the dawn belongs to
+  no prayer.
+- The home: the hero holds the countdown to the next PRAYER; «مرّ من وقت X»
+  is its own line (first hour only); «إقامة X» is its own line with its own
+  countdown. Each is a separate row with a hairline, each toggleable in
+  «المؤشرات» (two new switches).
+- A duration no longer wears a ص/م suffix (`hms` vs `clockHMS`) — «1:11:40 ص»
+  was a lie about the clock.
+- `DayClock.kt` + its test are deleted: an unused model with the old
+  wrap-around logic is a trap for the next agent.
+- The Times screen's rows use the same model; «الأقرب» no longer points at a
+  fasting boundary.
+
+**Verified on the emulator** (the clock was moved to the exact bug times):
+09:11 → no elapsed at all (the pre-dawn gap belongs to no prayer); 11:45 →
+«مرّ من وقت الظهر ٠:٠٦» + «إقامة الظهر بعد ٠:٠٨» + the hero's countdown to
+the Asr; 23:30 → one number only (the countdown to tomorrow's Fajr) and the
+chip «داخل وقت العشاء». 60/60 unit tests green; parity unchanged.
+
 # Journal — newest first
 
 > One dated entry per working session (see AGENTS.md). Next agent: read ROADMAP top

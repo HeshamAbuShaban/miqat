@@ -40,10 +40,11 @@ import app.miqat.core.NumFmt
 class Fmt(val prefs: DisplayPrefs) {
     val ar: Boolean get() = prefs.arabicIndicDigits
     fun hhmm(minutes: Int) = NumFmt.hhmm(minutes, ar, prefs.use12h)
-    fun hms(seconds: Long) = NumFmt.hms(seconds, ar, prefs.use12h)
+    /** A DURATION (the ticking countdown) — never carries a ص/م suffix. */
+    fun hms(seconds: Long) = NumFmt.hms(seconds, ar)
 
-    /** A clock time given in fractional local hours (the engine's unit). */
-    fun hmsOf(hours: Double) = NumFmt.hms(
+    /** A CLOCK time given in fractional local hours (the engine's unit). */
+    fun hmsOf(hours: Double) = NumFmt.clockHMS(
         (Math.floor(((hours % 24.0) + 24.0) % 24.0 * 3600.0)).toLong(), ar, prefs.use12h,
     )
     fun n(v: Int) = NumFmt.n(v, ar)

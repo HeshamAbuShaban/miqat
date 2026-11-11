@@ -43,11 +43,23 @@ object NumFmt {
     }
 
     /**
-     * "H:MM:SS" (elapsed/remaining clocks) — the ticking display. Honours the
-     * 12/24-hour preference like every other clock in the app: in 12-hour mode
-     * the suffix follows the number («٤:٠٥:٠٩ م»).
+     * "H:MM:SS" — a DURATION (the ticking countdown). No ص/م suffix: a
+     * duration is not a moment of the day, so «1:11:40 ص» was a lie about
+     * the clock. The suffix belongs to [clockHMS].
      */
-    fun hms(totalSeconds: Long, arabicIndic: Boolean, use12h: Boolean = false): String {
+    fun hms(totalSeconds: Long, arabicIndic: Boolean): String {
+        val s = ((totalSeconds % 86400) + 86400) % 86400
+        val h = s / 3600
+        val mm = s % 3600 / 60
+        val ss = s % 60
+        return ltr(digits("%d:%02d:%02d".format(h, mm, ss), arabicIndic))
+    }
+
+    /**
+     * "H:MM:SS" — a CLOCK (a moment of the day). In 12-hour mode the suffix
+     * follows the number («٤:٠٥:٠٩ م»).
+     */
+    fun clockHMS(totalSeconds: Long, arabicIndic: Boolean, use12h: Boolean): String {
         val s = ((totalSeconds % 86400) + 86400) % 86400
         val h = s / 3600
         val mm = s % 3600 / 60

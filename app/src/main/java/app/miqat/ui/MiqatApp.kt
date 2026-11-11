@@ -56,8 +56,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import app.miqat.core.Appointment
-import app.miqat.core.DayClock
 import app.miqat.core.DstInfo
 import app.miqat.core.DstTransition
 import app.miqat.core.LocalPrayerTimes
@@ -272,8 +270,14 @@ fun HomeScreen(
     val (y, m, d) = state.cityDate(now)
     val times = state.times(y, m, d)
     val nowHour = state.cityHourOfDay(now)
-    val appointments = PRAYER_KEY.mapIndexed { i, k -> Appointment(k, PRAYER_NAMES[i], times.list[i]) }
-    val seg = DayClock.position(appointments, nowHour)
+    val (tyHome, tmHome, tdHome) = state.cityTomorrow(now)
+    val tomorrowHome = state.times(tyHome, tmHome, tdHome)
+    // THE timers — one model, one clock, and every feature with its own line
+    val timers = app.miqat.core.Timers.of(
+        app.miqat.core.prayerPoints(times, tomorrowHome.fajr, PRAYER_NAMES),
+        nowHour,
+        state.notifications.iqamaMinutes,
+    )
 
     Column(
         Modifier
@@ -312,7 +316,7 @@ fun HomeScreen(
         Spacer(Modifier.height(Space.lg))
 
         // THE hero — one only
-        HeroCard(state, fmt, times, seg, nowHour)
+        HeroCard(state, fmt, times, timers, nowHour)
 
         Spacer(Modifier.height(Space.md))
 
@@ -342,18 +346,13 @@ fun HomeScreen(
             Spacer(Modifier.height(Space.md))
         }
 
-        // the awareness strip (neovim's "how far are you from the lines") —
-        // ONE place that says: now, what time has entered, and what is next
+        // the TIMER LINES — each feature on its own line, with its own clock
         if (state.display.showAwarenessStrip) {
-            val timeline = rememberTimeline(state, now)
-            AwarenessStrip(
+            TimerLines(
                 state = state,
                 fmt = fmt,
                 nowMillis = now,
-                appointments = PRAYER_KEY.mapIndexed { i, k ->
-                    Appointment(k, PRAYER_NAMES[i], times.list[i])
-                },
-                moments = timeline,
+                timers = timers,
             )
             Spacer(Modifier.height(Space.md))
         }
@@ -371,7 +370,7 @@ fun HomeScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             PRAYER_NAMES.forEachIndexed { i, name ->
-                val isNext = seg?.next?.key == PRAYER_KEY[i]
+                val isNext = timers.nextPrayer == name && !timers.nextIsTomorrow
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         name,
@@ -438,8 +437,10 @@ fun HomeScreen(
         val tomorrowTimes = state.times(ty2, tm2, td2)
         val timeline = rememberTimeline(state, now)
         val nowMinutes = minutesOf(nowHour)
+        // the nearest appointment the user can ACT on — a fasting boundary
+        // (الإمساك) is not one of them
         val nearest = timeline
-            .filter { it.isEvent }
+            .filter { it.isEvent && it.category != app.miqat.core.MomentCategory.FASTING }
             .minByOrNull { Moments.until(it, nowMinutes) }
 
         if (nearest != null) {
@@ -536,7 +537,7 @@ private fun HeroCard(
     state: AppState,
     fmt: Fmt,
     times: app.miqat.core.LocalPrayerTimes,
-    seg: app.miqat.core.ClockSegment?,
+    timers: app.miqat.core.Timers,
     nowHour: Double,
 ) {
     val scheme = MaterialTheme.colorScheme
@@ -674,7 +675,7 @@ private fun HeroCard(
             // the prayer ticks
             listOf(0f, 0.24f, 0.47f, 0.68f, 0.86f, 1f).forEachIndexed { i, f2 ->
                 val c = pointAt(f2)
-                val isNext = seg != null && seg.next.key == PRAYER_KEY[i] && !seg.nextIsTomorrow
+                val isNext = timers.nextPrayer == PRAYER_NAMES[i] && !timers.nextIsTomorrow
                 drawCircle(
                     if (isNext) Color(0xFFE8C46A) else Color(0xFF8E8672),
                     radius = if (isNext) 5f else 3.5f,
@@ -684,10 +685,10 @@ private fun HeroCard(
         }
 
         Spacer(Modifier.height(Space.sm))
-        if (seg != null) {
+        if (timers.nextPrayer != null) {
             val urgency = if (state.display.urgencyEnabled) {
                 UrgencyRules.of(
-                    seg.remainingSeconds,
+                    timers.remainingSeconds,
                     state.display.urgencySoonMinutes,
                     state.display.urgencyImminentMinutes,
                 )
@@ -699,18 +700,18 @@ private fun HeroCard(
             }
             Text(
                 when (urgency) {
-                    Urgency.NOW -> "حان الآن: ${seg.next.labelAr}"
-                    Urgency.IMMINENT -> "استعدّ لصلاة ${seg.next.labelAr}"
-                    Urgency.SOON -> "اقترب وقت ${seg.next.labelAr}"
-                    Urgency.CALM -> "المتبقي لميقات ${seg.next.labelAr}" +
-                        if (seg.nextIsTomorrow) " (غداً)" else ""
+                    Urgency.NOW -> "حان الآن: ${timers.nextPrayer}"
+                    Urgency.IMMINENT -> "استعدّ لصلاة ${timers.nextPrayer}"
+                    Urgency.SOON -> "اقترب وقت ${timers.nextPrayer}"
+                    Urgency.CALM -> "المتبقي لميقات ${timers.nextPrayer}" +
+                        if (timers.nextIsTomorrow) " (غداً)" else ""
                 },
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (urgency == Urgency.CALM) scheme.onSurfaceVariant else momentColor,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
             Text(
-                fmt.hms(seg.remainingSeconds),
+                fmt.hms(timers.remainingSeconds),
                 style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = TabularFigures),
                 color = momentColor,
                 modifier = Modifier.align(Alignment.CenterHorizontally),

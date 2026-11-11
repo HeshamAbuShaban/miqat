@@ -1,3 +1,48 @@
+## 2026-11-11 — The timers: one clock, one line per feature
+
+Hesham (2026-11-11): «the main timer needs work, its worngly putting time
+with another ones in the home, there must be multiple feature in its own
+line, meaning if the iqama came it has a timer of its own, if the prayer has
+started it has timer up until the other prayer to count through, and whats
+left as well in its own, right now im seeing something like "12:41:20" for
+how much it has been since "someprayer" which is wrong».
+
+**The diagnosis (three faults, one cause):**
+
+1. `DayClock.position` worked on ONE day's list. After the day's last
+   appointment it took "the next" from the first entry of the SAME list, so
+   after the Isha it announced today's Fajr as "next" and counted from
+   yesterday's Isha — the twelve-hour elapsed.
+2. The home mixed three clocks on ONE line: an elapsed since a prayer, a
+   countdown to a moment of any kind (even a fasting boundary like الإمساك),
+   and the state chip. One row, three meanings.
+3. The elapsed was a headline. «12:41:20» is not information; «the adhan was
+   six minutes ago» is.
+
+**The decisions:**
+
+- **ONE model** — `core/Timers.kt`. The day's ABSOLUTE timeline: yesterday's
+  Isha → today's points → midnight → tomorrow's Fajr, on one straight line
+  (hours may be negative or > 24), so the night is a span and not a trick.
+- **The Isha's window ends at MIDNIGHT**, not at the next dawn. That is the
+  root of the twelve-hour counter: the old window ran from the Isha to
+  tomorrow's Fajr. The gap between midnight and the Fajr belongs to no prayer.
+- **Each feature gets its own line and its own clock:**
+  - the countdown to the next PRAYER lives in the HERO (the sunrise is never
+    a target — it is a mark on the sky);
+  - «مرّ من وقت X» — the elapsed since the prayer that just entered — is its
+    own line, and only in the FIRST HOUR: after that the state chip
+    («داخل وقت X») carries it, and a second big number next to the hero's
+    countdown is exactly the confusion the user named;
+  - «إقامة X» — the iqama — is its own line with its own countdown,
+    attached to the prayer it belongs to.
+- **The next prayer is never a prayer that already happened**, and the
+  countdown never goes negative across midnight.
+- **A duration has no ص/م suffix.** «1:11:40 ص» was a lie about the clock:
+  the suffix belongs to a MOMENT of the day (`hms` vs `clockHMS`).
+- `DayClock.kt` is DELETED — an unused model with the old wrap-around logic
+  is a trap for the next agent.
+
 # Decisions log — Miqat
 
 > One line per decision; newest first. `applicationId` `app.miqat` freezes at release.

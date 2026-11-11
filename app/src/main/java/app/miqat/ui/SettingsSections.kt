@@ -589,10 +589,20 @@ fun IndicatorsSection(state: AppState, fmt: Fmt) {
         SettingsScreenTitle("المؤشرات", "ما يظهر في الشاشة الرئيسية والتقويم — كلُّها قابلة للإطفاء")
         SectionLabel("في الرئيسية", Modifier.padding(horizontal = Space.lg))
         ToggleRow(
-            "شريط الوعي",
+            "سطر المؤقّتات",
             "الآن، والوقت الذي دخل، وما يبعد عنه",
             d.showAwarenessStrip,
         ) { v -> state.updateDisplay(d.copy(showAwarenessStrip = v)) }
+        ToggleRow(
+            "مرّ من وقت الصلاة",
+            "كم مضى منذ دخول وقت الصلاة — في الساعة الأولى فقط",
+            d.showTimerElapsed,
+        ) { v -> state.updateDisplay(d.copy(showTimerElapsed = v)) }
+        ToggleRow(
+            "إقامة الصلاة",
+            "النداء الثاني، بعددّاد مستقل",
+            d.showTimerIqama,
+        ) { v -> state.updateDisplay(d.copy(showTimerIqama = v)) }
         ToggleRow(
             "أقرب وقت",
             "أقرب موعد من أي نوع — صلاة أو عبادة أو سنة",

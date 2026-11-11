@@ -22,8 +22,6 @@ import androidx.compose.runtime.State
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import app.miqat.core.Appointment
-import app.miqat.core.DayClock
 import app.miqat.core.Moments
 import app.miqat.core.Urgency
 import app.miqat.core.UrgencyRules
@@ -60,9 +58,11 @@ fun TimesScreen(
     val times = state.times(y, m, d)
     val tomorrow = state.times(ty, tm, td)
     val nowHour = state.cityHourOfDay(now)
-    val seg = DayClock.position(
-        PRAYER_KEY.mapIndexed { i, k -> Appointment(k, PRAYER_NAMES[i], times.list[i]) },
+    // THE timers — the same model the home uses (one clock for the app)
+    val timers = app.miqat.core.Timers.of(
+        app.miqat.core.prayerPoints(times, tomorrow.fajr, PRAYER_NAMES),
         nowHour,
+        state.notifications.iqamaMinutes,
     )
 
     val night = WorshipWindows.night(maghrib = times.maghrib, fajrNext = tomorrow.fajr)
@@ -84,11 +84,11 @@ fun TimesScreen(
         val gapAfter = Moments.gaps(timeline).associateBy { it.from.kind }
 
         PRAYER_NAMES.forEachIndexed { i, name ->
-            val isNext = seg?.next?.key == PRAYER_KEY[i]
-            val isCurrent = seg?.current?.key == PRAYER_KEY[i]
-            val urgency = if (state.display.urgencyEnabled && isNext && seg != null) {
+            val isNext = timers.nextPrayer == name && !timers.nextIsTomorrow
+            val isCurrent = timers.currentPrayer == name
+            val urgency = if (state.display.urgencyEnabled && isNext) {
                 UrgencyRules.of(
-                    seg.remainingSeconds,
+                    timers.remainingSeconds,
                     state.display.urgencySoonMinutes,
                     state.display.urgencyImminentMinutes,
                 )
@@ -97,8 +97,10 @@ fun TimesScreen(
                 name = name,
                 time = fmt.hhmm(minutesOf(times.list[i])),
                 clock = when {
-                    isNext -> "بعد " + fmt.hms(seg.remainingSeconds)
-                    isCurrent -> "منذ " + fmt.hms(seg.elapsedSeconds)
+                    isNext -> "بعد " + fmt.hms(timers.remainingSeconds)
+                    // the elapsed only exists inside the prayer's own window
+                    isCurrent && timers.sinceWorthShowing ->
+                        "منذ " + fmt.hms(timers.sinceSeconds)
                     else -> null
                 },
                 highlighted = isNext,

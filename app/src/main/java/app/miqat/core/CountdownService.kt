@@ -84,21 +84,21 @@ class CountdownService : android.app.Service() {
         val times = state.times(y, m, d)
         val (ty, tm, td) = state.cityTomorrow(now)
         val tomorrow = state.times(ty, tm, td)
-        val appointments = listOf(
-            app.miqat.core.Appointment("fajr", "الفجر", times.fajr),
-            app.miqat.core.Appointment("sunrise", "الشروق", times.sunrise),
-            app.miqat.core.Appointment("dhuhr", "الظهر", times.dhuhr),
-            app.miqat.core.Appointment("asr", "العصر", times.asr),
-            app.miqat.core.Appointment("maghrib", "المغرب", times.maghrib),
-            app.miqat.core.Appointment("isha", "العشاء", times.isha),
-            app.miqat.core.Appointment("fajr2", "الفجر", tomorrow.fajr),
+        // the SAME model the app uses — one clock, and the next PRAYER (never
+        // a sunrise, never a prayer that already happened)
+        val timers = app.miqat.core.Timers.of(
+            app.miqat.core.prayerPoints(
+                times, tomorrow.fajr,
+                listOf("الفجر", "الشروق", "الظهر", "العصر", "المغرب", "العشاء"),
+            ),
+            state.cityHourOfDay(now),
+            state.notifications.iqamaMinutes,
         )
-        val seg = app.miqat.core.DayClock.position(appointments, state.cityHourOfDay(now))
-        val title = if (seg != null) "المتبقي لميقات ${seg.next.labelAr}" else "المواقيت"
-        val body = if (seg != null) {
-            val h = seg.remainingSeconds / 3600
-            val m = (seg.remainingSeconds % 3600) / 60
-            val s = seg.remainingSeconds % 60
+        val title = if (timers.nextPrayer != null) "المتبقي لميقات ${timers.nextPrayer}" else "المواقيت"
+        val body = if (timers.nextPrayer != null) {
+            val h = timers.remainingSeconds / 3600
+            val m = (timers.remainingSeconds % 3600) / 60
+            val s = timers.remainingSeconds % 60
             "${app.miqat.core.NumFmt.digits("%d:%02d:%02d".format(h, m, s), state.display.arabicIndicDigits)}"
         } else ""
 

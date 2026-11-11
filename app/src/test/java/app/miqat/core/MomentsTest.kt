@@ -7,7 +7,7 @@ import org.junit.Test
 /** The unified moment registry (gaps, intervals) and the urgency model. */
 class MomentsTest {
 
-    // a Makkah-like day (local hours) — the same fixture as DayClockTest
+    // a Makkah-like day (local hours) — the same fixture as TimersTest
     private val today = LocalPrayerTimes(5.2, 6.7, 12.1, 15.4, 18.0, 19.3)
     private val tomorrowFajr = 5.2
     private val labels = listOf("الفجر", "الشروق", "الظهر", "العصر", "المغرب", "العشاء")
