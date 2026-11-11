@@ -339,8 +339,9 @@ class AlarmReceiver : BroadcastReceiver() {
         }
 
         // the adhan itself: a foreground service so it is heard with the phone
-        // in a pocket
-        if (kind == NotifyKind.DIRECT && !quiet) {
+        // in a pocket — but NOT for the iqama (a second call is not an adhan:
+        // the recitation used to play twice per prayer)
+        if (kind == NotifyKind.DIRECT && !quiet && !iqama) {
             val prefs = NotificationPrefsStore.load(context)
             if (prefs.adhanSound) {
                 try {

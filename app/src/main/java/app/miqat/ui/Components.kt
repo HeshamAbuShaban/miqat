@@ -184,14 +184,16 @@ fun InfoRow(label: String, value: String, valueColor: Color? = null) {
             label,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(0.42f),
         )
         Text(
             value,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontFeatureSettings = TabularFigures,
+            ),
             color = valueColor ?: MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.End,
-            modifier = Modifier.weight(1f).padding(start = 12.dp),
+            modifier = Modifier.weight(0.58f).padding(start = 12.dp),
         )
     }
 }

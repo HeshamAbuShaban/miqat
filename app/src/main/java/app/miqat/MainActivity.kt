@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.remember
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import app.miqat.ui.AppState
@@ -20,12 +21,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val state = AppState(this)
         app.miqat.core.AppStateHolder.publish(state)
-        val fmt = Fmt(state.display)
         // the always-on countdown follows the setting
         if (state.notifications.alwaysOnCountdown) {
             app.miqat.core.CountdownController.setEnabled(this, true)
         }
         setContent {
+            // the number format FOLLOWS the display prefs: a build of the Fmt
+            // once froze the digits and the 12/24h switch until the next
+            // launch (the advisory council, 2026-11-11)
+            val fmt = remember(state.display) { Fmt(state.display) }
             MiqatTheme(dark = state.display.darkTheme) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     MiqatApp(state, fmt)

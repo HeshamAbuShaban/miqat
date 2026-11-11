@@ -376,7 +376,7 @@ fun NotificationsSection(state: AppState, fmt: Fmt) {
         ) {
             Text("الإمساك قبل الفجر", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurface)
             MinuteStepper(state.imsakLeadMinutes, { v ->
-                state.imsakLeadMinutes = v.coerceIn(0, 60)
+                state.setImsakLeadMinutes(v)
             }, 0..60, fmt)
         }
         Text(
@@ -588,6 +588,14 @@ fun IndicatorsSection(state: AppState, fmt: Fmt) {
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Space.lg)) {
         SettingsScreenTitle("المؤشرات", "ما يظهر في الشاشة الرئيسية والتقويم — كلُّها قابلة للإطفاء")
         SectionLabel("في الرئيسية", Modifier.padding(horizontal = Space.lg))
+        NavRow(
+            "كثافة الرئيسية",
+            "${d.homeDensity.labelAr} — ${d.homeDensity.noteAr}",
+            onClick = {
+                state.updateDisplay(d.copy(homeDensity = app.miqat.core.HomeDensity.next(d.homeDensity)))
+            },
+        )
+        Divider(Modifier.padding(horizontal = Space.lg))
         ToggleRow(
             "سطر المؤقّتات",
             "الآن، والوقت الذي دخل، وما يبعد عنه",
@@ -604,8 +612,8 @@ fun IndicatorsSection(state: AppState, fmt: Fmt) {
             d.showTimerIqama,
         ) { v -> state.updateDisplay(d.copy(showTimerIqama = v)) }
         ToggleRow(
-            "أقرب وقت",
-            "أقرب موعد من أي نوع — صلاة أو عبادة أو سنة",
+            "سطر القبلة",
+            "القبلة والمسافة على الشاشة الرئيسية",
             d.showNearestMoment,
         ) { v -> state.updateDisplay(d.copy(showNearestMoment = v)) }
         ToggleRow(

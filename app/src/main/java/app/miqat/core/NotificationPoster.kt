@@ -52,7 +52,7 @@ object NotificationPoster {
         )
         return NotificationCompat.Builder(context, NotifyChannels.DIRECT)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("حان الآن وقت $label")
+            .setContentTitle("حان وقت $label")
             .setContentText("اضغط لعرض التفاصيل")
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
@@ -221,8 +221,10 @@ object NotificationPoster {
 
     private fun titleFor(kind: NotifyKind, label: String) = when (kind) {
         NotifyKind.PREPARATORY -> "اقترب وقت $label"
-        NotifyKind.DIRECT -> if (label.startsWith("إقامة")) label else "حان الآن وقت $label"
-        NotifyKind.REMINDER -> "فات وقت $label"
+        NotifyKind.DIRECT -> if (label.startsWith("إقامة")) label else "حان وقت $label"
+        // the reminder fires AFTER the time: it must not declare that a window
+        // has closed (the advisory council, 2026-11-11)
+        NotifyKind.REMINDER -> "مضى على وقت $label"
         NotifyKind.MOTIVATIONAL -> if (label.startsWith("غداً")) label else "ذكرى"
     }
 
@@ -234,8 +236,8 @@ object NotificationPoster {
     ): String {
         val base = when (kind) {
             NotifyKind.PREPARATORY -> "استعدّ للصلاة — تهيّئ مكانك وقلبك"
-            NotifyKind.DIRECT -> "حان الآن وقت $label"
-            NotifyKind.REMINDER -> "هل أدّيت $label؟"
+            NotifyKind.DIRECT -> "حان وقت $label"
+            NotifyKind.REMINDER -> "هل أديت $label؟"
             NotifyKind.MOTIVATIONAL -> motivational ?: ""
         }
         return base

@@ -76,7 +76,7 @@ enum class TopLevel(val label: String, val glyph: Glyph) {
     Times("المواقيت", Glyph.TICKS),
     Fasting("الصيام", Glyph.BRACKET),
     Calendar("التقويم", Glyph.CELL),
-    Settings("الإعدادات", Glyph.GRID),
+    More("المزيد", Glyph.GRID),
 }
 
 /** Sub-routes pushed on top of a top-level destination (their own screens). */
@@ -93,6 +93,7 @@ sealed interface Route {
     data object Qibla : Route
     data object Distance : Route
     data object Acts : Route
+    data object Settings : Route
     data object Tasbih : Route
     data class ActDetail(val id: String) : Route
     data object CalendarSettings : Route
@@ -181,18 +182,16 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                     )
                     TopLevel.Fasting -> FastingScreen(state, fmt, now)
                     TopLevel.Calendar -> CalendarScreen(state, fmt, now, onOpenDay = { y, m, d -> sub = Route.DayDetail(y, m, d) })
-                    TopLevel.Settings -> SettingsScreen(state, fmt, onOpen = { r ->
-                        sub = when (r) {
-                            SettingsRoute.Location -> Route.LocationSettings
-                            SettingsRoute.Calculation -> Route.CalculationSettings
-                            SettingsRoute.Notifications -> Route.NotificationsSettings
-                            SettingsRoute.Awareness -> Route.AwarenessSettings
-                            SettingsRoute.Adhan -> Route.AdhanSettings
-                            SettingsRoute.Verify -> Route.VerifySettings
-                            SettingsRoute.Indicators -> Route.IndicatorsSettings
-                            SettingsRoute.Calendar -> Route.CalendarSettings
-                            SettingsRoute.Appearance -> Route.AppearanceSettings
-                            SettingsRoute.About -> Route.AboutSettings
+                    TopLevel.More -> MoreScreen(state, fmt, now, onOpen = { target ->
+                        sub = when (target) {
+                            MoreTarget.QIBLA -> Route.Qibla
+                            MoreTarget.TASBIH -> Route.Tasbih
+                            MoreTarget.ACTS -> Route.Acts
+                            MoreTarget.SUNNAH -> Route.Sunnah
+                            MoreTarget.DISTANCE -> Route.Distance
+                            MoreTarget.GAPS -> Route.Gaps
+                            MoreTarget.INTERVAL -> Route.Interval
+                            MoreTarget.SETTINGS -> Route.Settings
                         }
                     })
                 }
@@ -217,6 +216,20 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                 }
                 Route.Qibla -> QiblaScreen(state, fmt) { sub = null }
                 Route.Acts -> ActsScreen(state, fmt, now, onOpenAct = { sub = Route.ActDetail(it) }, onOpenTasbih = { sub = Route.Tasbih })
+                Route.Settings -> SettingsScreen(state, fmt, onOpen = { r ->
+                    sub = when (r) {
+                        SettingsRoute.Location -> Route.LocationSettings
+                        SettingsRoute.Calculation -> Route.CalculationSettings
+                        SettingsRoute.Notifications -> Route.NotificationsSettings
+                        SettingsRoute.Awareness -> Route.AwarenessSettings
+                        SettingsRoute.Adhan -> Route.AdhanSettings
+                        SettingsRoute.Verify -> Route.VerifySettings
+                        SettingsRoute.Indicators -> Route.IndicatorsSettings
+                        SettingsRoute.Calendar -> Route.CalendarSettings
+                        SettingsRoute.Appearance -> Route.AppearanceSettings
+                        SettingsRoute.About -> Route.AboutSettings
+                    }
+                })
                 Route.Tasbih -> TasbihScreen { sub = null }
                 is Route.ActDetail -> ActDetailScreen(state, fmt, now, route.id) { sub = null }
                 Route.Distance -> DistanceScreen(state, fmt) { sub = null }
@@ -305,6 +318,8 @@ fun HomeScreen(
     )
     val timeline = rememberTimeline(state, now)
     val nowMinutes = (nowHour * 60).toInt()
+    // how much the home carries (one choice, not a dozen switches)
+    val density = state.display.homeDensity
 
     Column(
         Modifier
@@ -403,12 +418,15 @@ fun HomeScreen(
         }
 
         // the daylight-saving notice — the clock will change, and that moves
-        // every prayer's wall-clock time with it
-        if (state.display.showDstNotice) {
-            val zoneId = state.city.zoneId
-            val transition = if (zoneId != null) {
-                DstInfo.nextTransition(context, zoneId, now)
-            } else null
+        // every prayer's wall-clock time with it (FULL only: a notice belongs
+        // to the "everything" density)
+        if (state.display.showDstNotice && density == app.miqat.core.HomeDensity.FULL) {
+            val transition = DstInfo.nextTransition(
+                context,
+                zone = state.city.zone,
+                zoneId = state.effectiveZoneId,
+                nowMillis = now,
+            )
             if (transition != null) {
                 val days = (transition.atMillis - now) / 86_400_000L
                 if (days in 0..30) {
@@ -448,7 +466,9 @@ fun HomeScreen(
 
         // the reading card — one verse a day, with its source. Deliberately
         // quiet: it is the last thing on the screen, not a headline.
-        if (state.display.showDailyReminder) {
+        if (state.display.showDailyReminder &&
+            density != app.miqat.core.HomeDensity.COMPACT
+        ) {
             val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
             cal.timeInMillis = now
             val reminder = app.miqat.core.DailyReminders.forNow(
@@ -478,7 +498,9 @@ fun HomeScreen(
         }
 
         // the qibla — a tile, not a fact: one tap to the compass
-        if (state.display.showNearestMoment) {
+        if (state.display.showNearestMoment &&
+            density != app.miqat.core.HomeDensity.COMPACT
+        ) {
             val bearing = Qibla.bearing(state.city.lat, state.city.lon)
             val km = Qibla.distanceKm(state.city.lat, state.city.lon)
             Row(

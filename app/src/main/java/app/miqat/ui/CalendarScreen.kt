@@ -83,8 +83,13 @@ fun CalendarScreen(
     val hijriLabel = cells.firstOrNull { it != null }?.let {
         Hijri.MONTHS_AR[(it.hijri.hMonth - 1).coerceIn(0, 11)]
     }
-    val transitions = remember(state.city.zoneId, year) {
-        state.city.zoneId?.let { DstInfo.transitionsInYear(context, it, year) } ?: emptyList()
+    val transitions = remember(state.city.zone, state.effectiveZoneId, year) {
+        DstInfo.transitionsInYear(
+            context,
+            zone = state.city.zone,
+            zoneId = state.effectiveZoneId,
+            year = year,
+        )
     }
 
     Column(
@@ -247,7 +252,7 @@ fun CalendarScreen(
                         context,
                         bitmap,
                         "دفتر ${PRAYER_NAMES[stripPrayer]} — " +
-                            app.miqat.ui.export.MonthCard.hijriMonthLabel(year, month) +
+                            app.miqat.ui.export.MonthCard.hijriMonthLabel(year, month, state.display.hijriOffsetDays) +
                             " ${fmt.n(year)} · ${state.city.ar.ifBlank { state.city.en }}",
                     )
                 },
@@ -640,7 +645,7 @@ private fun monthGrid(
     val cells = mutableListOf<Cell?>()
     repeat(firstWeekday) { cells.add(null) }
     for (d in 1..days) {
-        val hijri = Hijri.at(year, month, d)
+        val hijri = Hijri.at(year, month, d, hijriOffset)
         val event = MiqatData.dayEvents(context, hijri.hMonth)
             .firstOrNull { hijri.hDay in it.startDay..it.endDay }
         cells.add(
@@ -677,7 +682,7 @@ fun DayDetailScreen(state: AppState, fmt: Fmt, year: Int, month: Int, day: Int, 
         if (month == 12) 1 else month + 1,
         day,
     )
-    val hijri = Hijri.at(year, month, day)
+    val hijri = Hijri.at(year, month, day, state.display.hijriOffsetDays)
     val timeline = remember(year, month, day, state.city.calcMethod, state.display.methodOverride, state.adjusts) {
         Moments.timeline(
             times, tomorrow.fajr, PRAYER_NAMES, ::minutesOf,

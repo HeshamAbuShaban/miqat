@@ -1,6 +1,7 @@
 package app.miqat.core
 
 import android.content.Context
+import java.util.TimeZone
 
 /**
  * Daylight-saving transitions and the drift of a prayer time across the year —
@@ -13,8 +14,12 @@ import android.content.Context
  *    by month: Fajr earlier in summer, Maghrib later, and the TOTAL change
  *    over the year visible at a glance.
  *
- * The transitions come from the bundled timezone table (28,522 rules), so this
- * works offline and matches the offsets the app actually uses.
+ * WHERE THE RULES COME FROM (the advisory council, 2026-11-11): the platform's
+ * own timezone database is CURRENT, while the bundled donor table's rules stop
+ * in 2023 — so a city in a DST country was an hour wrong in summer, and the
+ * notice could never fire (the table's seconds were compared with millis).
+ * The platform's rules are now the source of truth; the bundled table stays as
+ * the fallback for a zone the platform does not know.
  */
 data class DstTransition(
     /** When the clock changes (epoch millis). */
@@ -45,69 +50,138 @@ data class DstTransition(
 
 object DstInfo {
 
+    /** The platform's timezone for an IANA name — null when it is unknown. */
+    fun zoneFor(zone: String): TimeZone? {
+        if (zone.isBlank()) return null
+        val tz = TimeZone.getTimeZone(zone)
+        return if (tz.getID() == zone) tz else null
+    }
+
     /**
      * The next transition for a zone after [nowMillis], or null when the zone
      * has no further rules (a fixed-offset zone).
+     *
+     * @param zone the IANA zone name (the platform's rules)
+     * @param zoneId the bundled table's key (the fallback for old zones)
      */
     fun nextTransition(
         context: Context,
-        zoneId: Int,
+        zone: String,
+        zoneId: Int?,
         nowMillis: Long,
-    ): DstTransition? = try {
-        val db = MiqatData.open(context)
-        val next = db.rawQuery(
-            "SELECT start_epoch, gmt_offset, dst FROM tz_rules WHERE zone_id = ?"
-                + " AND start_epoch > ? ORDER BY start_epoch ASC LIMIT 1",
-            arrayOf(zoneId.toString(), nowMillis.toString()),
-        ).use { c -> if (c.moveToFirst()) Triple(c.getLong(0), c.getInt(1), c.getInt(2)) else null }
-        val prev = db.rawQuery(
-            "SELECT gmt_offset FROM tz_rules WHERE zone_id = ? AND start_epoch <= ?"
-                + " ORDER BY start_epoch DESC LIMIT 1",
-            arrayOf(zoneId.toString(), nowMillis.toString()),
-        ).use { c -> if (c.moveToFirst()) c.getInt(0) / 3600.0 else null }
-        if (next != null && prev != null) {
-            DstTransition(
-                atMillis = next.first,
-                oldOffsetHours = prev,
-                newOffsetHours = next.second / 3600.0,
-                isDstNow = next.third == 1,
-            )
-        } else null
-    } catch (e: Exception) {
-        null
+    ): DstTransition? {
+        zoneFor(zone)?.let { tz ->
+            val at = nextChange(tz, nowMillis) ?: return null
+            val before = tz.getOffset(at - 1) / 3600000.0
+            val after = tz.getOffset(at) / 3600000.0
+            return DstTransition(at, before, after, tz.inDaylightTime(java.util.Date(at)))
+        }
+        // the bundled table (its transitions are stored in SECONDS)
+        if (zoneId == null) return null
+        return try {
+            val db = MiqatData.open(context)
+            val nowSeconds = nowMillis / 1000L
+            val next = db.rawQuery(
+                "SELECT start_epoch, gmt_offset, dst FROM tz_rules WHERE zone_id = ?"
+                    + " AND start_epoch > ? ORDER BY start_epoch ASC LIMIT 1",
+                arrayOf(zoneId.toString(), nowSeconds.toString()),
+            ).use { c -> if (c.moveToFirst()) Triple(c.getLong(0), c.getInt(1), c.getInt(2)) else null }
+            val prev = db.rawQuery(
+                "SELECT gmt_offset FROM tz_rules WHERE zone_id = ? AND start_epoch <= ?"
+                    + " ORDER BY start_epoch DESC LIMIT 1",
+                arrayOf(zoneId.toString(), nowSeconds.toString()),
+            ).use { c -> if (c.moveToFirst()) c.getInt(0) / 3600.0 else null }
+            if (next != null && prev != null) {
+                DstTransition(
+                    atMillis = next.first * 1000L,
+                    oldOffsetHours = prev,
+                    newOffsetHours = next.second / 3600.0,
+                    isDstNow = next.third == 1,
+                )
+            } else null
+        } catch (e: Exception) {
+            null
+        }
     }
 
     /** Every transition inside a calendar year (for the calendar's markers). */
     fun transitionsInYear(
         context: Context,
-        zoneId: Int,
+        zone: String,
+        zoneId: Int?,
         year: Int,
-    ): List<DstTransition> = try {
-        val db = MiqatData.open(context)
-        val rows = db.rawQuery(
-            "SELECT start_epoch, gmt_offset, dst FROM tz_rules WHERE zone_id = ?"
-                + " ORDER BY start_epoch ASC",
-            arrayOf(zoneId.toString()),
-        ).use { c ->
-            val out = ArrayList<Triple<Long, Int, Int>>()
-            while (c.moveToNext()) out.add(Triple(c.getLong(0), c.getInt(1), c.getInt(2)))
-            out
-        }
-        val out = ArrayList<DstTransition>()
-        var prevOffset: Double? = null
-        for ((start, offset, dst) in rows) {
-            val cal = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"))
-            cal.timeInMillis = start
-            if (cal.get(java.util.Calendar.YEAR) == year && prevOffset != null) {
-                out.add(
-                    DstTransition(start, prevOffset, offset / 3600.0, dst == 1),
-                )
+    ): List<DstTransition> {
+        zoneFor(zone)?.let { tz ->
+            val out = ArrayList<DstTransition>()
+            val start = java.util.Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+                clear(); set(year, 0, 1)
+            }.timeInMillis
+            val end = java.util.Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+                clear(); set(year + 1, 0, 1)
+            }.timeInMillis
+            var at = nextChange(tz, start - 1) ?: return out
+            while (at < end) {
+                val before = tz.getOffset(at - 1) / 3600000.0
+                val after = tz.getOffset(at) / 3600000.0
+                if (before != after) {
+                    out.add(DstTransition(at, before, after, tz.inDaylightTime(java.util.Date(at))))
+                }
+                at = nextChange(tz, at) ?: break
             }
-            prevOffset = offset / 3600.0
+            return out
         }
-        out
-    } catch (e: Exception) {
-        emptyList()
+        if (zoneId == null) return emptyList()
+        return try {
+            val db = MiqatData.open(context)
+            val rows = db.rawQuery(
+                "SELECT start_epoch, gmt_offset, dst FROM tz_rules WHERE zone_id = ?"
+                    + " ORDER BY start_epoch ASC",
+                arrayOf(zoneId.toString()),
+            ).use { c ->
+                val out = ArrayList<Triple<Long, Int, Int>>()
+                while (c.moveToNext()) out.add(Triple(c.getLong(0), c.getInt(1), c.getInt(2)))
+                out
+            }
+            val out = ArrayList<DstTransition>()
+            var prevOffset: Double? = null
+            for ((start, offset, dst) in rows) {
+                val cal = java.util.Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+                cal.timeInMillis = start * 1000L // the table stores seconds
+                if (cal.get(java.util.Calendar.YEAR) == year && prevOffset != null) {
+                    out.add(
+                        DstTransition(start * 1000L, prevOffset, offset / 3600.0, dst == 1),
+                    )
+                }
+                prevOffset = offset / 3600.0
+            }
+            out
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    /**
+     * The first instant after [from] where the zone's offset changes — found
+     * by a coarse scan and then a bisection (the platform does not expose the
+     * transition dates, but it does answer «what is the offset at T»).
+     */
+    private fun nextChange(tz: TimeZone, from: Long): Long? {
+        val start = tz.getOffset(from)
+        val year = 400L * 24 * 3600_0000
+        var lo = from
+        var hi = from + 6 * 3600_000L
+        while (hi - from < year) {
+            if (tz.getOffset(hi) != start) break
+            lo = hi
+            hi += 6 * 3600_000L
+        }
+        if (hi - from >= year) return null
+        // bisect to the second
+        while (hi - lo > 1000L) {
+            val mid = lo + (hi - lo) / 2
+            if (tz.getOffset(mid) == start) lo = mid else hi = mid
+        }
+        return hi
     }
 }
 

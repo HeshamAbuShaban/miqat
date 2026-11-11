@@ -113,10 +113,13 @@ object MiqatData {
      * offset that applies FROM that moment.
      */
     fun utcOffsetHours(context: Context, zoneId: Int, epochMillis: Long): Double? = try {
+        // the table stores SECONDS — comparing it with millis matched every
+        // row and returned the standard-time sentinel: every DST city was an
+        // hour wrong in summer (the advisory council, 2026-11-11)
         open(context).rawQuery(
             "SELECT gmt_offset FROM tz_rules WHERE zone_id = ? AND start_epoch <= ?"
                 + " ORDER BY start_epoch DESC LIMIT 1",
-            arrayOf(zoneId.toString(), epochMillis.toString()),
+            arrayOf(zoneId.toString(), (epochMillis / 1000L).toString()),
         ).use { c ->
             if (c.moveToFirst()) c.getInt(0) / 3600.0 else null
         }
@@ -129,7 +132,7 @@ object MiqatData {
         open(context).rawQuery(
             "SELECT dst FROM tz_rules WHERE zone_id = ? AND start_epoch <= ?"
                 + " ORDER BY start_epoch DESC LIMIT 1",
-            arrayOf(zoneId.toString(), epochMillis.toString()),
+            arrayOf(zoneId.toString(), (epochMillis / 1000L).toString()),
         ).use { c -> if (c.moveToFirst()) c.getInt(0) == 1 else false }
     } catch (e: Exception) {
         false

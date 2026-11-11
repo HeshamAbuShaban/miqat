@@ -22,6 +22,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import app.miqat.core.MethodTable
 
+/** A small group label — the detail screen is grouped, not a dump. */
+@Composable
+private fun GroupLabel(text: String) {
+    Text(
+        text,
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(top = Space.md, bottom = Space.xs),
+    )
+}
+
 /**
  * PRAYER DETAIL — «لماذا هذا الوقت؟» as a full screen (R3): the honest
  * provenance of one computed time, both values when the user adjusted it, and
@@ -107,6 +118,7 @@ fun PrayerDetailScreen(state: AppState, fmt: Fmt, index: Int, onBack: () -> Unit
                 color = MaterialTheme.colorScheme.onBackground,
             )
             Spacer(Modifier.height(Space.xs))
+            GroupLabel("طريقة الحساب")
             InfoRow("الطريقة", "${methodNameAr(method.id)} · ${method.id}")
             InfoRow("زاوية الفجر", fmt.decimalUnit(method.fajrAngle, 1, "°"))
             InfoRow(
@@ -144,6 +156,7 @@ fun PrayerDetailScreen(state: AppState, fmt: Fmt, index: Int, onBack: () -> Unit
                     app.miqat.core.HighLatitudeRule.ANGLE_NIGHT -> "نسبة من الليل بالزاوية"
                 },
             )
+            GroupLabel("المكان")
             InfoRow("المنطقة الزمنية", "UTC+${fmt.n(state.locationFix.utcOffsetHours.toInt())}")
             InfoRow("الموقع", state.locationFix.source.labelAr)
             val conf = state.confidence()

@@ -30,6 +30,25 @@ data class PrayerAdjusts(
     val hasAny: Boolean get() = listOf(fajr, sunrise, dhuhr, asr, maghrib, isha).any { it != 0 }
 }
 
+/**
+ * How much the HOME shows (the design council, 2026-11-11).
+ *
+ * The granular per-line switches stay, but the front door is a DENSITY: one
+ * choice that says how much of the day the screen carries. «Too much is not a
+ * restriction — but you get to configure it» is better served by three
+ * densities than by twelve checkboxes.
+ */
+enum class HomeDensity(val labelAr: String, val noteAr: String) {
+    COMPACT("مختصر", "البطل والشريط فقط"),
+    BALANCED("متوازن", "البطل والشريط وآية اليوم والقبلة"),
+    FULL("كامل", "كل ما في التطبيق على شاشة واحدة"),
+    ;
+
+    companion object {
+        fun next(d: HomeDensity): HomeDensity = entries[(d.ordinal + 1) % entries.size]
+    }
+}
+
 /** Display preferences (R6/R7): theme, digit system, clock, Hijri offset. */
 data class DisplayPrefs(
     val darkTheme: Boolean = true,
@@ -76,6 +95,8 @@ data class DisplayPrefs(
     val showTimerElapsed: Boolean = true,
     /** The line: «إقامة X» — the second call, with its own countdown. */
     val showTimerIqama: Boolean = true,
+    /** How much the home carries (one choice, instead of a dozen). */
+    val homeDensity: HomeDensity = HomeDensity.BALANCED,
 )
 
 object UserSettings {
@@ -108,6 +129,9 @@ object UserSettings {
     private const val K_SHOW_STRIP = "show_prayer_strip"
     private const val K_TIMER_ELAPSED = "timer_elapsed"
     private const val K_TIMER_IQAMA = "timer_iqama"
+    private const val K_HOME_DENSITY = "home_density"
+    private const val K_IMSAK_LEAD = "imsak_lead_minutes"
+    private const val K_OFFICIAL = "official_adopted"
     private const val K_USE_GPS = "use_gps"
     private const val K_GPS_LAT = "gps_lat"
     private const val K_GPS_LON = "gps_lon"
@@ -152,6 +176,22 @@ object UserSettings {
         )
     }
 
+    /** The imsak lead (minutes before the Fajr) — OUR convention, persisted. */
+    fun imsakLeadMinutes(context: Context): Int =
+        prefs(context).getInt(K_IMSAK_LEAD, 15)
+
+    fun saveImsakLeadMinutes(context: Context, minutes: Int) {
+        prefs(context).edit().putInt(K_IMSAK_LEAD, minutes).apply()
+    }
+
+    /** Has the user adopted their city's official timetable? */
+    fun officialAdopted(context: Context): Boolean =
+        prefs(context).getBoolean(K_OFFICIAL, false)
+
+    fun saveOfficialAdopted(context: Context, adopted: Boolean) {
+        prefs(context).edit().putBoolean(K_OFFICIAL, adopted).apply()
+    }
+
     fun saveAdjusts(context: Context, a: PrayerAdjusts) {
         prefs(context).edit()
             .putInt(K_ADJ + "fajr", a.fajr).putInt(K_ADJ + "shorook", a.sunrise)
@@ -192,6 +232,9 @@ object UserSettings {
             showPrayerStrip = p.getBoolean(K_SHOW_STRIP, true),
             showTimerElapsed = p.getBoolean(K_TIMER_ELAPSED, true),
             showTimerIqama = p.getBoolean(K_TIMER_IQAMA, true),
+            homeDensity = runCatching {
+                HomeDensity.valueOf(p.getString(K_HOME_DENSITY, HomeDensity.BALANCED.name) ?: "")
+            }.getOrDefault(HomeDensity.BALANCED),
         )
     }
 
@@ -248,6 +291,7 @@ object UserSettings {
             .putBoolean(K_SHOW_STRIP, d.showPrayerStrip)
             .putBoolean(K_TIMER_ELAPSED, d.showTimerElapsed)
             .putBoolean(K_TIMER_IQAMA, d.showTimerIqama)
+            .putString(K_HOME_DENSITY, d.homeDensity.name)
             .apply()
     }
 }

@@ -1,3 +1,63 @@
+## 2026-11-11 — THE ADVISORY COUNCIL'S VERDICT: the numbers were lying
+
+The advisory council was asked to be brutal, and it was — and it was right
+about something the design council could not see: **the app was honest in its
+language and dishonest in its arithmetic.**
+
+**BLOCKER 1 — the timezone lookup compared seconds with milliseconds.** The
+bundled `tz_rules` table stores its transitions in SECONDS; the queries
+compared them with MILLISECONDS, so every comparison matched, the sentinel row
+won, and the app always used the STANDARD offset. Result: every city in a
+daylight-saving country was **an hour wrong in summer** (the council counted
+112,545 cities), the DST notice could never fire, and the calendar's DST
+markers were dead code.
+
+The fix has two halves: the unit (the table's convention is now respected) and
+the source (the **platform's** timezone database is current, while the donor's
+table stops in 2023 — so the platform's rules are now the source of truth, and
+the bundled table is the fallback for a zone the platform does not know). The
+transitions are found by a bisection over `TimeZone.getOffset` (the platform
+does not publish the dates, but it answers «what is the offset at T»). A guard
+was added: `tools/verify_tz.py` compares the table with the system's own
+zoneinfo, so a unit mismatch can never ship again.
+
+**BLOCKER 2 — the Asr madhhab.** The council reported that the Hanafi methods
+computed a Shafi'i Asr (~72 minutes early). We checked the evidence before
+acting: the claim came from `tools/fitted_methods.json` (a FITTED
+approximation), while the donor's own corpus — the ground truth the Kotlin
+engine is tested against — says Shafi'i for those methods. The change was
+**reverted**: the fixtures are the contract. (The user's own madhhab remains a
+real gap, but it needs the method's own table, not a fitted guess.)
+
+**BLOCKER 3 — the settings that did nothing.**
+
+- The number format was built ONCE, outside the composition: switching the
+  digits or the 12/24h clock did nothing until the app was killed. Now it is
+  `remember(state.display) { Fmt(state.display) }`.
+- The Hijri offset was applied to the home header ONLY — the calendar, the
+  day card, the acts and the exported card contradicted it (the exact days
+  that matter: Ramadan, Eid). The offset is now threaded into `Hijri.at()`.
+- The imsak lead and the «official timetable adopted» flag were memory-only:
+  two user decisions that evaporated. Both persist now.
+- `showNearestMoment` was labelled «أقرب موعد من أي نوع» but controlled the
+  qibla line (it is now labelled «سطر القبلة»).
+
+**And the things the council called non-negotiable but non-blocking:**
+
+- The **iqama played the adhan** — the full recitation, then again at the
+  next prayer. The second call is not an adhan; the service is now gated.
+- The notifications said «حان الآن وقت X» and «فات وقت X» — the second claims
+  a window has closed (it fires 20 minutes AFTER the time, and for the Fajr
+  the window is long). Now: «حان وقت X» and «مضى على وقت X».
+- The method's Latin id («makkah») was printed in the Arabic prayer-detail
+  screen; it now prints the Arabic name too.
+
+**PHASE 4 — «المUQ»**: the settings tree left the navigation bar (it is opened
+weekly; the compass and the tasbih are opened daily), and everything else
+moved into a hub whose tiles carry their LIVE state — the qibla's bearing, the
+next act of worship, the next moment. Every feature is now one tap from the
+bar.
+
 ## 2026-11-11 — THE DESIGN CAMPAIGN: phase 1 (the home) + phase 2 (الصيام)
 
 The founder asked for the design/UX to reach 8.8/10, and for the councils to

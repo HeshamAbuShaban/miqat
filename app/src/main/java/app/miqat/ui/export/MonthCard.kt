@@ -75,7 +75,7 @@ object MonthCard {
         for (day in 1..days) {
             val t = state.times(year, month, day).list[prayer]
             val minute = (((t % 24.0) + 24.0) % 24.0 * 60.0).roundToInt()
-            val hijri = Hijri.at(year, month, day)
+            val hijri = Hijri.at(year, month, day, state.display.hijriOffsetDays)
             out.add(
                 Row(
                     gregorianDay = day,
@@ -95,8 +95,8 @@ object MonthCard {
             .get(java.util.Calendar.DAY_OF_WEEK)
 
     /** The month's Hijri label (the month the Gregorian month mostly falls in). */
-    fun hijriMonthLabel(year: Int, month: Int): String {
-        val hijri = Hijri.at(year, month, 15)
+    fun hijriMonthLabel(year: Int, month: Int, offsetDays: Int = 0): String {
+        val hijri = Hijri.at(year, month, 15, offsetDays)
         return Hijri.MONTHS_AR[(hijri.hMonth - 1).coerceIn(0, 11)]
     }
 
@@ -144,7 +144,7 @@ object MonthCard {
 
         val meta = paint(DIM, 28f, regular)
         canvas.drawText(
-            "دفتر ${PRAYER_NAMES[prayer]} — ${hijriMonthLabel(year, month)} ${fmt.n(year)}",
+            "دفتر ${PRAYER_NAMES[prayer]} — ${hijriMonthLabel(year, month, state.display.hijriOffsetDays)} ${fmt.n(year)}",
             WIDTH - MARGIN,
             206f,
             meta,

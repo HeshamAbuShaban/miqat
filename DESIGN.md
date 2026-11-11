@@ -65,6 +65,30 @@ only if it is bundled locally; if it is not available, Cairo stays alone.
 | `label` | 13/18 | 400 | `textDim` | row meta, nav label |
 | `caption` | 11/16 | 400 | `textDim` | a citation, a source line |
 
+## 3b. The Sky (the hero's phases)
+
+The sky is a FUNCTION OF THE HOUR, not a fixed gradient — four phases from
+the day's real sunrise and sunset:
+
+| Phase | Dark bands (top → horizon) |
+|---|---|
+| ليل NIGHT | `#04070F` · `#0B1226` · `#141E3C` · `#1E2A4C` |
+| فجر DAWN | `#050912` · `#101B36` · `#24304A` · `#7A5A42` |
+| نهار DAY | `#0B1226` · `#18244A` · `#27365C` · `#41527C` |
+| غروب SUNSET | `#080D1E` · `#182348` · `#5A4560` · `#8A5533` |
+
+The stars fade in the night and out at dawn; the sun's mark (saffron
+`#FFB25C`) means "the sun" everywhere (the sunrise tick, the rail's "now"
+dot). The sky BLEEDS to the hero card's edge — it is the card, not a
+rectangle inside it.
+
+## 3c. The navigation (five destinations, our own glyphs)
+
+`الرئيسية` (the horizon) · `المواقيت` (the ticked horizon) · `الصيام` (the
+fast's open bracket) · `التقويم` (the ledger cell) · `المزيد` (the grid).
+The glyphs are drawn in `ui/BrandGlyph.kt` — 24dp, 2dp stroke, gold when the
+destination is current. No Material icons in the bar.
+
 ## 4. Component Stylings
 
 - **Button/primary**: filled `gold`, label `bg`, radius 10, height 48 — **one per

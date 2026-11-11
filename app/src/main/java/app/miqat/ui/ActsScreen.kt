@@ -52,7 +52,8 @@ fun ActsScreen(
     val timeline = remember(y, m, d, state.city.calcMethod, state.display.methodOverride, state.adjusts) {
         Moments.timeline(
             state.times(y, m, d), state.times(ty, tm, td).fajr, PRAYER_NAMES, ::minutesOf,
-            hijriMonth = Hijri.at(y, m, d).hMonth, hijriDay = Hijri.at(y, m, d).hDay,
+            hijriMonth = Hijri.at(y, m, d, state.display.hijriOffsetDays).hMonth,
+            hijriDay = Hijri.at(y, m, d, state.display.hijriOffsetDays).hDay,
             imsakLeadMinutes = state.imsakLeadMinutes,
         )
     }
@@ -166,7 +167,8 @@ fun ActDetailScreen(
     val timeline = remember(y, m, d, state.city.calcMethod, state.display.methodOverride, state.adjusts) {
         Moments.timeline(
             state.times(y, m, d), state.times(ty, tm, td).fajr, PRAYER_NAMES, ::minutesOf,
-            hijriMonth = Hijri.at(y, m, d).hMonth, hijriDay = Hijri.at(y, m, d).hDay,
+            hijriMonth = Hijri.at(y, m, d, state.display.hijriOffsetDays).hMonth,
+            hijriDay = Hijri.at(y, m, d, state.display.hijriOffsetDays).hDay,
             imsakLeadMinutes = state.imsakLeadMinutes,
         )
     }

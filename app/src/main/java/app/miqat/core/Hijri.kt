@@ -31,9 +31,16 @@ object Hijri {
     }
 
     /** The IslamicDay for an arbitrary Gregorian date (calendar grid). */
-    fun at(y: Int, m: Int, d: Int): IslamicDay {
+    /**
+     * The Hijri day of a Gregorian date.
+     *
+     * [offsetDays] is the user's own adjustment (their local sighting): it
+     * MUST be threaded through here, or the calendar would contradict the
+     * home on the very days that matter (Ramadan, Eid).
+     */
+    fun at(y: Int, m: Int, d: Int, offsetDays: Int = 0): IslamicDay {
         val g = GregorianCalendar(y, m - 1, d)
-        return today(g.timeInMillis)
+        return today(g.timeInMillis, offsetDays)
     }
 
     /** Short "١٥ رمضان ١٤٤٧" style label (western digits kept for tabular clarity). */

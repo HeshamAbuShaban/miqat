@@ -47,6 +47,16 @@ class AppState(
     var display by mutableStateOf(DisplayPrefs()); private set
     var notifications by mutableStateOf(NotificationPrefs()); private set
 
+    /** How much before Fajr the fast begins (the imsak lead) — a setting.
+     *  It is OUR convention (a prudence margin), never a ruling — and it
+     *  persists: a user's decision must not evaporate (the advisory council). */
+    var imsakLeadMinutes: Int = 15
+        private set
+
+    /** Has the user adopted their city's official timetable? */
+    var officialAdopted: Boolean = false
+        private set
+
     /** True while the persisted state is still being read (first frame renders
      *  the Makkah constant so the UI never blocks). */
     var loaded by mutableStateOf(false); private set
@@ -58,6 +68,8 @@ class AppState(
         display = UserSettings.display(appContext)
         notifications = NotificationPrefsStore.load(appContext)
         gpsFix = UserSettings.gpsFix(appContext)
+        imsakLeadMinutes = UserSettings.imsakLeadMinutes(appContext)
+        officialAdopted = UserSettings.officialAdopted(appContext)
         loaded = true
         // arm the alarms for the appointed times (S3)
         if (armAlarms) AlarmScheduler.reschedule(appContext)
@@ -135,6 +147,15 @@ class AppState(
     fun utcOffsetAt(epochMillis: Long): Double {
         display.manualUtcOffsetMinutes?.let { return it / 60.0 }
         if (gpsFix != null) return deviceOffsetAt(epochMillis)
+        // the PLATFORM's timezone database is current; the bundled donor
+        // table's rules stop in 2023, so a city in a DST country was an hour
+        // wrong in every summer (the advisory council, 2026-11-11)
+        val zone = city.zone
+        if (zone.isNotBlank()) {
+            val tz = java.util.TimeZone.getTimeZone(zone)
+            if (tz.getID() == zone) return tz.getOffset(epochMillis) / 3_600_000.0
+        }
+        // the bundled table — the fallback for a zone the platform lacks
         val zoneId = effectiveZoneId
         if (zoneId != null) {
             val fromTable = MiqatData.utcOffsetHours(appContext, zoneId, epochMillis)
@@ -150,9 +171,6 @@ class AppState(
     /** The offset right now (the common case). */
     val utcOffset: Double get() = utcOffsetAt(System.currentTimeMillis())
 
-    /** How long before Fajr the fast begins (the imsak lead) — a setting. */
-    var imsakLeadMinutes: Int = 15
-
     /**
      * How much the app may claim about the times it shows (gate 0.5): the
      * method, whether the user adopted an official timetable, and whether the
@@ -165,13 +183,16 @@ class AppState(
             method.highLatRule != app.miqat.core.HighLatitudeRule.NONE,
     )
 
-    /** True once the user has adopted their city's official timetable. */
-    var officialAdopted: Boolean = false
-        private set
-
     /** Mark the times as the city's official ones (the verification screen). */
     fun markOfficial(adopted: Boolean) {
         officialAdopted = adopted
+        UserSettings.saveOfficialAdopted(appContext, adopted)
+    }
+
+    /** The imsak lead — our convention, persisted. */
+    fun setImsakLeadMinutes(minutes: Int) {
+        imsakLeadMinutes = minutes.coerceIn(0, 60)
+        UserSettings.saveImsakLeadMinutes(appContext, imsakLeadMinutes)
     }
 
     /** Is daylight saving in force right now for the picked city? */
