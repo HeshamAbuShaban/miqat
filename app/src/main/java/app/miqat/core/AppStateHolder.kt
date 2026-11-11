@@ -16,5 +16,5 @@ object AppStateHolder {
     }
 
     fun state(context: android.content.Context): AppState =
-        current ?: AppState(context.applicationContext).also { current = it }
+        current ?: AppState(context.applicationContext, armAlarms = false).also { current = it }
 }

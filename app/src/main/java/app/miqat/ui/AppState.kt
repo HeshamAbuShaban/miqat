@@ -29,7 +29,15 @@ import java.util.TimeZone
  * screen is a pure function of state + route. No screen owns a preference, no
  * preference is duplicated in two places — that was the v0 slop.
  */
-class AppState(context: Context) {
+class AppState(
+    context: Context,
+    /**
+     * Arm the prayer alarms on construction. The app wants this; the widget
+     * (which ticks every minute) does NOT — it would re-arm the alarms on
+     * every tick.
+     */
+    private val armAlarms: Boolean = true,
+) {
 
     private val appContext = context.applicationContext
 
@@ -52,7 +60,7 @@ class AppState(context: Context) {
         gpsFix = UserSettings.gpsFix(appContext)
         loaded = true
         // arm the alarms for the appointed times (S3)
-        AlarmScheduler.reschedule(appContext)
+        if (armAlarms) AlarmScheduler.reschedule(appContext)
     }
 
     // --- mutations (persist immediately) -----------------------------------
@@ -69,24 +77,37 @@ class AppState(context: Context) {
         UserSettings.saveCity(appContext, c)
         UserSettings.saveGpsFix(appContext, null)
         AlarmScheduler.reschedule(appContext)
+        notifyWidgets()
     }
 
     fun updateAdjusts(a: PrayerAdjusts) {
         adjusts = a
         UserSettings.saveAdjusts(appContext, a)
         AlarmScheduler.reschedule(appContext)
+        notifyWidgets()
     }
 
     fun updateDisplay(d: DisplayPrefs) {
         display = d
         UserSettings.saveDisplay(appContext, d)
         AlarmScheduler.reschedule(appContext)
+        notifyWidgets()
     }
 
     fun updateNotifications(n: NotificationPrefs) {
         notifications = n
         NotificationPrefsStore.save(appContext, n)
         AlarmScheduler.reschedule(appContext)
+        notifyWidgets()
+    }
+
+    /** The home-screen widget is a view of THIS state — it must never lag. */
+    private fun notifyWidgets() {
+        try {
+            app.miqat.ui.widget.MiqatWidgetProvider.refresh(appContext)
+        } catch (e: Exception) {
+            // a widget must never break the app
+        }
     }
 
     // --- derived -----------------------------------------------------------

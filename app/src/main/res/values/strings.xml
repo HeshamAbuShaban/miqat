@@ -4,4 +4,12 @@
          launcher label is Arabic. values-en keeps the Latin name for English
          locales. -->
     <string name="app_name">الميقات</string>
+    <!-- The home-screen widget: the next prayer and what is left of it. -->
+    <string name="widget_label">الميقات — الموعد التالي</string>
+    <string name="widget_description">موعد الصلاة التالي وكم بقي عليه، فوق أفق اليوم.</string>
+    <!-- The launcher's preview: the numbers carry the LTR isolate so the run
+         never renders reversed inside the RTL panel. -->
+    <string name="widget_preview_prayer">المغرب</string>
+    <string name="widget_preview_countdown">⁦٠:١٢:٤٤⁩</string>
+    <string name="widget_preview_meta">القاهرة · ⁦٥:٠١⁩ م</string>
 </resources>

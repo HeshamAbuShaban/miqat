@@ -67,6 +67,20 @@
             </intent-filter>
         </receiver>
 
+        <!-- The home-screen widget: the next prayer over the day's horizon. -->
+        <receiver
+            android:name=".ui.widget.MiqatWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="app.miqat.action.WIDGET_STATE_CHANGED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/miqat_widget_info" />
+        </receiver>
+
         <receiver
             android:name=".core.BootReceiver"
             android:exported="true">

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The horizon, as a static picture (the widget's preview). The same
+     quadratic the hero draws, with the same ticks and the same sun — the
+     geometry of ui/DayArc.kt, frozen for the launcher's preview. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="220dp"
+    android:height="52dp"
+    android:viewportWidth="200"
+    android:viewportHeight="60">
+
+    <!-- the whole horizon -->
+    <path
+        android:pathData="M14,57 Q100,4 186,57"
+        android:strokeColor="#2C3A5C"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+
+    <!-- the travelled part, gold -->
+    <path
+        android:pathData="M14,57 Q48.4,35.8 82.8,31.56"
+        android:strokeColor="#E8C46A"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round" />
+
+    <!-- the prayer ticks -->
+    <path
+        android:pathData="M14,57 m-2.2,0 a2.2,2.2 0 1,0 4.4,0 a2.2,2.2 0 1,0 -4.4,0"
+        android:fillColor="#8E8672" />
+    <path
+        android:pathData="M55.3,37.7 m-2.2,0 a2.2,2.2 0 1,0 4.4,0 a2.2,2.2 0 1,0 -4.4,0"
+        android:fillColor="#8E8672" />
+    <path
+        android:pathData="M94.8,30.6 m-2.2,0 a2.2,2.2 0 1,0 4.4,0 a2.2,2.2 0 1,0 -4.4,0"
+        android:fillColor="#8E8672" />
+    <path
+        android:pathData="M131,33.9 m-3,0 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0"
+        android:fillColor="#E8C46A" />
+    <path
+        android:pathData="M161.9,44.2 m-2.2,0 a2.2,2.2 0 1,0 4.4,0 a2.2,2.2 0 1,0 -4.4,0"
+        android:fillColor="#8E8672" />
+    <path
+        android:pathData="M186,57 m-2.2,0 a2.2,2.2 0 1,0 4.4,0 a2.2,2.2 0 1,0 -4.4,0"
+        android:fillColor="#8E8672" />
+
+    <!-- the sun, at the day's progress -->
+    <path
+        android:pathData="M82.8,31.6 m-9,0 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0"
+        android:fillColor="#33FFB25C" />
+    <path
+        android:pathData="M82.8,31.6 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0"
+        android:fillColor="#77FFB25C" />
+    <path
+        android:pathData="M82.8,31.6 m-3.2,0 a3.2,3.2 0 1,0 6.4,0 a3.2,3.2 0 1,0 -6.4,0"
+        android:fillColor="#FFFFE0A8" />
+</vector>

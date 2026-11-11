@@ -330,6 +330,14 @@ class AlarmReceiver : BroadcastReceiver() {
         } else {
             NotificationPoster.post(context, kind, label, slot, quiet)
         }
+        // the widget counts down to the NEXT prayer — at the moment a prayer
+        // arrives, that next one changes
+        try {
+            app.miqat.ui.widget.MiqatWidgetProvider.refresh(context)
+        } catch (e: Exception) {
+            // a widget must never break a notification
+        }
+
         // the adhan itself: a foreground service so it is heard with the phone
         // in a pocket
         if (kind == NotifyKind.DIRECT && !quiet) {

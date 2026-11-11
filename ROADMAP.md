@@ -135,7 +135,14 @@ Every step cites its donor lead (teardown §).
       alarm/widget mocks next)
 - [x] Compose home v0: Day-Arc hero + countdown + contextual cards + city picker
       (MainActivity; palette hardcoded until the theme system lands)
-- [ ] Widgets re-imagined (Glance; donor's 3 widgets + analog clock = parity bar)
+- [x] Widgets re-imagined — DONE 2026-11-11: ONE widget (the donor shipped
+      three), no new dependency: the platform's AppWidgetProvider + RemoteViews,
+      and the SAME horizon the hero draws (`ui/DayArc.kt` → the bitmap in
+      `ui/widget/ArcRenderer.kt`). It says the one thing a widget should —
+      the next prayer and the countdown — with the app's own palette, digits
+      and 12/24h preference, and it ticks on a minute alarm (the donor's
+      TIME_TICK trick). REMAINING: a second size (a 2×1 "just the next
+      prayer"), and the clock face variant.
 - [ ] Dual clocks everywhere: remaining primary, elapsed secondary, HH:MM:SS;
       windowed on-demand computation («وضع المدار») for calendar (research-agenda R1)
 - [ ] Rich search rows + ranking disclosure («معلنة ومدللة») over the S2 index

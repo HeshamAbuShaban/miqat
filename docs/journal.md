@@ -1,3 +1,29 @@
+## 2026-11-11 — THE WIDGET: the next prayer on the home screen
+
+The donor shipped three widgets; we ship ONE, and it says the one thing a
+widget should say: «which prayer is next, and how long until it».
+
+**No new dependency** (the admission rule in `docs/ui-patterns.md` held):
+the platform's `AppWidgetProvider` + `RemoteViews`, and the horizon drawn
+into a bitmap with the platform's own Canvas — from the SAME geometry the
+hero uses, extracted to `ui/DayArc.kt` so the shape is literally one shape in
+two places. Glance was considered and dropped: a dependency for one screen.
+
+- The widget's arc is the day's real progress (the gold travelled part, the
+  sun at the hour, the next prayer's tick in gold).
+- The countdown ticks on a minute alarm (the donor's TIME_TICK trick, done
+  with `setInexactRepeating` — a widget does not deserve an exact alarm) and
+  refreshes at every prayer alarm, on every state change (the city, the
+  adjusts, the display prefs) and on the timezone/date changes.
+- The digits and the 12/24h preference come from the app's own `Fmt` — the
+  widget can never disagree with the app about how a number looks.
+- The launcher's preview is a real layout (`previewLayout`) with the horizon
+  as a static vector and the numbers with the LTR isolate — no PNG, no
+  half-truth.
+
+Verified on the emulator: dropped on the home screen it shows «العشاء»,
+«٠:٥٣:٢٧» and «القاهرة · ٦:٢٠ م», over the same arc the app draws.
+
 ## 2026-11-11 — THE TIMERS: the home's clocks, one per feature
 
 Hesham found the home's main timer mixing times: «there must be multiple
