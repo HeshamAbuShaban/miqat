@@ -50,6 +50,7 @@ fun TimesScreen(
     onOpenWorship: (WorshipKind) -> Unit,
     onOpenGaps: () -> Unit,
     onOpenDistance: () -> Unit,
+    onOpenActs: () -> Unit = {},
     onOpenInterval: () -> Unit,
     onOpenSunnah: () -> Unit,
 ) {
@@ -159,6 +160,8 @@ fun TimesScreen(
             color = MaterialTheme.colorScheme.onBackground,
         )
         Spacer(Modifier.height(Space.xs))
+        NavRow("مواقيت العبادات", "كل أوقات الصلاة والعبادات والسنة", onOpenActs)
+        Divider(Modifier.padding(horizontal = Space.lg))
         NavRow("كم بعدت عن هذا الوقت؟", "قياس البُعد عن أي ميقوت", onOpenDistance)
         Divider(Modifier.padding(horizontal = Space.lg))
         NavRow("المدد بين المواقيت", "كم يبقى بين كل موعد والذي يليه", onOpenGaps)

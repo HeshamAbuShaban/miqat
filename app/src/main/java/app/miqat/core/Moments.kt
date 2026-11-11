@@ -73,6 +73,8 @@ object Moments {
     const val ARAFAH_TAKBIR = "arafah_takbir"
     const val RAMI = "rami"
     const val HAJJ_DAYS = "hajj_days"
+    const val EID_PRAYER_END = "eid_prayer_end"
+    const val ARAFAH_TAKBIR_END = "arafah_takbir_end"
 
     /** The prayers + sunrise of one day, as moments. */
     fun prayers(
@@ -134,8 +136,10 @@ object Moments {
             Moment(IFTAR, "الإفطار", MomentCategory.FASTING, minuteOf(times.maghrib)),
             // العيد — its prayer falls between the sunrise and the Dhuhr
             Moment(EID_PRAYER, "صلاة العيد", MomentCategory.EID, minuteOf(times.sunrise) + 20),
+            Moment(EID_PRAYER_END, "نهاية صلاة العيد", MomentCategory.EID, minuteOf(times.sunrise) + 75),
             // الحج — the rites that have a TIME
             Moment(ARAFAH_TAKBIR, "تكبير عرفة", MomentCategory.HAJJ, minuteOf(times.dhuhr)),
+            Moment(ARAFAH_TAKBIR_END, "نهاية التكبير", MomentCategory.HAJJ, minuteOf(times.asr)),
             Moment(RAMI, "رمي الجمار", MomentCategory.HAJJ, minuteOf(times.dhuhr) + 60),
         )).filter { it.appliesTo(hijriMonth, hijriDay) }.sortedBy { it.minute }
     }
