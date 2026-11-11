@@ -49,6 +49,26 @@ and prints the collection-only line for the rest.
 The collection-only line the app prints when the number is not verified:
 **«رواه: <المصدر> — رقم الحديث غير متحقق منه»**.
 
+## The daily reminder line (دليل اليوم)
+
+The home screen shows one verse a day, chosen to fit the hour, with its
+reference. The list is curated and verified; the wording is the Mushaf's.
+
+| Verse | Reference | Hours |
+|-------|-----------|-------|
+| «وَمِنَ اللَّيْلِ فَتَهَجَّدْ بِهِ نَافِلَةً لَّكَ» | سورة مزمل ٧٣ | الليل |
+| «أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ» | سورة الرعد ٢٨ | أي وقت |
+| «وَقُل رَّبِّ زِدْنِي عِلْمًا» | سورة طه ١١٤ | الصباح |
+| «إِنَّ مَعَ الْعُسْرِ يُسْرًا» | سورة الشرح ٦ | الظهيرة |
+| «حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ» | سورة آل عمران ١٧٣ | المساء |
+
+## The acts catalog (`assets/acts-v1.json`)
+
+Eleven acts, each with: what it is, why it matters, how it is computed, and its
+source (only where the council verified it). Acts without a verified source
+print «تقديري بحسب الاصطلاح» instead of a reference — never a number we
+cannot stand behind.
+
 ## Verified practice, but NOT quoted in the UI
 
 | Narration | Source | Why it is not quoted |
