@@ -250,7 +250,11 @@ object CalendarWindows {
         turnsHere: Boolean,
         placard: String,
     ): CalendarCell {
-        val hijri = IslamicDay(hy, hm, hd, 0)
+        // the REAL weekday: with 0 the grid never marked Monday/Thursday as
+        // fast days, and disagreed with the day card (the council, 2026-11-11)
+        val weekday = Calendar.getInstance().apply { clear(); set(gy, gm - 1, gd) }
+            .get(Calendar.DAY_OF_WEEK)
+        val hijri = IslamicDay(hy, hm, hd, weekday)
         return CalendarCell(
             gregorianYear = gy,
             gregorianMonth = gm,
@@ -258,8 +262,9 @@ object CalendarWindows {
             hijriYear = hy,
             hijriMonth = hm,
             hijriDay = hd,
-            weekday = Calendar.getInstance().apply { clear(); set(gy, gm - 1, gd) }
-                .get(Calendar.DAY_OF_WEEK) % 7,
+            // the weekday as the grid counts it (0 = Saturday, the first
+            // column in RTL) — and the same value the fasting rules test
+            weekday = if (weekday == Calendar.SATURDAY) 7 else weekday - 1,
             isFast = IslamicDays.isWhiteDays(hijri) ||
                 IslamicDays.isMondayThursday(hijri) ||
                 IslamicDays.isDayOfArafah(hijri) ||

@@ -490,7 +490,8 @@ private fun PrayerStrip(
             if (points.size < 2) return@Canvas
             val w = size.width
             val h = size.height - 16f
-            fun x(i: Int) = w * i / (points.size - 1).toFloat()
+            // right-to-left, like the grid above it (day 1 at the right)
+            fun x(i: Int) = w * (points.size - 1 - i) / (points.size - 1).toFloat()
             fun y(v: Int) = h - ((v - min).toFloat() / span) * h
             val path = Path()
             points.forEachIndexed { i, v ->
@@ -505,7 +506,7 @@ private fun PrayerStrip(
         Spacer(Modifier.height(Space.xs))
         Text(
             "أوّل الشهر ${fmt.hhmm(points.first().toInt())} — آخر الشهر ${fmt.hhmm(points.last().toInt())} " +
-                "(الفرق ${fmt.n(max - min)} دقيقة) — اضغط مطوّلاً لعرض السنة",
+                "(الفرق ${fmt.n(max - min)} دقيقة) — اضغط لعرض السنة",
             style = MaterialTheme.typography.labelSmall,
             color = scheme.onSurfaceVariant,
         )
@@ -630,7 +631,8 @@ private fun YearDriftSheet(state: AppState, fmt: Fmt, year: Int, prayer: Int) {
             val span = (maxD - minD).coerceAtLeast(1)
             val w = size.width
             val h = size.height
-            fun x(i: Int) = w * i / (points.size - 1).toFloat()
+            // right-to-left, like the grid above it (day 1 at the right)
+            fun x(i: Int) = w * (points.size - 1 - i) / (points.size - 1).toFloat()
             fun y(d: Int) = h - ((d - minD).toFloat() / span) * (h - 12f) - 6f
             drawLine(
                 color = scheme.outlineVariant,
