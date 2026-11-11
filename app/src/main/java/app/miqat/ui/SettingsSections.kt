@@ -62,7 +62,8 @@ fun LocationSection(state: AppState, fmt: Fmt, onPickCity: () -> Unit) {
         SettingsScreenTitle("الموقع", "من أين تأتي المواقيت")
 
         // the confidence of the whole chain — never hidden
-        if (confidence.warn != null) {
+        val locWarning = state.locationFix.warning
+        if (locWarning != null) {
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -80,7 +81,7 @@ fun LocationSection(state: AppState, fmt: Fmt, onPickCity: () -> Unit) {
                 )
                 Spacer(Modifier.width(Space.md))
                 Text(
-                    confidence.warn,
+                    locWarning,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -597,6 +598,21 @@ fun IndicatorsSection(state: AppState, fmt: Fmt) {
             "أقرب موعد من أي نوع — صلاة أو عبادة أو سنة",
             d.showNearestMoment,
         ) { v -> state.updateDisplay(d.copy(showNearestMoment = v)) }
+        ToggleRow(
+            "شريط المواقيت",
+            "مواقيت الستة في سطر واحد",
+            d.showPrayerStrip,
+        ) { v -> state.updateDisplay(d.copy(showPrayerStrip = v)) }
+        ToggleRow(
+            "دليل اليوم",
+            "آية واحدة كل يوم، مع موضعها",
+            d.showDailyReminder,
+        ) { v -> state.updateDisplay(d.copy(showDailyReminder = v)) }
+        ToggleRow(
+            "علامات الليل",
+            "الشروق والغروب والثلث الأخير",
+            d.showNightMarkers,
+        ) { v -> state.updateDisplay(d.copy(showNightMarkers = v)) }
         ToggleRow(
             "تنبيه التوقيت الصيفي",
             "قبل أن تتقدّم الساعة أو تتراجع",

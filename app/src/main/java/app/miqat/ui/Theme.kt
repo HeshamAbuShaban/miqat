@@ -33,7 +33,7 @@ import app.miqat.R
 
 val Gold = Color(0xFFE8C46A)          // the wordmark gold — primary accent
 val Saffron = Color(0xFFFFB25C)       // the live moment (the sun, the urgency)
-val Plum = Color(0xFF2A1B33)          // the night
+val Lapis = Color(0xFF101B36)         // the sky's mid-band — lapis ink, never violet
 val GoldDim = Color(0xFF8A7530)
 val Cream = Color(0xFFF8E7AE)
 val Amber = Color(0xFFFFB25C)         // "the moment" colour (next prayer)
@@ -58,15 +58,15 @@ object Radius {
 }
 
 // dark scheme
-val NightBg = Color(0xFF0A0D1C)
-val NightSurface = Color(0xFF12172B)
-val NightSurfaceHigh = Color(0xFF1A2138)
-val NightOutline = Color(0xFF28304C)
+val NightBg = Color(0xFF060B1C)      // lapis night
+val NightSurface = Color(0xFF0E1526)
+val NightSurfaceHigh = Color(0xFF1B2542)
+val NightOutline = Color(0xFF26314F)
 val NightText = Color(0xFFEDEBE3)
 val NightTextDim = Color(0xFF98A2C4)
 
 // light scheme (paper, not white — the brand reads as ink on warm paper)
-val PaperBg = Color(0xFFF6F1E4)
+val PaperBg = Color(0xFFF6F1E4)      // dawn paper
 val PaperSurface = Color(0xFFFFFCF4)
 val PaperSurfaceHigh = Color(0xFFEFE7D4)
 val PaperOutline = Color(0xFFD6CBB2)

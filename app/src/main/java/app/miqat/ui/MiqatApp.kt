@@ -454,6 +454,53 @@ fun HomeScreen(
             Divider()
         }
 
+        // the DAILY REMINDER — one verse, with its source
+        if (state.display.showDailyReminder) {
+            val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+            cal.timeInMillis = now
+            val reminder = app.miqat.core.DailyReminders.forNow(
+                nowHour, cal.get(Calendar.DAY_OF_YEAR),
+            )
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = Space.md),
+            ) {
+                Text(
+                    reminder.text,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    reminder.reference,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Divider()
+        }
+
+        // the NIGHT MARKERS — the day's edges
+        if (state.display.showNightMarkers) {
+            val night = WorshipWindows.night(maghrib = times.maghrib, fajrNext = tomorrowTimes.fajr)
+            Row(
+                Modifier.fillMaxWidth().padding(vertical = Space.md),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    "الشروق ${fmt.hhmm(minutesOf(times.sunrise))} · الغروب ${fmt.hhmm(minutesOf(times.maghrib))}",
+                    style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = TabularFigures),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    "الثلث الأخير ${fmt.hhmm(minutesOf(night.lastThirdStartHour))}",
+                    style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = TabularFigures),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Divider()
+        }
+
         // qibla — one line, and it opens the COMPASS
         val bearing = Qibla.bearing(state.city.lat, state.city.lon)
         val km = Qibla.distanceKm(state.city.lat, state.city.lon)
@@ -524,10 +571,10 @@ private fun HeroCard(
                 Brush.verticalGradient(
                     if (nightSky) {
                         listOf(
-                            Color(0xFF0E1428),
-                            Color(0xFF1E1836),
-                            Color(0xFF4A2A3A),
-                            Color(0xFF8A5533).copy(alpha = .65f),
+                            Color(0xFF060B1C),
+                            Color(0xFF101B36),
+                            Color(0xFF24304A),
+                            Color(0xFF8A5533).copy(alpha = .55f),
                         )
                     } else {
                         listOf(
@@ -565,15 +612,43 @@ private fun HeroCard(
                 size = androidx.compose.ui.geometry.Size(w, h - horizon),
             )
 
-            // the rim — the horizon line
+            // the rim — the horizon line, in two weights: what the day has
+            // already travelled (gold) and what is left (a hairline). The
+            // progress is read as LENGTH, before any number.
             val rim = Path().apply {
                 moveTo(p0.x, p0.y)
                 quadraticBezierTo(p1.x, p1.y, p2.x, p2.y)
             }
+            val night = scheme.background.luminance() < 0.5f
             drawPath(
                 rim,
-                if (scheme.background.luminance() < 0.5f) Color(0xFF6E5A3A) else Color(0xFFA98C4E),
-                style = Stroke(width = 2.5f, cap = StrokeCap.Round),
+                if (night) Color(0xFF2C3A5C) else Color(0xFFCFC4A6),
+                style = Stroke(width = 2f, cap = StrokeCap.Round),
+            )
+            // the travelled part only — the sun's position is computed below,
+            // so the gold path is rebuilt up to it
+            val minsNow = times.list.map { ((it + 0.5 / 60.0) % 24.0 + 24.0) % 24.0 * 60 }
+            val startNow = minsNow[0]
+            val endNow = minsNow[5].let { if (it < startNow) it + 1440 else it }
+            val fNow = (((nowHour * 60 - startNow) / (endNow - startNow)).coerceIn(0.0, 1.0)).toFloat()
+            val tNow = 0.07f + 0.86f * fNow
+            val travelled = Path()
+            val steps = 40
+            for (i in 0..steps) {
+                val t = tNow * i / steps
+                val pt = pointAt(t)
+                if (i == 0) travelled.moveTo(pt.x, pt.y) else travelled.lineTo(pt.x, pt.y)
+            }
+            drawPath(
+                travelled,
+                Brush.horizontalGradient(
+                    listOf(
+                        if (night) Color(0xFFE8C46A) else Color(0xFF8A6A16),
+                        if (night) Color(0xFFFFB25C) else Color(0xFFB4600C),
+                    ),
+                    startX = p0.x, endX = p2.x,
+                ),
+                style = Stroke(width = 5f, cap = StrokeCap.Round),
             )
 
             // where the sun is now

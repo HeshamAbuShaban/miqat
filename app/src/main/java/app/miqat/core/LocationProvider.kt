@@ -28,21 +28,16 @@ enum class LocationSource(val labelAr: String) {
     MANUAL("مدينة مختارة"),
 }
 
-/** How confident the app may be about the resulting times. */
-enum class TimeConfidence(val labelAr: String, val warn: String?) {
-    CONFIRMED("مؤكد", null),
-    ESTIMATED(
-        "تقديري",
-        "موقعك غير مُتحقَّق منه — الحساب مبني على المدينة المختارة وقد لا يطابق موقعك الفعلي.",
-    ),
-}
-
 data class LocationFix(
     val latitude: Double,
     val longitude: Double,
     val utcOffsetHours: Double,
     val source: LocationSource,
 ) {
+    /** The honest warning when the place is not confirmed. */
+    val warning: String?
+        get() = if (source == LocationSource.GPS) null
+        else "موقعك غير مُتحقَّق منه — الحساب مبني على المدينة المختارة وقد لا يطابق موقعك الفعلي."
     val confidence: TimeConfidence
         get() = if (source == LocationSource.GPS) TimeConfidence.CONFIRMED else TimeConfidence.ESTIMATED
 }

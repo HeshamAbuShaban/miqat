@@ -13,7 +13,7 @@ import android.os.Build
 import android.os.SystemClock
 import androidx.core.app.NotificationCompat
 import app.miqat.R
-import app.miqat.ui.MainActivity
+import app.miqat.MainActivity
 import java.util.concurrent.TimeUnit
 
 /**

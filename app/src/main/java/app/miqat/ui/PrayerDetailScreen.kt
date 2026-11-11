@@ -171,7 +171,7 @@ fun PrayerDetailScreen(state: AppState, fmt: Fmt, index: Int, onBack: () -> Unit
                 )
             }
 
-            val warn = state.confidence.warn
+            val warn = state.locationFix.warning
             if (warn != null) {
                 Spacer(Modifier.height(Space.md))
                 Text(

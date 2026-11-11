@@ -66,6 +66,12 @@ data class DisplayPrefs(
     val calendarPrayer: Int = 0,
     /** The calendar's month table is visible. */
     val calendarShowTable: Boolean = true,
+    /** The daily reminder line (a verse with its source). */
+    val showDailyReminder: Boolean = true,
+    /** The night markers line (sunrise, sunset, the last third). */
+    val showNightMarkers: Boolean = true,
+    /** The strip of the six prayer times. */
+    val showPrayerStrip: Boolean = true,
 )
 
 object UserSettings {
@@ -85,7 +91,7 @@ object UserSettings {
     private const val K_URGENCY_IMMINENT = "urgency_imminent"
     private const val K_SHOW_GAPS = "show_gaps"
     private const val K_GAP_CATEGORIES = "gap_categories"
-    private const val K_SHOW_STRIP = "show_strip"
+    private const val K_SHOW_AWARENESS = "show_strip"
     private const val K_SHOW_DST = "show_dst"
     private const val K_SHOW_NEAREST = "show_nearest"
     private const val K_CAL_HIJRI = "cal_hijri"
@@ -93,6 +99,9 @@ object UserSettings {
     private const val K_CAL_EVENTS = "cal_events"
     private const val K_CAL_PRAYER = "cal_prayer"
     private const val K_CAL_TABLE = "cal_table"
+    private const val K_SHOW_REMINDER = "show_reminder"
+    private const val K_SHOW_NIGHT = "show_night"
+    private const val K_SHOW_STRIP = "show_prayer_strip"
     private const val K_USE_GPS = "use_gps"
     private const val K_GPS_LAT = "gps_lat"
     private const val K_GPS_LON = "gps_lon"
@@ -164,7 +173,7 @@ object UserSettings {
             gapCategories = p.getStringSet(
                 K_GAP_CATEGORIES, setOf("صلاة", "شمس", "عبادة", "ليل", "سنة"),
             ) ?: emptySet(),
-            showAwarenessStrip = p.getBoolean(K_SHOW_STRIP, true),
+            showAwarenessStrip = p.getBoolean(K_SHOW_AWARENESS, true),
             showDstNotice = p.getBoolean(K_SHOW_DST, true),
             showNearestMoment = p.getBoolean(K_SHOW_NEAREST, true),
             calendarShowHijri = p.getBoolean(K_CAL_HIJRI, true),
@@ -172,6 +181,9 @@ object UserSettings {
             calendarShowEvents = p.getBoolean(K_CAL_EVENTS, true),
             calendarPrayer = p.getInt(K_CAL_PRAYER, 0),
             calendarShowTable = p.getBoolean(K_CAL_TABLE, true),
+            showDailyReminder = p.getBoolean(K_SHOW_REMINDER, true),
+            showNightMarkers = p.getBoolean(K_SHOW_NIGHT, true),
+            showPrayerStrip = p.getBoolean(K_SHOW_STRIP, true),
         )
     }
 
@@ -215,7 +227,7 @@ object UserSettings {
             .putInt(K_URGENCY_IMMINENT, d.urgencyImminentMinutes)
             .putBoolean(K_SHOW_GAPS, d.showGaps)
             .putStringSet(K_GAP_CATEGORIES, d.gapCategories)
-            .putBoolean(K_SHOW_STRIP, d.showAwarenessStrip)
+            .putBoolean(K_SHOW_AWARENESS, d.showAwarenessStrip)
             .putBoolean(K_SHOW_DST, d.showDstNotice)
             .putBoolean(K_SHOW_NEAREST, d.showNearestMoment)
             .putBoolean(K_CAL_HIJRI, d.calendarShowHijri)
@@ -223,6 +235,9 @@ object UserSettings {
             .putBoolean(K_CAL_EVENTS, d.calendarShowEvents)
             .putInt(K_CAL_PRAYER, d.calendarPrayer)
             .putBoolean(K_CAL_TABLE, d.calendarShowTable)
+            .putBoolean(K_SHOW_REMINDER, d.showDailyReminder)
+            .putBoolean(K_SHOW_NIGHT, d.showNightMarkers)
+            .putBoolean(K_SHOW_STRIP, d.showPrayerStrip)
             .apply()
     }
 }
