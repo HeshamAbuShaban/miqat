@@ -203,6 +203,13 @@ fun ActDetailScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.tertiary,
                 )
+                if (live.elapsedMinutes != null) {
+                    Text(
+                        "مضى ${fmt.n(live.elapsedMinutes)} دقيقة من هذا الوقت",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 Spacer(Modifier.height(Space.md))
 
                 Text("ما هو", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground)

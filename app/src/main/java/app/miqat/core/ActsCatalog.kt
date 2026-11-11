@@ -87,6 +87,8 @@ object ActsCatalog {
         val state: ActState,
         /** Minutes until it starts (or until it ends, when running). */
         val minutesAway: Int,
+        /** Minutes since the window opened (null unless it is running). */
+        val elapsedMinutes: Int? = null,
     )
 
     /**
@@ -107,7 +109,11 @@ object ActsCatalog {
                 ActState.RUNNING -> end - nowMinute
                 ActState.PASSED -> 1440 - nowMinute + start
             }
-            Live(act, start, end, state, away)
+            // the dual clock of the act: how long it has been open, and how
+            // long it stays open (R1: the remaining is primary, the elapsed
+            // is secondary)
+            val elapsed = if (state == ActState.RUNNING) nowMinute - start else null
+            Live(act, start, end, state, away, elapsed)
         }.sortedBy { it.startMinute }
     }
 }

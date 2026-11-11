@@ -1,3 +1,31 @@
+## 2026-11-11 — The acts' own clocks, the changelog, and the store copy
+
+**The acts carry their own two clocks now.** R1 asks for the dual clock
+everywhere (the remaining primary, the elapsed secondary) — the acts' index
+and each act's own screen now show both: «جارٍ · يبقى ٤٨٠ د» and, under it,
+«منذ ١٢٠ د». The elapsed only exists while the window is open (a pinned
+test asserts it).
+
+**`CHANGELOG.md`** — the honest changelog: what actually shipped in 0.1.0,
+section by section, with the reasons that are not obvious from the diff (why
+`DayClock` died, why the Isha's window ends at midnight, why the duration
+lost its ص/م suffix).
+
+**`docs/store-listing.md`** — the copy, in Arabic and English: the name, the
+tagline («مواقيت الصلاة والعبادات، بلا إنترنت — وكم بقي، ولماذا»), the short
+description, the long one, the privacy statement, the screenshots to take and
+the release checklist.
+
+**And the privacy claim is checked, not hoped for:**
+
+```sh
+aapt2 dump permissions app/build/outputs/apk/debug/app-debug.apk
+# → no android.permission.INTERNET — the app cannot reach a network
+```
+
+That is the honest version of «offline-first»: not a promise, a permission
+list.
+
 ## 2026-11-11 — THE MONTH EXPORT: the ledger, as a card you can share
 
 The roadmap has asked for the month's export since the first week. It is not

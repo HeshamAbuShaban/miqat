@@ -52,7 +52,10 @@ The full ladder lives in [ROADMAP.md](ROADMAP.md); decisions in
 [docs/decisions.md](docs/decisions.md); the reverse-engineering teardown in
 [docs/TEARDOWN.md](docs/TEARDOWN.md); the engine parity report in
 [docs/engine-parity.md](docs/engine-parity.md); the design brief in
-[docs/design-brief.md](docs/design-brief.md).
+[docs/design-brief.md](docs/design-brief.md); the design system every agent
+must read in [DESIGN.md](DESIGN.md); what changed in
+[CHANGELOG.md](CHANGELOG.md); the store copy in
+[docs/store-listing.md](docs/store-listing.md).
 
 ## Build
 

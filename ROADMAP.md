@@ -143,8 +143,11 @@ Every step cites its donor lead (teardown §).
       and 12/24h preference, and it ticks on a minute alarm (the donor's
       TIME_TICK trick). REMAINING: a second size (a 2×1 "just the next
       prayer"), and the clock face variant.
-- [ ] Dual clocks everywhere: remaining primary, elapsed secondary, HH:MM:SS;
-      windowed on-demand computation («وضع المدار») for calendar (research-agenda R1)
+- [x] Dual clocks everywhere — DONE 2026-11-11 (home, the times screen, the
+      acts' rows and each act's own screen): the remaining is primary, the
+      elapsed is secondary, and every feature keeps its own line and its own
+      clock (`core/Timers.kt`).
+- [ ] windowed on-demand computation («وضع المدار») for calendar (research-agenda R1)
 - [ ] Rich search rows + ranking disclosure («معلنة ومدللة») over the S2 index
       (research-agenda R2)
 - [ ] «Why this time» transparency screen + two warning registers (حتى لا يلبس
@@ -195,7 +198,10 @@ Every step cites its donor lead (teardown §).
       texts (the DB carries no separate athkar table — that claim was wrong)
       with the council's verified citations and a tap-to-count. REMAINING: the
       traditional per-dhikr counts (not yet verified)
-- [ ] Monthly timetable export: PDF/image share (donor's SharingActivity minimal)
+- [x] Monthly timetable export: PDF/image share — DONE 2026-11-11: the month
+      as a designed card (`ui/export/MonthCard.kt`), shared through the
+      platform's FileProvider (no new dependency), with the confidence and
+      the method printed at its foot.
 - [ ] Battery-kind scheduler (WorkManager + exact-alarm hybrid; donor burns a
       foreground service for persistence — do better)
 - [ ] Backup/export settings (donor has `allowBackup=false` = nothing survives)
@@ -216,7 +222,11 @@ Every step cites its donor lead (teardown §).
 
 ## S8 — Release
 
-- [ ] Store listing: name **الميقات / Miqat** + official tagline
+- [x] Store listing: name **الميقات / Miqat** + official tagline — DONE
+      2026-11-11: `docs/store-listing.md` (the AR + EN copy, the privacy
+      statement, the screenshots to take, the release checklist) and
+      `CHANGELOG.md`. The claims are verifiable: the built APK holds **no
+      INTERNET permission** (`aapt2 dump permissions`).
       **«مواقيت الصلاة والصيام»** (decisions.md 2026-11-07 (2))
 - [ ] F-Droid-friendly build (no nonfree deps at all), signing, changelog
 - [ ] Store-free install path (ADB/sideload — sideload sovereignty, see lab L15)
