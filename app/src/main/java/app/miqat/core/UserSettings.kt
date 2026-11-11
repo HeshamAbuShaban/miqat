@@ -97,6 +97,9 @@ data class DisplayPrefs(
     val showTimerIqama: Boolean = true,
     /** How much the home carries (one choice, instead of a dozen). */
     val homeDensity: HomeDensity = HomeDensity.BALANCED,
+    /** What the calendar is organized around (the Gregorian, the Hijri, or
+     *  the acts of worship). */
+    val calendarContext: String = "HIJRI",
 )
 
 object UserSettings {
@@ -130,6 +133,7 @@ object UserSettings {
     private const val K_TIMER_ELAPSED = "timer_elapsed"
     private const val K_TIMER_IQAMA = "timer_iqama"
     private const val K_HOME_DENSITY = "home_density"
+    private const val K_CAL_CONTEXT = "calendar_context"
     private const val K_IMSAK_LEAD = "imsak_lead_minutes"
     private const val K_OFFICIAL = "official_adopted"
     private const val K_USE_GPS = "use_gps"
@@ -232,6 +236,7 @@ object UserSettings {
             showPrayerStrip = p.getBoolean(K_SHOW_STRIP, true),
             showTimerElapsed = p.getBoolean(K_TIMER_ELAPSED, true),
             showTimerIqama = p.getBoolean(K_TIMER_IQAMA, true),
+            calendarContext = p.getString(K_CAL_CONTEXT, "HIJRI") ?: "HIJRI",
             homeDensity = runCatching {
                 HomeDensity.valueOf(p.getString(K_HOME_DENSITY, HomeDensity.BALANCED.name) ?: "")
             }.getOrDefault(HomeDensity.BALANCED),
@@ -292,6 +297,7 @@ object UserSettings {
             .putBoolean(K_TIMER_ELAPSED, d.showTimerElapsed)
             .putBoolean(K_TIMER_IQAMA, d.showTimerIqama)
             .putString(K_HOME_DENSITY, d.homeDensity.name)
+            .putString(K_CAL_CONTEXT, d.calendarContext)
             .apply()
     }
 }

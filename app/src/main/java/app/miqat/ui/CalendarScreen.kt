@@ -77,11 +77,42 @@ fun CalendarScreen(
     var yearOpen by remember { mutableStateOf(false) }
 
     val d = state.display
-    val cells = remember(year, month, d.hijriOffsetDays) {
-        monthGrid(context, year, month, d.hijriOffsetDays)
+    // WHAT THE CALENDAR IS ORGANIZED AROUND — the founder's "the method
+    // highlights a context": the Hijri month, the Gregorian month, or the
+    // worship the month holds.
+    var axis by remember {
+        mutableStateOf(
+            runCatching { app.miqat.core.CalendarContext.valueOf(d.calendarContext) }
+                .getOrDefault(app.miqat.core.CalendarContext.HIJRI),
+        )
     }
-    val hijriLabel = cells.firstOrNull { it != null }?.let {
-        Hijri.MONTHS_AR[(it.hijri.hMonth - 1).coerceIn(0, 11)]
+    val cityToday = state.cityDate(now)
+    val window = remember(axis, year, month, d.hijriOffsetDays, cityToday) {
+        app.miqat.core.CalendarWindows.build(
+            context = axis,
+            gregorianYear = year,
+            gregorianMonth = month,
+            hijriOffset = d.hijriOffsetDays,
+            today = cityToday,
+        )
+    }
+    // the step: a Hijri month in the Hijri context, a Gregorian month in the
+    // Gregorian contexts
+    fun stepMonth(delta: Int) {
+        if (axis == app.miqat.core.CalendarContext.HIJRI) {
+            var hy = window.spineYear
+            var hm = window.spineMonth + delta
+            if (hm > 12) { hm = 1; hy++ }
+            if (hm < 1) { hm = 12; hy-- }
+            val anchor = app.miqat.core.CalendarWindows
+                .anchorForHijriMonth(hy, hm, d.hijriOffsetDays)
+            year = anchor.first
+            month = anchor.second
+        } else {
+            month += delta
+            if (month < 1) { month = 12; year-- }
+            if (month > 12) { month = 1; year++ }
+        }
     }
     val transitions = remember(state.city.zone, state.effectiveZoneId, year) {
         DstInfo.transitionsInYear(
@@ -100,23 +131,53 @@ fun CalendarScreen(
     ) {
         Spacer(Modifier.height(Space.md))
 
-        // the month header — the Hijri leads, the Gregorian is secondary
+        // the CONTEXT — what the calendar is organized around
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Space.xs),
+        ) {
+            app.miqat.core.CalendarContext.entries.forEach { c ->
+                val selected = c == axis
+                Text(
+                    c.labelAr,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (selected) MaterialTheme.colorScheme.onPrimary
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(Radius.chip))
+                        .background(
+                            if (selected) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.surfaceVariant,
+                        )
+                        .clickable {
+                            axis = c
+                            state.updateDisplay(d.copy(calendarContext = c.name))
+                        }
+                        .padding(horizontal = Space.md, vertical = 6.dp),
+                )
+            }
+        }
+        Spacer(Modifier.height(Space.sm))
+
+        // the header — the SPINE names itself; the other axis is a SPAN, so a
+        // month that turns halfway through is never hidden by a half-title
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(Icons.AutoMirrored.Filled.KeyboardArrowRight, "الشهر السابق") {
-                month--; if (month < 1) { month = 12; year-- }
+            // in RTL the RIGHT button is «previous» — the arrows were swapped
+            IconButton(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "الشهر السابق") {
+                stepMonth(-1)
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    hijriLabel ?: "",
+                    window.titleAr,
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onBackground,
                 )
                 Text(
-                    "${fmt.n(month)} / ${fmt.n(year)}",
+                    window.subtitleAr,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -127,8 +188,8 @@ fun CalendarScreen(
                     color = MaterialTheme.colorScheme.outline,
                 )
             }
-            IconButton(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "الشهر التالي") {
-                month++; if (month > 12) { month = 1; year++ }
+            IconButton(Icons.AutoMirrored.Filled.KeyboardArrowRight, "الشهر التالي") {
+                stepMonth(1)
             }
         }
 
@@ -146,27 +207,23 @@ fun CalendarScreen(
         }
         Spacer(Modifier.height(Space.xs))
 
-        // the month grid
-        cells.chunked(7).forEach { week ->
+        // the month grid — the spine's days, with the turn marked
+        val all = List<app.miqat.core.CalendarCell?>(window.leadBlanks) { null } + window.days
+        all.chunked(7).forEach { week ->
             Row(Modifier.fillMaxWidth()) {
                 week.forEach { cell ->
                     Box(Modifier.weight(1f)) {
                         if (cell == null) {
-                            Box(Modifier.size(54.dp))
+                            Box(Modifier.size(58.dp))
                         } else {
                             DayCell(
-                                day = cell.gregorianDay,
-                                hijri = cell.hijri,
-                                isToday = cell.isToday,
-                                fast = cell.isFast,
-                                event = cell.hasEvent,
-                                rite = cell.isRite,
-                                shifted = cell.shifted,
-                                showHijri = d.calendarShowHijri,
-                                showGregorian = d.calendarShowGregorian,
-                                showEvents = d.calendarShowEvents,
+                                cell = cell,
+                                primaryHijri = axis == app.miqat.core.CalendarContext.HIJRI,
+                                emphasiseActs = axis == app.miqat.core.CalendarContext.ACTS,
                                 fmt = fmt,
-                                onClick = { onOpenDay(year, month, cell.gregorianDay) },
+                                onClick = {
+                                    onOpenDay(cell.gregorianYear, cell.gregorianMonth, cell.gregorianDay)
+                                },
                             )
                         }
                     }
@@ -275,18 +332,17 @@ fun CalendarScreen(
  * sigil strip — fast (a bar), event (a lozenge), rite (a pin). The slots are
  * always reserved, so the grid never jumps.
  */
+/**
+ * The cell: TWO numbers (the spine's is the big one), the sigil strip, and —
+ * where the other axis turns — a gold hairline and the placard naming the new
+ * month. The turn is a MARK, never a tint: a tint would turn the calendar
+ * into a two-tone board (the design council, 2026-11-11).
+ */
 @Composable
 private fun DayCell(
-    day: Int,
-    hijri: IslamicDay,
-    isToday: Boolean,
-    fast: Boolean,
-    event: Boolean,
-    rite: Boolean,
-    shifted: Boolean,
-    showHijri: Boolean,
-    showGregorian: Boolean,
-    showEvents: Boolean,
+    cell: app.miqat.core.CalendarCell,
+    primaryHijri: Boolean,
+    emphasiseActs: Boolean,
     fmt: Fmt,
     onClick: () -> Unit,
 ) {
@@ -294,61 +350,61 @@ private fun DayCell(
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(2.dp)
             .clip(RoundedCornerShape(Radius.row))
-            .background(if (isToday) scheme.primaryContainer else scheme.surface)
+            .background(if (cell.isToday) scheme.primaryContainer else scheme.surface)
             .clickable { onClick() }
-            .padding(vertical = 6.dp),
+            .padding(vertical = 5.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        if (showHijri) {
-            Text(
-                fmt.n(hijri.hDay),
-                style = MaterialTheme.typography.bodyLarge,
-                color = if (isToday) scheme.onPrimaryContainer else scheme.onSurface,
+        if (cell.turnsHere) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 2.dp)
+                    .height(1.dp)
+                    .background(scheme.primary),
             )
         }
-        if (showGregorian) {
+        Text(
+            text = if (primaryHijri) fmt.n(cell.hijriDay) else fmt.n(cell.gregorianDay),
+            style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = TabularFigures),
+            color = if (cell.isToday) scheme.onPrimaryContainer else scheme.onSurface,
+        )
+        Text(
+            text = if (primaryHijri) fmt.n(cell.gregorianDay) else fmt.n(cell.hijriDay),
+            style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = TabularFigures),
+            color = scheme.onSurfaceVariant,
+        )
+        if (cell.turnsHere && cell.turnsToLabel.isNotBlank()) {
             Text(
-                fmt.n(day),
+                text = cell.turnsToLabel,
                 style = MaterialTheme.typography.labelSmall,
-                color = scheme.onSurfaceVariant,
+                color = scheme.primary,
+                maxLines = 1,
             )
         }
-        if (showEvents) {
+        if (emphasiseActs || cell.isFast || cell.isRite) {
             Spacer(Modifier.height(2.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                // the fast: a hairline bar
                 Box(
                     Modifier
                         .width(8.dp)
                         .height(2.dp)
-                        .background(if (fast) scheme.secondary else scheme.outlineVariant),
+                        .background(if (cell.isFast) scheme.secondary else scheme.outlineVariant),
                 )
-                // the event: a filled lozenge
                 Box(
                     Modifier
                         .size(5.dp)
                         .clip(RoundedCornerShape(2.dp))
-                        .background(if (event) scheme.tertiary else Color_Transparent),
+                        .background(if (emphasiseActs) scheme.tertiary else scheme.outlineVariant),
                 )
-                // the rite: a pin
                 Box(
                     Modifier
                         .size(4.dp)
                         .clip(CircleShape)
-                        .background(if (rite) scheme.primary else Color_Transparent),
+                        .background(if (cell.isRite) scheme.primary else scheme.outlineVariant),
                 )
             }
-        }
-        if (shifted) {
-            Box(
-                Modifier
-                    .padding(top = 2.dp)
-                    .size(4.dp)
-                    .clip(CircleShape)
-                    .background(scheme.primary),
-            )
         }
     }
 }
@@ -619,52 +675,6 @@ private fun YearDriftSheet(state: AppState, fmt: Fmt, year: Int, prayer: Int) {
 }
 
 /** A cell of the month grid. */
-private data class Cell(
-    val gregorianDay: Int,
-    val hijri: IslamicDay,
-    val isToday: Boolean,
-    val hasEvent: Boolean,
-    val isFast: Boolean,
-    val isRite: Boolean,
-    val shifted: Boolean,
-)
-
-private fun monthGrid(
-    context: android.content.Context,
-    year: Int,
-    month: Int,
-    hijriOffset: Int,
-): List<Cell?> {
-    val cal = Calendar.getInstance().apply {
-        clear()
-        set(year, month - 1, 1)
-    }
-    val firstWeekday = cal.get(Calendar.DAY_OF_WEEK) % 7
-    val days = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
-    val today = Calendar.getInstance()
-    val cells = mutableListOf<Cell?>()
-    repeat(firstWeekday) { cells.add(null) }
-    for (d in 1..days) {
-        val hijri = Hijri.at(year, month, d, hijriOffset)
-        val event = MiqatData.dayEvents(context, hijri.hMonth)
-            .firstOrNull { hijri.hDay in it.startDay..it.endDay }
-        cells.add(
-            Cell(
-                gregorianDay = d,
-                hijri = hijri,
-                isToday = today.get(Calendar.YEAR) == year &&
-                    today.get(Calendar.MONTH) + 1 == month &&
-                    today.get(Calendar.DAY_OF_MONTH) == d,
-                hasEvent = event != null,
-                isFast = isVoluntaryFast(hijri),
-                isRite = hajjRite(hijri) != null,
-                shifted = false,
-            ),
-        )
-    }
-    while (cells.size % 7 != 0) cells.add(null)
-    return cells
-}
 
 private val ARABIC_WEEKDAYS = listOf("سبت", "أحد", "إثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة")
 

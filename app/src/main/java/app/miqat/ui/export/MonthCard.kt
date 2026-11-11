@@ -94,10 +94,20 @@ object MonthCard {
         java.util.Calendar.getInstance().apply { clear(); set(year, month - 1, day) }
             .get(java.util.Calendar.DAY_OF_WEEK)
 
-    /** The month's Hijri label (the month the Gregorian month mostly falls in). */
+    /**
+     * The month's label — from the SAME window the screen draws, so the card
+     * and the grid can never call the same month by two names (they did, in
+     * six months of 2026 — the design council, 2026-11-11).
+     */
     fun hijriMonthLabel(year: Int, month: Int, offsetDays: Int = 0): String {
-        val hijri = Hijri.at(year, month, 15, offsetDays)
-        return Hijri.MONTHS_AR[(hijri.hMonth - 1).coerceIn(0, 11)]
+        val window = app.miqat.core.CalendarWindows.build(
+            context = app.miqat.core.CalendarContext.GREGORIAN,
+            gregorianYear = year,
+            gregorianMonth = month,
+            hijriOffset = offsetDays,
+            today = Triple(year, month, 1),
+        )
+        return window.subtitleAr
     }
 
     /**

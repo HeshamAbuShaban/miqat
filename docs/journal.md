@@ -1,3 +1,35 @@
+## 2026-11-11 — THE CALENDAR: an explicit axis, and the truth about the title
+
+Hesham on the calendar: «هو صراحة يحتاج مزيد ومزيد من الجهود في عرض وتحكم وإفادة… hij يحمل العنوان للشهر الذي مبتدأ به، وإذا دخل آخر في حيز الـ٣٠ يوم الميلادي يصبح العنوان مشاركًا لجزء من حقيقته وآخر من الشهر الذي يليه! وهذا خطأ… ولا يعني أن تجعل الميلادي ثانويًا أن تهمشه لأنّه للأسف منتشر، ولكن الأفضل في سياق التحكم… أن يجعل طريقة تبرز سياقًا معينًا سواء على الصعيد الميلادي والهجري أو على صعيد الطاعات الأخرى».
+
+**The design council measured the flaw before fixing it:** 107 of 108 Gregorian
+months (2024–2032) are SPLIT across two Hijri months — the turn always falls
+inside the month, never at its edge. November 2026: the 1st–10th are Jumada I
+and the 11th–30th are Jumada II. The old header took the month of the FIRST
+cell, so the title was wrong for two-thirds of the grid — and the turn
+happened on the day the founder was looking at.
+
+**The cure is not a cleverer title; it is an explicit AXIS.** New model
+`core/CalendarWindow.kt` — one builder for three readings of the same days:
+
+| The context | The grid's spine | The big number | The title |
+|---|---|---|---|
+| **الهجري** | one Hijri month (29–30 days) | the Hijri day | «جمادى الآخرة ١٤٤٨» + the Gregorian span «١٠ نوفمبر – ٨ ديسمبر ٢٠٢٦» |
+| **الميلادي** | one Gregorian month | the Gregorian day | «نوفمبر ٢٠٢٦» + the Hijri span «جمادى الأولى – جمادى الآخرة ١٤٤٨» |
+| **الطعاعات** | the Gregorian month, the worship layer in front | the Gregorian day | the same, with the sigils promoted |
+
+- **The title names the SPINE; the other axis is printed as a SPAN** — never as
+  a name. The grid and the exported card now read the SAME window, so they can
+  never call a month by two names (they did, in six months of 2026).
+- **The turn is marked, not hidden**: a gold hairline and a placard naming the
+  new month («جمادى ٢») on the day the other axis turns. A tint was refused —
+  it would turn the calendar into a two-tone board.
+- **The Gregorian is not neglected**: it is the PRIMARY number in its own
+  context, one tap away, and it stays in every cell.
+- The council also caught: the chevron glyphs were swapped in RTL (the right
+  button pointed forward), the DST transitions were computed and never used,
+  and `isToday` compared against the DEVICE's day, not the city's.
+
 ## 2026-11-11 — THE ADVISORY COUNCIL'S VERDICT: the numbers were lying
 
 The advisory council was asked to be brutal, and it was — and it was right
