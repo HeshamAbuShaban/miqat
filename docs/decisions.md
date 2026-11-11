@@ -2,6 +2,54 @@
 
 > One line per decision; newest first. `applicationId` `app.miqat` freezes at release.
 
+## 2026-11-11 — The three councils, and the layers they set
+
+- **مجلس النماذج (Council of Models)** — the free-model seats (deepseek /
+  minimax / longcat / flint / mimo): research, citation verification, wide
+  critique.
+- **مجلس التصميم (Design Council)** — palette, type, layout, the day-sky, the
+  compass, the home composition.
+- **المجلس الاستشاري (Advisory Council)** — the adversarial seat: what a user
+  would call dishonest, noisy or missing, and what must NOT be built yet.
+
+**Layers (from the council's verdicts):**
+
+- **Layer 0 — the gates (DONE).** the «تقديري بحسب الاصطلاح» qualifier in
+  every window-bound payload; ONE clock for the whole app (two clocks is how
+  the location bug happened); the manual-adjust ceiling raised to ±60; the
+  missed-Fajr gate (battery-optimisation deep link, audio-focus yield to a
+  call, the iqama second call, the always-on countdown); an explicit
+  confidence class per time (مؤكد / محسوب / تقديري).
+- **Layer 1 — the calendar as a worship ledger (DONE).** one Hijri number per
+  cell + a fixed three-slot sigil strip (fast / event / rite — shapes, never
+  colour); the day card = a spine (the prayers as points, the spacing IS the
+  gap) with the windows as bands behind it, the fast as brackets and the Hajj
+  as a pin; the prayer strip under the grid (pick a prayer, see its drift);
+  the month ledger as a pull-up sheet; the year as an overlay.
+- **Layer 2 — the acts catalog (DONE).** `assets/acts-v1.json` — STATIC,
+  versioned, cited content (what it is / why it matters / how it is computed /
+  the source) + the live fields from the engine (the window, the state, the
+  neighbours). The index screen is a flat time-ordered list; the depth lives on
+  each act's own screen.
+- **Layer 3 — the craft (DONE).** Palette A «لازورد» (the violet family is
+  banned — it composites to mud); the hero as a PROPORTIONAL clock (the gold
+  travelled part vs the hairline remainder — progress read as length); the
+  home's seven lines, each toggleable.
+- **Layer 4 — the sighting-informed calendar + the daily practice.** The
+  sighting presets need a signed data drop (no server, no keys) — the
+  hijri offset stays the honest lever meanwhile. The daily practice: the
+  tasbih screen over the donor's 21 texts, each with its verified citation.
+- **Layer 5 — the tooling.** the root `DESIGN.md` (the Stitch format, nine
+  sections) and `docs/ui-patterns.md` (the admission rule for any third-party
+  UI library). The `anatomy` skill is installed for OpenCode, Antigravity,
+  Codex and MiniMax Code on this machine.
+- **Layer 6 — the widgets and the export.**
+
+**Cuts:** the separate "nearest act" card (merged into the strip), the separate
+motivational channel (merged into the reminder), the duplicated events list
+under the grid, "which prayer?" as a settings prerequisite, gradients on cards,
+and shadows in the dark theme.
+
 ## 2026-11-11 — The three councils, and the Layer-0 mandate
 
 Hesham: «take the wheel, let the council help you — Council of Models → مجلس

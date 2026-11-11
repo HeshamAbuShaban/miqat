@@ -42,6 +42,7 @@ fun ActsScreen(
     fmt: Fmt,
     nowState: androidx.compose.runtime.State<Long>,
     onOpenAct: (String) -> Unit,
+    onOpenTasbih: () -> Unit = {},
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val now = nowState.value
@@ -81,6 +82,8 @@ fun ActsScreen(
             ActRow(item, fmt) { onOpenAct(item.act.id) }
             Divider()
         }
+        Spacer(Modifier.height(Space.md))
+        NavRow("التسبيح", "أذكار اليوم مع مراجعها وعدّاد", onOpenTasbih)
         Spacer(Modifier.height(Space.xxl))
     }
 }

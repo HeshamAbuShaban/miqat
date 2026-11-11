@@ -137,13 +137,19 @@ Every step cites its donor lead (teardown §).
       (research-agenda R2)
 - [ ] «Why this time» transparency screen + two warning registers (حتى لا يلبس
       على الناس / توخي وحذر) + offline timetable reconciliation (research-agenda R3)
-- [x] Calendar — DONE 2026-11-10 (R4, rebuilt the same day): three views —
+- [x] Calendar — DONE 2026-11-10, REBUILT 2026-11-11 as a worship ledger: the
+      Hijri leads, the Gregorian is secondary, a fixed three-slot sigil strip
+      (fast/event/rite) marks each day, the day card is a spine (the prayers as
+      points, the spacing IS the gap) with the windows as bands, the fast as
+      brackets and the Hajj as a pin; the prayer strip under the grid, the
+      month ledger as a pull-up sheet, the year as an overlay. REMAINING: the
+      sighting-informed presets (needs a signed data drop), the monthly export.
+      (The earlier three-view version: three views —
       الشهر (Hijri-first cells, Gregorian secondary), جدول الشهر (every day with
       the chosen prayer's time and its day-to-day change) and الانحراف السنوي
       (the curve with the total change in words); the month's events listed
       under the grid; the day screen carries the prayers, the gaps and the
-      worship windows; DST transition days are marked. REMAINING: export/share
-      the month as an image, and the regional Hijri presets
+      worship windows; DST transition days are marked.)
 - [x] The awareness layer — DONE 2026-11-10: the strip (now / the time that
       entered / the distances to the neighbouring lines — the neovim idea),
       the DST notice, and every indicator toggleable in «المؤشرات»
@@ -173,7 +179,10 @@ Every step cites its donor lead (teardown §).
       page. REMAINING: verification against an official timetable (R3.3)
 - [x] **R12 مواقيت السنة** — DONE 2026-11-10: النوم، السحور، القيلولة، أوقات
       قراءة القرآن — computed from the day; texts gated by docs/sourcing-table.md
-- [ ] Athkar/tasbih module (donor DB already carries azkar text)
+- [x] Tasbih / the daily practice — DONE 2026-11-11: the donor's 21 reminder
+      texts (the DB carries no separate athkar table — that claim was wrong)
+      with the council's verified citations and a tap-to-count. REMAINING: the
+      traditional per-dhikr counts (not yet verified)
 - [ ] Monthly timetable export: PDF/image share (donor's SharingActivity minimal)
 - [ ] Battery-kind scheduler (WorkManager + exact-alarm hybrid; donor burns a
       foreground service for persistence — do better)

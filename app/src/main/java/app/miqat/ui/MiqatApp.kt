@@ -92,6 +92,7 @@ sealed interface Route {
     data object Qibla : Route
     data object Distance : Route
     data object Acts : Route
+    data object Tasbih : Route
     data class ActDetail(val id: String) : Route
     data object CalendarSettings : Route
     data object AppearanceSettings : Route
@@ -207,7 +208,8 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                     IndicatorsSection(state, fmt)
                 }
                 Route.Qibla -> QiblaScreen(state, fmt) { sub = null }
-                Route.Acts -> ActsScreen(state, fmt, now) { sub = Route.ActDetail(it) }
+                Route.Acts -> ActsScreen(state, fmt, now, onOpenAct = { sub = Route.ActDetail(it) }, onOpenTasbih = { sub = Route.Tasbih })
+                Route.Tasbih -> TasbihScreen { sub = null }
                 is Route.ActDetail -> ActDetailScreen(state, fmt, now, route.id) { sub = null }
                 Route.Distance -> DistanceScreen(state, fmt) { sub = null }
                 Route.AdhanSettings -> MiqatScaffold("الإعدادات", onBack = { sub = null }) {
