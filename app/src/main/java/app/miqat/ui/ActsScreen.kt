@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import app.miqat.core.ActsCatalog
 import app.miqat.core.Hijri
 import app.miqat.core.Moments
+import app.miqat.core.Proximity
+import app.miqat.core.TimerKind
 
 /**
  * THE ACTS — «مواقيت السنة والعبادات»: a flat, time-ordered INDEX of every
@@ -215,8 +217,12 @@ private fun ActRow(item: ActsCatalog.Live, fmt: Fmt, onClick: () -> Unit) {
             )
             Text(
                 when (item.state) {
-                    ActsCatalog.ActState.UPCOMING -> "بقي ${fmt.n(item.minutesAway)} د"
-                    ActsCatalog.ActState.RUNNING -> "جارٍ · بقي ${fmt.n(item.minutesAway)} د"
+                    ActsCatalog.ActState.UPCOMING -> Proximity.timerLine(
+                        TimerKind.ACT_REMAINING, item.minutesAway * 60L, item.act.name,
+                    ).prefixAr + " " + fmt.duration(item.minutesAway)
+                    ActsCatalog.ActState.RUNNING -> Proximity.timerLine(
+                        TimerKind.AVAILABLE, item.minutesAway * 60L, item.act.name,
+                    ).prefixAr + " " + fmt.duration(item.minutesAway)
                     ActsCatalog.ActState.PASSED -> "مضى"
                 },
                 style = MaterialTheme.typography.labelSmall,
@@ -277,8 +283,12 @@ fun ActDetailScreen(
                 )
                 Text(
                     when (live.state) {
-                        ActsCatalog.ActState.UPCOMING -> "قادم · بعد ${fmt.n(live.minutesAway)} دقيقة"
-                        ActsCatalog.ActState.RUNNING -> "جارٍ الآن · يبقى ${fmt.n(live.minutesAway)} دقيقة"
+                        ActsCatalog.ActState.UPCOMING -> Proximity.timerLine(
+                            TimerKind.ACT_REMAINING, live.minutesAway * 60L, act.name,
+                        ).prefixAr + " " + fmt.duration(live.minutesAway)
+                        ActsCatalog.ActState.RUNNING -> Proximity.timerLine(
+                            TimerKind.AVAILABLE, live.minutesAway * 60L, act.name,
+                        ).prefixAr + " " + fmt.duration(live.minutesAway)
                         ActsCatalog.ActState.PASSED -> "مضى اليوم"
                     },
                     style = MaterialTheme.typography.bodyMedium,
@@ -286,7 +296,9 @@ fun ActDetailScreen(
                 )
                 if (live.elapsedMinutes != null) {
                     Text(
-                        "مضى ${fmt.n(live.elapsedMinutes)} دقيقة من هذا الوقت",
+                        Proximity.timerLine(
+                            TimerKind.ELAPSED, live.elapsedMinutes * 60L, act.name,
+                        ).prefixAr + " " + fmt.duration(live.elapsedMinutes),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

@@ -90,8 +90,15 @@ fun TimesScreen(
         Spacer(Modifier.height(Space.sm))
 
         // the bridges are between PRAYERS, never between a prayer and a
-        // sunnah marker parked on the same minute (that printed «٠ د»)
-        val gapAfter = Moments.prayerGaps(times, tomorrow.fajr, PRAYER_NAMES, ::minutesOf).toMap()
+        // sunnah marker parked on the same minute (that printed «٠ د»).
+        // Each bridge is a SPAN: a number AND a proportional window.
+        val nowMinute = (nowHour * 60).toInt()
+        val points = times.list.map(::minutesOf) + (minutesOf(tomorrow.fajr) + 1440)
+        val labels = PRAYER_NAMES + "الفجر غداً"
+        val spans = (0 until 6).map { i ->
+            app.miqat.core.Span(points[i], points[i + 1], nowMinute) to
+                (labels[i] to labels[i + 1])
+        }
 
         PRAYER_NAMES.forEachIndexed { i, name ->
             // after the Isha the countdown BELONGS to tomorrow's Fajr — the
@@ -115,19 +122,21 @@ fun TimesScreen(
                     ).prefixAr + " " + fmt.hms(timers.remainingSeconds)
                     // the elapsed only exists inside the prayer's own window
                     isCurrent && timers.sinceWorthShowing ->
-                        "منذ " + fmt.hms(timers.sinceSeconds)
+                        Proximity.timerLine(
+                            TimerKind.ELAPSED, timers.sinceSeconds, name,
+                        ).prefixAr + " " + fmt.hms(timers.sinceSeconds)
                     else -> null
                 },
                 highlighted = isNext,
                 urgency = urgency,
                 onClick = { onOpenPrayer(i) },
             )
-            // the gap to the NEXT PRAYER — a real span, never a ٠ د sunnah marker
-            val gap = gapAfter[PRAYER_KEY[i]] ?: 0
-            if (state.display.showGaps && gap > 0 &&
+            // the window to the NEXT PRAYER — a real span, never a ٠ د marker
+            val (span, pair) = spans[i]
+            if (state.display.showGaps && span.totalMin > 0 &&
                 state.display.gapCategories.contains(app.miqat.core.MomentCategory.PRAYER.labelAr)
             ) {
-                GapBridge(gap, fmt.duration(gap))
+                GapBridge(span, pair.first, pair.second, fmt)
             }
             Divider()
         }

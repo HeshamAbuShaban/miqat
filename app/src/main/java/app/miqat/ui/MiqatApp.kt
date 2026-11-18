@@ -841,7 +841,10 @@ private fun HeroCard(
             if (state.display.showTimerElapsed && timers.sinceWorthShowing) {
                 Spacer(Modifier.height(Space.xs))
                 Text(
-                    "مرّ من وقت ${timers.currentPrayer} · ${fmt.hms(timers.sinceSeconds)}",
+                    app.miqat.core.Proximity.timerLine(
+                        app.miqat.core.TimerKind.ELAPSED,
+                        timers.sinceSeconds, timers.currentPrayer!!,
+                    ).prefixAr + " " + fmt.hms(timers.sinceSeconds),
                     style = MaterialTheme.typography.labelSmall,
                     color = scheme.onSurfaceVariant,
                 )
@@ -851,8 +854,8 @@ private fun HeroCard(
                 Spacer(Modifier.height(Space.xs))
                 Text(
                     app.miqat.core.Proximity.timerLine(
-                        app.miqat.core.TimerKind.PRAYER_REMAINING,
-                        timers.iqamaSeconds, "إقامة ${timers.iqamaPrayer}",
+                        app.miqat.core.TimerKind.IQAMA_REMAINING,
+                        timers.iqamaSeconds, timers.iqamaPrayer!!,
                     ).prefixAr + " " + fmt.hms(timers.iqamaSeconds),
                     style = MaterialTheme.typography.labelSmall,
                     color = scheme.tertiary,

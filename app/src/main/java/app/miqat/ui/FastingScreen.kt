@@ -236,7 +236,10 @@ fun FastingScreen(
             )
             if (iftarPassed) {
                 Text(
-                    "منذ الإفطار ${fmt.duration((nowMinute - iftar).coerceAtLeast(0))}",
+                    app.miqat.core.Proximity.timerLine(
+                        app.miqat.core.TimerKind.ELAPSED,
+                        (nowMinute - iftar).coerceAtLeast(0) * 60L, "الإفطار",
+                    ).prefixAr + " " + fmt.hms((nowMinute - iftar).coerceAtLeast(0) * 60L),
                     style = MaterialTheme.typography.titleMedium,
                     color = scheme.onSurface,
                 )
@@ -248,7 +251,9 @@ fun FastingScreen(
             }
             if (imsakPassed && !iftarPassed) {
                 Text(
-                    "منذ الإمساك ${fmt.hms(elapsedMinutes * 60L)}",
+                    app.miqat.core.Proximity.timerLine(
+                        app.miqat.core.TimerKind.ELAPSED, elapsedMinutes * 60L, "الإمساك",
+                    ).prefixAr + " " + fmt.hms(elapsedMinutes * 60L),
                     style = MaterialTheme.typography.labelSmall,
                     color = scheme.onSurfaceVariant,
                 )

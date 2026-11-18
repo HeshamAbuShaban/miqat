@@ -26,7 +26,22 @@ enum class Verdict { DUE, NEAR, UPCOMING, NOT_RELEVANT }
 
 /** The six timer kinds — one wording each, no synonyms (council P0.4). */
 enum class TimerKind {
-    PRAYER_REMAINING, ACT_REMAINING, SINCE_IQAMA, AVAILABLE, BETWEEN_ACTS, ELAPSED,
+    PRAYER_REMAINING, ACT_REMAINING, SINCE_IQAMA, IQAMA_REMAINING,
+    AVAILABLE, BETWEEN_ACTS, ELAPSED,
+}
+
+/**
+ * A window between TWO timed acts, in absolute minutes. The founder wants
+ * the remaining window shown as a NUMBER and as a SHAPE ([GapBridge]).
+ * [open] is the premature guard: a window that has not begun has no
+ * "remaining" — only its total may be printed.
+ */
+data class Span(val fromMin: Int, val toMin: Int, val nowMin: Int) {
+    val totalMin: Int get() = toMin - fromMin
+    val remainingMin: Int get() = (toMin - nowMin).coerceIn(0, totalMin.coerceAtLeast(0))
+    val open: Boolean get() = nowMin in fromMin until toMin
+    val frac: Float get() = remainingMin.toFloat() / totalMin.coerceAtLeast(1)
+    val consumedFrac: Float get() = ((nowMin - fromMin).toFloat() / totalMin.coerceAtLeast(1)).coerceIn(0f, 1f)
 }
 
 /** One appointed slot on the absolute timeline. */
@@ -216,6 +231,7 @@ object Proximity {
         TimerKind.PRAYER_REMAINING -> TimerLine("بقي لـ$labelAr", kind, seconds)
         TimerKind.ACT_REMAINING -> TimerLine("بقي من وقت $labelAr", kind, seconds)
         TimerKind.SINCE_IQAMA -> TimerLine("منذ الإقامة · $labelAr", kind, seconds)
+        TimerKind.IQAMA_REMAINING -> TimerLine("بقي إلى إقامة $labelAr", kind, seconds)
         TimerKind.AVAILABLE -> TimerLine("المتاح حتى $labelAr", kind, seconds)
         TimerKind.BETWEEN_ACTS -> TimerLine("بين $labelAr و${label2Ar.orEmpty()}", kind, seconds)
         TimerKind.ELAPSED -> TimerLine("منذ أذان $labelAr", kind, seconds)

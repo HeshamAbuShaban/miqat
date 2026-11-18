@@ -330,33 +330,43 @@ private fun StepButton(symbol: String, onClick: () -> Unit) {
  * between prayer rows, in the gaps table, and in the interval tool.
  */
 @Composable
-fun GapBridge(minutes: Int, label: String? = null) {
-    Row(
-        Modifier.fillMaxWidth().padding(vertical = 2.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        // the hairline (start side = right in RTL)
+fun GapBridge(span: app.miqat.core.Span, fromAr: String, toAr: String, fmt: Fmt) {
+    val scheme = MaterialTheme.colorScheme
+    val line = app.miqat.core.Proximity.timerLine(
+        app.miqat.core.TimerKind.BETWEEN_ACTS,
+        span.remainingMin * 60L, fromAr, toAr,
+    )
+    Column(Modifier.fillMaxWidth().padding(vertical = Space.xs)) {
+        // the window as a SHAPE (RTL: right = the act that entered, left =
+        // the one waiting). The teal tail is what REMAINS; the grey head has
+        // been consumed; the gold tick is the line between them.
         Box(
             Modifier
-                .width(1.dp)
-                .height(26.dp)
-                .background(MaterialTheme.colorScheme.outlineVariant),
+                .fillMaxWidth()
+                .height(6.dp)
+                .clip(RoundedCornerShape(Radius.chip))
+                .background(scheme.outlineVariant),
         )
-        Spacer(Modifier.width(Space.md))
+        Row(Modifier.fillMaxWidth().height(6.dp)) {
+            // the left (RTL-end) part is the remaining tail
+            Spacer(Modifier.weight(1f - span.frac))
+            if (span.open) {
+                Box(
+                    Modifier
+                        .weight(span.frac)
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(Radius.chip))
+                        .background(scheme.secondary),
+                )
+            }
+        }
         Text(
-            label ?: durationLabel(minutes),
+            if (span.open) "${line.prefixAr}: ${fmt.duration(span.remainingMin)}"
+            else "بين $fromAr و$toAr: ${fmt.duration(span.totalMin)}",
             style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = TabularFigures),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = scheme.onSurfaceVariant,
         )
     }
-}
-
-/** "1:17" / "2:04:30" — the duration format used across the app. */
-fun durationLabel(minutes: Int, arabicIndic: Boolean = true): String {
-    val sign = if (minutes < 0) "−" else ""
-    val m = kotlin.math.abs(minutes)
-    val raw = if (m >= 60) "$sign${m / 60}:%02d".format(m % 60) else "$sign$m"
-    return app.miqat.core.NumFmt.digits(raw, arabicIndic) + if (m >= 60) "" else " د"
 }
 
 /** The chip that marks an approximate, convention-based value («تقديري»). */
