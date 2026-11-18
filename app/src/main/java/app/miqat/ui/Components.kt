@@ -340,23 +340,31 @@ fun GapBridge(span: app.miqat.core.Span, fromAr: String, toAr: String, fmt: Fmt)
         // the window as a SHAPE (RTL: right = the act that entered, left =
         // the one waiting). The teal tail is what REMAINS; the grey head has
         // been consumed; the gold tick is the line between them.
-        Box(
+        // drawn directly: a `weight(0f)` at frac == 1 or 0 used to crash
+        // the whole Times screen (Compose rejects zero weights)
+        androidx.compose.foundation.Canvas(
             Modifier
                 .fillMaxWidth()
-                .height(6.dp)
-                .clip(RoundedCornerShape(Radius.chip))
-                .background(scheme.outlineVariant),
-        )
-        Row(Modifier.fillMaxWidth().height(6.dp)) {
-            // the left (RTL-end) part is the remaining tail
-            Spacer(Modifier.weight(1f - span.frac))
-            if (span.open) {
-                Box(
-                    Modifier
-                        .weight(span.frac)
-                        .height(6.dp)
-                        .clip(RoundedCornerShape(Radius.chip))
-                        .background(scheme.secondary),
+                .height(6.dp),
+        ) {
+            val w = size.width
+            val h = size.height
+            val radius = androidx.compose.ui.geometry.CornerRadius(h / 2f, h / 2f)
+            val sizeFull = androidx.compose.ui.geometry.Size(w, h)
+            drawRoundRect(scheme.outlineVariant, cornerRadius = radius, size = sizeFull)
+            if (span.open && span.frac > 0f) {
+                val tailW = (w * span.frac.coerceIn(0f, 1f)).coerceAtLeast(1f)
+                drawRoundRect(
+                    scheme.secondary,
+                    topLeft = androidx.compose.ui.geometry.Offset(w - tailW, 0f),
+                    size = androidx.compose.ui.geometry.Size(tailW, h),
+                    cornerRadius = radius,
+                )
+                drawLine(
+                    scheme.primary,
+                    start = androidx.compose.ui.geometry.Offset(w - tailW, 0f),
+                    end = androidx.compose.ui.geometry.Offset(w - tailW, h),
+                    strokeWidth = 1.5f,
                 )
             }
         }

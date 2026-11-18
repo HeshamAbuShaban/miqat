@@ -48,4 +48,13 @@ class SpanTest {
         )
         assertEquals("بين العصر والمغرب", line.prefixAr)
     }
+
+    @Test fun `edge fractions are valid - a zero weight used to crash the Times screen`() {
+        // exactly at the opening minute: frac == 1
+        assertEquals(1f, Span(920, 1108, 920).frac, 0f)
+        // exactly at the closing minute: the window is closed, no tail
+        assertEquals(0f, Span(920, 1108, 1108).frac, 0f)
+        // the last open minute still has a positive tail
+        assertTrue(Span(920, 1108, 1107).frac > 0f)
+    }
 }
