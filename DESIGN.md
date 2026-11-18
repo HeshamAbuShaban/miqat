@@ -220,6 +220,12 @@ A day cell is at most TWO badges, in one 14dp row:
   cream bar.
 - Eid and tashreeq VETO the fast badge. No scores, rarity colours, or
   "level 3" numbers: a level is a real predicate, never a reward.
+- RANK of the SAME type is the CUT, not a new colour: hollow square
+  12×6 (nafl Mon/Thu) → 16×7 + 10% ink (sunnah) → 20×7 + inner 14×2
+  rule (Arafah) → 44×8 filled + one 6×2 gold inlay (Ramadan).
+- The bottom bar is a DRAWN RULER: 1dp top rule, five equal 56dp slots,
+  a fixed 22dp glyph with a fixed 2dp stroke, labels always visible,
+  and the active state is one colour change plus a 16×2dp top tick.
 - Today carries a 12×3dp saffron underline beneath its number.
 
 ## 8c. The Day-Line (the home's second drawing)

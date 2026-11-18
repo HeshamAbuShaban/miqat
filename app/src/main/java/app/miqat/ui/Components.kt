@@ -55,13 +55,14 @@ fun BigCountdown(
     text: String,
     color: Color,
     modifier: Modifier = Modifier,
+    sizeSp: Float = 32f,
 ) {
     val annotated = remember(text, color) {
         buildAnnotatedString {
             val idx = text.lastIndexOf(':')
             if (idx > 0) {
                 append(text.substring(0, idx + 1))
-                withStyle(SpanStyle(fontSize = 28.sp, color = color.copy(alpha = .62f))) {
+                withStyle(SpanStyle(fontSize = (sizeSp * 0.55f).sp, color = color.copy(alpha = 0.78f))) {
                     append(text.substring(idx + 1))
                 }
             } else {
@@ -72,7 +73,7 @@ fun BigCountdown(
     Text(
         text = annotated,
         style = MaterialTheme.typography.displayMedium.copy(
-            fontSize = 46.sp,
+            fontSize = sizeSp.sp,
             fontFeatureSettings = TabularFigures,
         ),
         color = color,

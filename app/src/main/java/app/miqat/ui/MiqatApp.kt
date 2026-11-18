@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -27,9 +28,6 @@ import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,7 +41,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.zIndex
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.geometry.Offset
@@ -129,49 +126,82 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
     // user never loses the map.
     Scaffold(
         bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = 0.dp,
-            ) {
-                TopLevel.entries.forEach { dest ->
-                    NavigationBarItem(
-                        selected = top == dest && sub == null,
-                        onClick = { top = dest; sub = null },
-                        icon = {
-                            BrandGlyph(
-                                kind = dest.glyph,
-                                active = top == dest && sub == null,
-                                size = 22.dp,
+            // ONE drawn ruler — no Material NavigationBar, no pill, no
+            // elevation, no container. Five equal slots, fixed silhouettes;
+            // selection is a colour + one 16x2dp printed-index rule.
+            Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface)) {
+                Box(
+                    Modifier.fillMaxWidth().height(1.dp)
+                        .background(MaterialTheme.colorScheme.outlineVariant),
+                )
+                Row(Modifier.fillMaxWidth().height(56.dp)) {
+                    TopLevel.entries.forEach { dest ->
+                        val selected = top == dest // the parent stays marked on sub-screens
+                        Column(
+                            Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .clickable {
+                                    top = dest
+                                    sub = null
+                                },
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Box(Modifier.height(2.dp)) {
+                                if (selected) {
+                                    Box(
+                                        Modifier.size(width = 16.dp, height = 2.dp)
+                                            .background(MaterialTheme.colorScheme.primary),
+                                    )
+                                }
+                            }
+                            Box(
+                                Modifier.weight(1f),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                BrandGlyph(
+                                    kind = dest.glyph,
+                                    active = selected,
+                                    size = 22.dp,
+                                )
+                            }
+                            Text(
+                                dest.label,
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                                color = if (selected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(bottom = 10.dp),
                             )
-                        },
-                        label = { Text(dest.label, fontSize = 11.sp) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        ),
+                        }
+                    }
+                    // the contextual drawer lives at the EDGE of the ruler,
+                    // not floating over the content and not a sixth slot
+                    Box(
+                        Modifier
+                            .width(1.dp).fillMaxHeight()
+                            .background(MaterialTheme.colorScheme.outlineVariant),
                     )
+                    Column(
+                        Modifier
+                            .width(48.dp)
+                            .fillMaxHeight()
+                            .clickable { sub = Route.More },
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        BrandGlyph(kind = Glyph.GRID, active = false, size = 22.dp)
+                        Text(
+                            "أدوات",
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
         },
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {
-            // the fifth place is CONTEXTUAL: tools and settings live one tap
-            // away on every screen, not as a bottom-nav bucket
-            if (sub == null) {
-                androidx.compose.material3.IconButton(
-                    onClick = { sub = Route.More },
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(top = 104.dp, end = Space.sm)
-                        .zIndex(2f),
-                ) {
-                    BrandGlyph(kind = Glyph.GRID, active = false, size = 20.dp)
-                }
-            }
             when (val route = sub) {
                 null -> when (top) {
                     TopLevel.Home -> HomeScreen(
@@ -551,7 +581,7 @@ fun HomeScreen(
             }
         }
         // clearance under the floating navigation — nothing ends half-cut
-        Spacer(Modifier.height(96.dp))
+        Spacer(Modifier.height(56.dp))
     }
 }
 
@@ -859,8 +889,10 @@ private fun HeroCard(
             Spacer(Modifier.height(Space.xs))
 
             Text(
-                timers.nextPrayer ?: "—",
+                (timers.nextPrayer ?: "—") +
+                    if (timers.nextIsTomorrow) " · غداً" else "",
                 style = MaterialTheme.typography.headlineMedium.copy(
+                    fontSize = 34.sp,
                     fontWeight = FontWeight.Medium,
                     letterSpacing = 0.sp,
                 ),
@@ -885,13 +917,6 @@ private fun HeroCard(
                 color = momentColor,
                 modifier = Modifier.padding(top = Space.xs),
             )
-            if (timers.nextIsTomorrow) {
-                Text(
-                    "غداً",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = scheme.onSurfaceVariant,
-                )
-            }
 
             // the elapsed — its own line, and only in the first hour
             if (state.display.showTimerElapsed && timers.sinceWorthShowing) {
@@ -914,7 +939,7 @@ private fun HeroCard(
                         timers.iqamaSeconds, timers.iqamaPrayer!!,
                     ).prefixAr + " " + fmt.hms(timers.iqamaSeconds),
                     style = MaterialTheme.typography.labelSmall,
-                    color = scheme.tertiary,
+                    color = scheme.onSurfaceVariant,
                 )
             }
             // «منذ الإقامة» — its OWN line: an elapsed fact about the iqama

@@ -592,22 +592,44 @@ private fun DayCell(
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
                 verticalAlignment = androidx.compose.ui.Alignment.Bottom,
             ) {
+                // ONE type (a fast bar), FOUR cuts — rank is the ink inside
+                // the same family, never a new colour, size-only signal or
+                // game level. Same grammar in every screen that shows a fast.
                 when (cell.fastKind) {
-                    app.miqat.core.IslamicDays.FastDay.RAMADAN -> Box(
-                        Modifier.width(44.dp).height(8.dp)
-                            .clip(RoundedCornerShape(2.dp)).background(scheme.secondary),
-                    )
-                    app.miqat.core.IslamicDays.FastDay.ARAFAH,
-                    app.miqat.core.IslamicDays.FastDay.ASHURA,
-                    app.miqat.core.IslamicDays.FastDay.SIX_SHAWWAL,
-                    app.miqat.core.IslamicDays.FastDay.WHITE -> Box(
-                        Modifier.width(16.dp).height(7.dp)
-                            .clip(RoundedCornerShape(2.dp)).background(scheme.secondary),
-                    )
+                    // R1 — nafl: raw cut stone, hollow, square corners
                     app.miqat.core.IslamicDays.FastDay.MON_THU -> Box(
                         Modifier.width(12.dp).height(6.dp)
-                            .border(1.5.dp, scheme.secondary, RoundedCornerShape(2.dp)),
+                            .border(1.dp, scheme.secondary, RoundedCornerShape(0.dp)),
                     )
+                    // R2 — sunnah: dressed once, a trace of ink inside
+                    app.miqat.core.IslamicDays.FastDay.WHITE,
+                    app.miqat.core.IslamicDays.FastDay.ASHURA,
+                    app.miqat.core.IslamicDays.FastDay.SIX_SHAWWAL -> Box(
+                        Modifier.width(16.dp).height(7.dp)
+                            .clip(RoundedCornerShape(1.dp))
+                            .background(scheme.secondary.copy(alpha = 0.10f))
+                            .border(1.5.dp, scheme.secondary, RoundedCornerShape(1.dp)),
+                    )
+                    // R3 — Arafah: double-ruled, the inner rule IS the mark
+                    app.miqat.core.IslamicDays.FastDay.ARAFAH -> Box(
+                        Modifier.width(20.dp).height(7.dp)
+                            .clip(RoundedCornerShape(1.dp))
+                            .border(2.dp, scheme.secondary, RoundedCornerShape(1.dp)),
+                        contentAlignment = androidx.compose.ui.Alignment.Center,
+                    ) {
+                        Box(
+                            Modifier.width(14.dp).height(2.dp).background(scheme.secondary),
+                        )
+                    }
+                    // R4 — Ramadan: filled, with ONE gold inlay at the start
+                    app.miqat.core.IslamicDays.FastDay.RAMADAN -> Box(
+                        Modifier.width(44.dp).height(8.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(scheme.secondary),
+                        contentAlignment = androidx.compose.ui.Alignment.CenterEnd,
+                    ) {
+                        Box(Modifier.width(6.dp).height(2.dp).background(scheme.primary))
+                    }
                     else -> Unit // Eid and tashreeq veto the fast badge
                 }
                 when (cell.occasion) {

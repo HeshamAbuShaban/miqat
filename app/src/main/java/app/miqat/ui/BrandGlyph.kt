@@ -14,16 +14,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * THE BRAND GLYPHS — the navigation drawn from the app's own geometry.
+ * ONE ALPHABET — five marks cut from the same object.
  *
- * The four Material icons that shipped first (Home, List, DateRange, Settings)
- * are the most generic in the whole set — and "a list" for a prayer schedule
- * is a tell. These five are drawn from the app's shapes: the horizon (the
- * home), the ticked horizon (the times), the open bracket (the fast's
- * window), the ledger cell (the calendar), and the grid (the settings).
- *
- * One size, one stroke weight, one colour rule: gold when the destination is
- * the current one, dim otherwise.
+ * The council's ruling: the old glyphs were drawn one at a time, each with
+ * its own skeleton, and they MUTATED on selection (1.7dp → 2.4dp + a pill).
+ * A navigation set must be one family: one 24-unit box, one baseline
+ * y=18, one arc P(3,18)→P(12,4.5)→P(21,18), one fixed 2dp stroke.
+ * Selection changes COLOUR only — never the silhouette.
  */
 enum class Glyph { HORIZON, TICKS, BRACKET, CELL, SPAN, GRID }
 
@@ -34,133 +31,67 @@ fun BrandGlyph(
     modifier: Modifier = Modifier,
     size: Dp = 22.dp,
 ) {
-    val color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+    val color = if (active) MaterialTheme.colorScheme.primary
+    else MaterialTheme.colorScheme.onSurfaceVariant
     Canvas(modifier.size(size)) {
-        val w = this.size.width
-        val h = this.size.height
-        val stroke = if (active) 2.4f else 1.7f
+        val s = this.size.width / 24f
+        fun p(x: Float, y: Float) = Offset(x * s, y * s)
+        val w = 2f * s // the ONE stroke, fixed in both states
+
+        fun arc(): Path = Path().apply {
+            moveTo(3f * s, 18f * s)
+            quadraticTo(12f * s, 4.5f * s, 21f * s, 18f * s)
+        }
+        fun base() = drawLine(color, p(3f, 18f), p(21f, 18f), w, StrokeCap.Round)
 
         when (kind) {
-            Glyph.HORIZON -> {
-                // the sun sits ON the arc's apex — the same mark as the
-                // launcher and the hero, not a bullet glued to an endpoint
-                val p = Path().apply {
-                    moveTo(w * 0.08f, h * 0.72f)
-                    quadraticTo(w * 0.5f, h * 0.06f, w * 0.92f, h * 0.72f)
-                }
-                drawPath(p, color, style = Stroke(width = stroke, cap = StrokeCap.Round))
-                drawCircle(color, w * 0.055f, Offset(w * 0.5f, h * 0.39f))
-            }
+            // the horizon itself — nothing added
+            Glyph.HORIZON -> drawPath(arc(), color, style = Stroke(width = w, cap = StrokeCap.Round))
 
+            // three real prayer dots ON the curve (the quadratic, not floated)
             Glyph.TICKS -> {
-                // the arc + the prayer ticks
-                val p = Path().apply {
-                    moveTo(w * 0.08f, h * 0.74f)
-                    quadraticTo(w * 0.5f, h * 0.14f, w * 0.92f, h * 0.74f)
-                }
-                drawPath(p, color, style = Stroke(width = stroke, cap = StrokeCap.Round))
-                // ticks sit ON the curve (the old y formula floated 0.28h
-                // above it): the exact quadratic, with the sunrise omitted
-                listOf(0f, 0.47f, 0.68f, 0.86f, 1f).forEach { t ->
+                drawPath(arc(), color, style = Stroke(width = w, cap = StrokeCap.Round))
+                listOf(0.28f, 0.5f, 0.72f).forEach { t ->
                     val mt = 1 - t
-                    val x = w * (0.08f + 0.84f * t)
-                    val y = h * (mt * mt * 0.74f + 2 * mt * t * 0.14f + t * t * 0.74f)
-                    drawCircle(color, stroke * 0.75f, Offset(x, y))
+                    val x = mt * mt * 3f + 2 * mt * t * 12f + t * t * 21f
+                    val y = mt * mt * 18f + 2 * mt * t * 4.5f + t * t * 18f
+                    drawCircle(color, 1.5f * s, p(x, y))
                 }
             }
 
+            // a fast's window measured on the horizon: two posts
             Glyph.BRACKET -> {
-                // the fast's window: two end dots — not a sun inside a box
-                val y = h * 0.56f
-                drawLine(
-                    color = color,
-                    start = Offset(w * 0.14f, y),
-                    end = Offset(w * 0.86f, y),
-                    strokeWidth = stroke,
-                    cap = StrokeCap.Round,
-                )
-                // the legs rise to the two endpoints, as on the fasting arc
-                drawLine(
-                    color = color,
-                    start = Offset(w * 0.14f, y),
-                    end = Offset(w * 0.14f, h * 0.30f),
-                    strokeWidth = stroke,
-                    cap = StrokeCap.Round,
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(w * 0.86f, y),
-                    end = Offset(w * 0.86f, h * 0.30f),
-                    strokeWidth = stroke,
-                    cap = StrokeCap.Round,
-                )
-                listOf(0.14f, 0.86f).forEach { fx ->
-                    drawCircle(color, w * 0.05f, Offset(w * fx, h * 0.30f))
+                base()
+                listOf(6f, 18f).forEach { x ->
+                    drawLine(color, p(x, 18f), p(x, 10f), w, StrokeCap.Round)
                 }
             }
 
+            // the calendar page: its bottom edge IS the baseline
             Glyph.CELL -> {
-                // the ledger cell + the sigil strip
-                val r = w * 0.12f
                 drawRoundRect(
-                    color = color,
-                    topLeft = Offset(w * 0.14f, h * 0.14f),
-                    size = androidx.compose.ui.geometry.Size(w * 0.72f, h * 0.72f),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(r, r),
-                    style = Stroke(width = stroke),
+                    color,
+                    topLeft = p(3f, 6f),
+                    size = androidx.compose.ui.geometry.Size(18f * s, 12f * s),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(3f * s, 3f * s),
+                    style = Stroke(width = w),
                 )
-                // the cell's one real mark: the fast sigil, a short bar
-                drawLine(
-                    color = color,
-                    start = Offset(w * 0.26f, h * 0.70f),
-                    end = Offset(w * 0.56f, h * 0.70f),
-                    strokeWidth = 3.dp.toPx(),
-                    cap = StrokeCap.Round,
-                )
+                drawLine(color, p(7f, 14f), p(13f, 14f), 3f * s, StrokeCap.Round)
             }
 
+            // the act rail: a window and one now-playhead
             Glyph.SPAN -> {
-                // the ACT RAIL in miniature: a spine, a real window, and
-                // ONE crossing playhead — three marks, each a fact
-                drawLine(
-                    color = color,
-                    start = Offset(w * 0.12f, h * 0.58f),
-                    end = Offset(w * 0.88f, h * 0.58f),
-                    strokeWidth = stroke,
-                    cap = StrokeCap.Round,
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(w * 0.60f, h * 0.58f),
-                    end = Offset(w * 0.88f, h * 0.58f),
-                    strokeWidth = stroke * 1.6f,
-                    cap = StrokeCap.Round,
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(w * 0.5f, h * 0.30f),
-                    end = Offset(w * 0.5f, h * 0.86f),
-                    strokeWidth = stroke,
-                    cap = StrokeCap.Round,
-                )
+                base()
+                drawLine(color, p(12f, 18f), p(21f, 18f), 3f * s, StrokeCap.Round)
+                drawLine(color, p(12f, 10f), p(12f, 18f), w, StrokeCap.Round)
             }
 
+            // the contextual drawer: three gnomons, three shadow lengths
             Glyph.GRID -> {
-                // settings are ADJUSTMENTS: three sliders in the app's own
-                // line-and-dot language (a 2×2 dot grid says "grid", not this)
-                listOf(0.3f, 0.5f, 0.7f).forEachIndexed { i, fy ->
-                    drawLine(
-                        color = color,
-                        start = Offset(w * 0.14f, h * fy),
-                        end = Offset(w * 0.86f, h * fy),
-                        strokeWidth = stroke,
-                        cap = StrokeCap.Round,
-                    )
-                    drawCircle(
-                        color = color,
-                        radius = w * 0.07f,
-                        center = Offset(w * listOf(0.32f, 0.66f, 0.5f)[i], h * fy),
-                    )
+                base()
+                listOf(7f to 13f, 12f to 9f, 17f to 11f).forEach { (x, y) ->
+                    drawLine(color, p(x, 18f), p(x, y), w, StrokeCap.Round)
+                    drawCircle(color, 1.5f * s, p(x, y))
                 }
             }
         }
