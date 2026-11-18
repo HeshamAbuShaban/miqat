@@ -1,5 +1,10 @@
 package app.miqat.ui
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -79,7 +84,20 @@ fun ActsScreen(
         )
         Spacer(Modifier.height(Space.md))
 
-        live.forEach { item ->
+        // THE ACT RAIL — the day as a SHAPE: every act at its real geometry,
+        // not a list of labels with a time stapled on (the founder: «الطاعات
+        // توضح بغير هذا الشكل .. أصلا الشكل الحالي لا ينم عن أي طاعة»).
+        ActRail(live, nowMinute)
+        Spacer(Modifier.height(Space.lg))
+
+        // grouped by STATE — «الأقرب فالأقرب»: what is open, then what comes,
+        // then what passed (never a fake countdown for a passed act)
+        val order = mapOf(
+            ActsCatalog.ActState.RUNNING to 0,
+            ActsCatalog.ActState.UPCOMING to 1,
+            ActsCatalog.ActState.PASSED to 2,
+        )
+        live.sortedBy { order[it.state] }.forEach { item ->
             ActRow(item, fmt) { onOpenAct(item.act.id) }
             Divider()
         }
@@ -89,6 +107,60 @@ fun ActsScreen(
     }
 }
 
+
+/**
+ * The day as a rail: RTL, 00:00 at the right, 24:00 at the left. A window is
+ * a teal bar, a point is a gold dot, the fast is a bracket between two gold
+ * pins, and NOW is one saffron tick — the legend the app already teaches.
+ */
+@Composable
+private fun ActRail(items: List<ActsCatalog.Live>, nowMinute: Int) {
+    val scheme = MaterialTheme.colorScheme
+    Canvas(
+        Modifier
+            .fillMaxWidth()
+            .height(52.dp),
+    ) {
+        val w = size.width
+        val h = size.height
+        val y = h * 0.55f
+        val xOf: (Int) -> Float = { m -> w * (0.92f - 0.84f * (m.coerceIn(0, 1440) / 1440f)) }
+        // the spine
+        drawLine(
+            scheme.outlineVariant,
+            Offset(xOf(0), y), Offset(xOf(1440), y),
+            strokeWidth = 1f,
+        )
+        items.forEach { item ->
+            when {
+                item.act.isWindow -> drawLine(
+                    scheme.secondary.copy(alpha = if (item.state == ActsCatalog.ActState.PASSED) 0.3f else 0.9f),
+                    Offset(xOf(item.startMinute), y), Offset(xOf(item.endMinute), y),
+                    strokeWidth = 5f, cap = StrokeCap.Round,
+                )
+                item.act.isBoundary -> {
+                    drawLine(
+                        scheme.secondary.copy(alpha = 0.7f),
+                        Offset(xOf(item.startMinute), y - 6f), Offset(xOf(item.endMinute), y - 6f),
+                        strokeWidth = 2f,
+                    )
+                    listOf(item.startMinute, item.endMinute).forEach { m ->
+                        drawCircle(scheme.primary, 3f, Offset(xOf(m), y))
+                    }
+                }
+                else -> drawCircle(
+                    scheme.primary, 3.5f, Offset(xOf(item.startMinute), y),
+                )
+            }
+        }
+        // now — the only saffron mark on the rail
+        drawLine(
+            app.miqat.ui.Sky.sunMark,
+            Offset(xOf(nowMinute), y - 12f), Offset(xOf(nowMinute), y + 12f),
+            strokeWidth = 2f,
+        )
+    }
+}
 @Composable
 private fun ActRow(item: ActsCatalog.Live, fmt: Fmt, onClick: () -> Unit) {
     val scheme = MaterialTheme.colorScheme
@@ -108,7 +180,7 @@ private fun ActRow(item: ActsCatalog.Live, fmt: Fmt, onClick: () -> Unit) {
                 .clip(CircleShape)
                 .background(
                     when {
-                        running -> scheme.tertiary
+                        running -> scheme.secondary
                         passed -> scheme.outline
                         else -> scheme.primary
                     },
@@ -126,18 +198,25 @@ private fun ActRow(item: ActsCatalog.Live, fmt: Fmt, onClick: () -> Unit) {
                 style = MaterialTheme.typography.bodySmall,
                 color = scheme.onSurfaceVariant,
             )
+            Text(
+                item.act.source ?: "تقديري بحسب الاصطلاح",
+                style = MaterialTheme.typography.labelSmall,
+                color = scheme.onSurfaceVariant,
+            )
         }
         Spacer(Modifier.width(Space.md))
         Column(horizontalAlignment = Alignment.End) {
             Text(
-                fmt.hhmm(item.startMinute),
-                style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = TabularFigures),
-                color = if (running) scheme.tertiary else scheme.onSurface,
+                if (item.act.isWindow || item.act.isBoundary)
+                    "${fmt.hhmm(item.startMinute)} — ${fmt.hhmm(item.endMinute)}"
+                else fmt.hhmm(item.startMinute),
+                style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = TabularFigures),
+                color = if (running) scheme.secondary else scheme.onSurface,
             )
             Text(
                 when (item.state) {
-                    ActsCatalog.ActState.UPCOMING -> "بعد ${fmt.n(item.minutesAway)} د"
-                    ActsCatalog.ActState.RUNNING -> "جارٍ · يبقى ${fmt.n(item.minutesAway)} د"
+                    ActsCatalog.ActState.UPCOMING -> "بقي ${fmt.n(item.minutesAway)} د"
+                    ActsCatalog.ActState.RUNNING -> "جارٍ · بقي ${fmt.n(item.minutesAway)} د"
                     ActsCatalog.ActState.PASSED -> "مضى"
                 },
                 style = MaterialTheme.typography.labelSmall,

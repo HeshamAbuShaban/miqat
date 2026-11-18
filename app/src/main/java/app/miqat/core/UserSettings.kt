@@ -84,6 +84,8 @@ data class DisplayPrefs(
     /** The widget names the city — ONLY when the user opted in and the
      *  times actually come from that city (never under a GPS fix). */
     val widgetShowCity: Boolean = false,
+    /** Offline per-day act log ("2026-11-18:fast") — no account, no cloud. */
+    val dayActLog: Set<String> = emptySet(),
     /** Which prayer the calendar's month table shows (0 = Fajr). */
     val calendarPrayer: Int = 0,
     /** The calendar's month table is visible. */
@@ -133,6 +135,7 @@ object UserSettings {
     private const val K_WIDGET_CITY = "widget_show_city"
     private const val K_CAL_PRAYER = "cal_prayer"
     private const val K_CAL_TABLE = "cal_table"
+    private const val K_DAY_ACTS = "day_act_log"
     private const val K_SHOW_REMINDER = "show_reminder"
     private const val K_SHOW_NIGHT = "show_night"
     private const val K_SHOW_STRIP = "show_prayer_strip"
@@ -239,6 +242,7 @@ object UserSettings {
             widgetShowCity = p.getBoolean(K_WIDGET_CITY, false),
             calendarPrayer = p.getInt(K_CAL_PRAYER, 0),
             calendarShowTable = p.getBoolean(K_CAL_TABLE, true),
+            dayActLog = p.getStringSet(K_DAY_ACTS, emptySet()) ?: emptySet(),
             showDailyReminder = p.getBoolean(K_SHOW_REMINDER, true),
             showNightMarkers = p.getBoolean(K_SHOW_NIGHT, true),
             showPrayerStrip = p.getBoolean(K_SHOW_STRIP, true),
@@ -301,6 +305,7 @@ object UserSettings {
             .putBoolean(K_WIDGET_CITY, d.widgetShowCity)
             .putInt(K_CAL_PRAYER, d.calendarPrayer)
             .putBoolean(K_CAL_TABLE, d.calendarShowTable)
+            .putStringSet(K_DAY_ACTS, d.dayActLog)
             .putBoolean(K_SHOW_REMINDER, d.showDailyReminder)
             .putBoolean(K_SHOW_NIGHT, d.showNightMarkers)
             .putBoolean(K_SHOW_STRIP, d.showPrayerStrip)

@@ -107,7 +107,9 @@ object ActsCatalog {
             val away = when (state) {
                 ActState.UPCOMING -> start - nowMinute
                 ActState.RUNNING -> end - nowMinute
-                ActState.PASSED -> 1440 - nowMinute + start
+                // a passed act has NO forward number (the old wrap said
+                // "بعد ١٦ ساعة" — the twelve-hour lie again)
+                ActState.PASSED -> 0
             }
             // the dual clock of the act: how long it has been open, and how
             // long it stays open (R1: the remaining is primary, the elapsed

@@ -86,10 +86,16 @@ fun CalendarScreen(
     // worship the month holds.
     var axis by remember {
         mutableStateOf(
-            runCatching { app.miqat.core.CalendarContext.valueOf(d.calendarContext) }
-                .getOrDefault(app.miqat.core.CalendarContext.HIJRI),
+            when (runCatching { app.miqat.core.CalendarContext.valueOf(d.calendarContext) }.getOrNull()) {
+                app.miqat.core.CalendarContext.GREGORIAN -> app.miqat.core.CalendarContext.GREGORIAN
+                else -> app.miqat.core.CalendarContext.HIJRI // ACTS was never an axis
+            },
         )
     }
+    // A LENS, not a peer tab: the founder called the three-way split stupid.
+    // The Hijri/Gregorian spine stays; this only dims what is not being sought.
+    var lens by remember { mutableStateOf("الكل") }
+    val lenses = listOf("الكل", "صيام", "مناسبات")
     val cityToday = state.cityDate(now)
     // the swipe: the month follows the finger and turns at the end (in RTL,
     // dragging to the LEFT is the next month)
@@ -144,12 +150,16 @@ fun CalendarScreen(
     ) {
         Spacer(Modifier.height(Space.md))
 
-        // the CONTEXT — what the calendar is organized around
+        // THE SPINE — the calendar is organized around ONE axis, not three
+        // competing tabs (the founder: «التقسيم للتبويب غبي»).
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(Space.xs),
         ) {
-            app.miqat.core.CalendarContext.entries.forEach { c ->
+            listOf(
+                app.miqat.core.CalendarContext.HIJRI,
+                app.miqat.core.CalendarContext.GREGORIAN,
+            ).forEach { c ->
                 val selected = c == axis
                 Text(
                     c.labelAr,
@@ -170,11 +180,15 @@ fun CalendarScreen(
                 )
             }
             Spacer(Modifier.weight(1f))
-            // «اليوم» — always visible: the calendar never yanks the user back,
-            // but the way back is one tap
-            val onToday = window.spineYear == cityToday.first &&
-                (axis == app.miqat.core.CalendarContext.GREGORIAN ||
-                    axis == app.miqat.core.CalendarContext.ACTS)
+            // «اليوم» — always visible; the way back is one tap
+            val todayHijri = app.miqat.core.Hijri.at(
+                cityToday.first, cityToday.second, cityToday.third, d.hijriOffsetDays,
+            )
+            val onToday = when (axis) {
+                app.miqat.core.CalendarContext.HIJRI ->
+                    window.spineYear == todayHijri.hYear && window.spineMonth == todayHijri.hMonth
+                else -> window.spineYear == cityToday.first && window.spineMonth == cityToday.second
+            }
             Text(
                 "اليوم",
                 style = MaterialTheme.typography.labelMedium,
@@ -190,6 +204,36 @@ fun CalendarScreen(
                     }
                     .padding(horizontal = Space.md, vertical = 6.dp),
             )
+        }
+        Spacer(Modifier.height(Space.sm))
+        // THE LENS — acts are a way of looking at the same ledger
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Space.xs),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+        ) {
+            Text(
+                "العدسة",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            lenses.forEach { l ->
+                val active = l == lens
+                Text(
+                    l,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (active) MaterialTheme.colorScheme.onSurface
+                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(Radius.chip))
+                        .background(
+                            if (active) MaterialTheme.colorScheme.surfaceVariant
+                            else androidx.compose.ui.graphics.Color.Transparent,
+                        )
+                        .clickable { lens = l }
+                        .padding(horizontal = Space.sm, vertical = 3.dp),
+                )
+            }
         }
         Spacer(Modifier.height(Space.sm))
 
@@ -294,7 +338,13 @@ fun CalendarScreen(
                             DayCell(
                                 cell = cell,
                                 primaryHijri = axis == app.miqat.core.CalendarContext.HIJRI,
-                                emphasiseActs = axis == app.miqat.core.CalendarContext.ACTS,
+                                emphasiseActs = false,
+                                showPrimary = if (axis == app.miqat.core.CalendarContext.HIJRI)
+                                    d.calendarShowHijri else d.calendarShowGregorian,
+                                showSecondary = if (axis == app.miqat.core.CalendarContext.HIJRI)
+                                    d.calendarShowGregorian else d.calendarShowHijri,
+                                showEvents = d.calendarShowEvents,
+                                lens = lens,
                                 fmt = fmt,
                                 onClick = {
                                     onOpenDay(cell.gregorianYear, cell.gregorianMonth, cell.gregorianDay)
@@ -418,15 +468,27 @@ private fun DayCell(
     cell: app.miqat.core.CalendarCell,
     primaryHijri: Boolean,
     emphasiseActs: Boolean,
+    showPrimary: Boolean,
+    showSecondary: Boolean,
+    showEvents: Boolean,
+    lens: String,
     fmt: Fmt,
     onClick: () -> Unit,
 ) {
     val scheme = MaterialTheme.colorScheme
+    // the lens dims UNMATCHED days; nothing disappears (the ledger stays whole)
+    val relevant = when (lens) {
+        "صيام" -> cell.isFast
+        "مناسبات" -> cell.isRite
+        else -> true
+    }
+    val cellAlpha = if (relevant) 1f else 0.32f
     Column(
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(Radius.row))
             .background(if (cell.isToday) scheme.primaryContainer else androidx.compose.ui.graphics.Color.Transparent)
+            .graphicsLayer { alpha = cellAlpha }
             .clickable { onClick() }
             .padding(vertical = 5.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -440,16 +502,20 @@ private fun DayCell(
                     .background(scheme.primary),
             )
         }
-        Text(
-            text = if (primaryHijri) fmt.n(cell.hijriDay) else fmt.n(cell.gregorianDay),
-            style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = TabularFigures),
-            color = if (cell.isToday) scheme.onPrimaryContainer else scheme.onSurface,
-        )
-        Text(
-            text = if (primaryHijri) fmt.n(cell.gregorianDay) else fmt.n(cell.hijriDay),
-            style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = TabularFigures),
-            color = scheme.onSurfaceVariant,
-        )
+        if (showPrimary) {
+            Text(
+                text = if (primaryHijri) fmt.n(cell.hijriDay) else fmt.n(cell.gregorianDay),
+                style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = TabularFigures),
+                color = if (cell.isToday) scheme.onPrimaryContainer else scheme.onSurface,
+            )
+        }
+        if (showSecondary) {
+            Text(
+                text = if (primaryHijri) fmt.n(cell.gregorianDay) else fmt.n(cell.hijriDay),
+                style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = TabularFigures),
+                color = scheme.onSurfaceVariant,
+            )
+        }
         if (cell.turnsHere && cell.turnsToLabel.isNotBlank()) {
             Text(
                 text = cell.turnsToLabel,
@@ -458,7 +524,7 @@ private fun DayCell(
                 maxLines = 1,
             )
         }
-        if (emphasiseActs || cell.isFast || cell.isRite) {
+        if (showEvents && (emphasiseActs || cell.isFast || cell.isRite)) {
             Spacer(Modifier.height(2.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                 Box(
@@ -754,25 +820,37 @@ private val ARABIC_MONTHS = listOf(
     "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر",
 )
 
-/** A single day: its prayers, its worship windows and the gaps between them. */
+/** A single day: its prayers, its windows, and things the user can DO. */
 @Composable
-fun DayDetailScreen(state: AppState, fmt: Fmt, year: Int, month: Int, day: Int, onBack: () -> Unit) {
+fun DayDetailScreen(
+    state: AppState,
+    fmt: Fmt,
+    year: Int,
+    month: Int,
+    day: Int,
+    onBack: () -> Unit,
+    onOpenPrayer: (Int) -> Unit,
+    onOpenTasbih: () -> Unit,
+) {
+    // REAL date arithmetic: the old `month + 1` kept the day, so Jan 31 asked
+    // for Feb 31 and got a normalised, wrong night.
+    val (ty, tm, td) = app.miqat.core.Dates.nextDay(year, month, day)
+
     val times = state.times(year, month, day)
-    val tomorrow = state.times(
-        if (month == 12) year + 1 else year,
-        if (month == 12) 1 else month + 1,
-        day,
-    )
-    val hijri = Hijri.at(year, month, day, state.display.hijriOffsetDays)
+    val tomorrow = state.times(ty, tm, td)
+    val hijri = app.miqat.core.Hijri.at(year, month, day, state.display.hijriOffsetDays)
     val timeline = remember(year, month, day, state.city.calcMethod, state.display.methodOverride, state.adjusts) {
-        Moments.timeline(
+        app.miqat.core.Moments.timeline(
             times, tomorrow.fajr, PRAYER_NAMES, ::minutesOf,
             hijriMonth = hijri.hMonth, hijriDay = hijri.hDay,
             imsakLeadMinutes = state.imsakLeadMinutes,
         )
     }
+    val dayKey = "%04d-%02d-%02d".format(year, month, day)
+    val logged = state.display.dayActLog
+    var showLog by remember { mutableStateOf(false) }
 
-    MiqatScaffold(Hijri.label(hijri, fmt.ar), onBack = onBack) {
+    MiqatScaffold(app.miqat.core.Hijri.label(hijri, fmt.ar), onBack = onBack) {
         Column(
             Modifier
                 .fillMaxSize()
@@ -780,19 +858,63 @@ fun DayDetailScreen(state: AppState, fmt: Fmt, year: Int, month: Int, day: Int, 
                 .padding(horizontal = Space.lg),
         ) {
             Spacer(Modifier.height(Space.sm))
+            // the spine: the prayer points are TAPPABLE now, not a dead picture
             DayCard(
-                state = state,
-                fmt = fmt,
-                year = year,
-                month = month,
-                day = day,
-                timeline = timeline,
-                hijri = hijri,
-                onOpenPrayer = { },
+                state = state, fmt = fmt,
+                year = year, month = month, day = day,
+                timeline = timeline, hijri = hijri,
+                onOpenPrayer = onOpenPrayer,
             )
             Spacer(Modifier.height(Space.lg))
+
             Text(
-                "محسوبة عند الطلب — بلا جدولة مسبقة لكل أيام السنة.",
+                "ما تفعله في هذا اليوم",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Spacer(Modifier.height(Space.xs))
+            NavRow(
+                "سجّل طاعة",
+                "صيام · صلاة · ذكر — يُحفظ على جهازك فقط",
+                onClick = { showLog = !showLog },
+            )
+            if (showLog) {
+                listOf("fast" to "صيام", "prayer" to "صلاة", "dhikr" to "ذكر").forEach { (kind, label) ->
+                    val key = "$dayKey:$kind"
+                    val on = key in logged
+                    Text(
+                        (if (on) "✓ " else "") + label,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (on) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                state.updateDisplay(
+                                    state.display.copy(
+                                        dayActLog = if (on) logged - key else logged + key,
+                                    ),
+                                )
+                            }
+                            .padding(vertical = Space.sm, horizontal = Space.md),
+                    )
+                }
+            }
+            Divider()
+            NavRow(
+                "افتح الموعد",
+                "تفاصيل أول موعد في هذا اليوم",
+                onClick = { onOpenPrayer(0) },
+            )
+            Divider()
+            NavRow(
+                "أضف ذكرًا",
+                "التسبيح مرجعٌ مقرون بالتذكير، لا شاشة منفصلة",
+                onClick = onOpenTasbih,
+            )
+            Spacer(Modifier.height(Space.md))
+            Text(
+                "المواقيت محسوبة عند الطلب — بلا جدولة مسبقة لكل أيام السنة.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

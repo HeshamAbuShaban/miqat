@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
  * One size, one stroke weight, one colour rule: gold when the destination is
  * the current one, dim otherwise.
  */
-enum class Glyph { HORIZON, TICKS, BRACKET, CELL, GRID }
+enum class Glyph { HORIZON, TICKS, BRACKET, CELL, SPAN, GRID }
 
 @Composable
 fun BrandGlyph(
@@ -122,6 +122,32 @@ fun BrandGlyph(
                 )
                 drawCircle(color, w * 0.06f, Offset(w * 0.58f, h * 0.68f))
                 drawCircle(color, w * 0.05f, Offset(w * 0.72f, h * 0.68f))
+            }
+
+            Glyph.SPAN -> {
+                // the ACT RAIL in miniature: a span with a dot at its hour
+                drawLine(
+                    color = color,
+                    start = Offset(w * 0.12f, h * 0.58f),
+                    end = Offset(w * 0.88f, h * 0.58f),
+                    strokeWidth = stroke,
+                    cap = StrokeCap.Round,
+                )
+                drawLine(
+                    color = color,
+                    start = Offset(w * 0.34f, h * 0.34f),
+                    end = Offset(w * 0.34f, h * 0.82f),
+                    strokeWidth = stroke,
+                    cap = StrokeCap.Round,
+                )
+                drawLine(
+                    color = color,
+                    start = Offset(w * 0.72f, h * 0.34f),
+                    end = Offset(w * 0.72f, h * 0.82f),
+                    strokeWidth = stroke,
+                    cap = StrokeCap.Round,
+                )
+                drawCircle(color, w * 0.08f, Offset(w * 0.53f, h * 0.58f))
             }
 
             Glyph.GRID -> {

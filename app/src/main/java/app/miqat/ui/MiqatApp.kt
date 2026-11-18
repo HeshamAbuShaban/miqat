@@ -76,6 +76,7 @@ enum class TopLevel(val label: String, val glyph: Glyph) {
     Times("المواقيت", Glyph.TICKS),
     Fasting("الصيام", Glyph.BRACKET),
     Calendar("التقويم", Glyph.CELL),
+    Acts("الطاعات", Glyph.SPAN),
     More("المزيد", Glyph.GRID),
 }
 
@@ -182,6 +183,11 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                     )
                     TopLevel.Fasting -> FastingScreen(state, fmt, now)
                     TopLevel.Calendar -> CalendarScreen(state, fmt, now, onOpenDay = { y, m, d -> sub = Route.DayDetail(y, m, d) })
+                    TopLevel.Acts -> ActsScreen(
+                        state, fmt, now,
+                        onOpenAct = { sub = Route.ActDetail(it) },
+                        onOpenTasbih = { sub = Route.Tasbih },
+                    )
                     TopLevel.More -> MoreScreen(state, fmt, now, onOpen = { target ->
                         sub = when (target) {
                             MoreTarget.QIBLA -> Route.Qibla
@@ -197,7 +203,12 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                 }
                 is Route.PrayerDetailArgs -> PrayerDetailScreen(state, fmt, route.index) { sub = null }
                 is Route.WorshipDetail -> WorshipDetailScreen(state, fmt, route.kind) { sub = null }
-                is Route.DayDetail -> DayDetailScreen(state, fmt, route.year, route.month, route.day) { sub = null }
+                is Route.DayDetail -> DayDetailScreen(
+                    state, fmt, route.year, route.month, route.day,
+                    onBack = { sub = null },
+                    onOpenPrayer = { i -> sub = Route.PrayerDetailArgs(i) },
+                    onOpenTasbih = { sub = Route.Tasbih },
+                )
                 Route.Gaps -> GapsScreen(state, fmt) { sub = null }
                 Route.Interval -> IntervalScreen(state, fmt) { sub = null }
                 Route.Sunnah -> SunnahScreen(state, fmt) { sub = null }
