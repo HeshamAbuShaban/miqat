@@ -210,6 +210,22 @@ same ticks, same type scale, same words. Not a donor widget in our colours.
 - **Tokens live in `res/values/colors.xml`** (`miqat_*`) — no hex literals
   in the layout, no drift between files.
 
+## 8c. The Day-Line (the home's second drawing)
+
+The rail is a MAP, not a second table. Fajr sits at the right end, Isha at
+the left; the 10% margins at both ends are the night, so the now-mark can
+sit in the night without being clamped onto Fajr.
+
+- Each tick carries NAME (10sp) + CLOCK (11sp, tnum). The sunrise is a
+  saffron dot, never an appointment.
+- States: `PASSED` dim · `CURRENT` gold ring · `NEXT` saffron tall stub +
+  dot + saffron clock · `LATER` hairline. Saffron = now, gold = ours.
+- NOW is a 2dp saffron playhead crossing the line (17dp tall).
+- Label boxes are 46dp, clamped inside the rail, and hang inward at the
+  edges. Rows alternate even/odd so evening neighbours never collide.
+- A 48dp invisible, ripple-free target over each tick opens that prayer's
+  detail. There is no countdown on the rail — the hero owns it.
+
 ## 9. Agent Prompt Guide
 
 **Quick colours**: bg `#060B1C`/`#F2ECDC` · surface `#0E1526`/`#FFFCF4` ·

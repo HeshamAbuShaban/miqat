@@ -178,6 +178,7 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                         state, fmt, now,
                         onOpenTimes = { top = TopLevel.Times },
                         onOpenQibla = { sub = Route.Qibla },
+                        onOpenPrayer = { sub = Route.PrayerDetailArgs(it) },
                     )
                     TopLevel.Times -> TimesScreen(
                         state, fmt, now,
@@ -315,6 +316,7 @@ fun HomeScreen(
     nowState: State<Long>,
     onOpenTimes: () -> Unit,
     onOpenQibla: () -> Unit = {},
+    onOpenPrayer: (Int) -> Unit = {},
 ) {
     val context = LocalContext.current
     val now = nowState.value
@@ -424,10 +426,15 @@ fun HomeScreen(
         // 4 — the day-rail: the day's proportions (and the sunrise, a tick)
         if (state.display.showPrayerStrip) {
             DayRail(
-                times = times,
+                entries = app.miqat.core.DayRailInfo.entries(
+                    times = times,
+                    labels = PRAYER_NAMES,
+                    nowMinute = nowMinutes,
+                    tomorrowFajrMinute = minutesOf(tomorrowHome.fajr),
+                ),
                 fmt = fmt,
-                nextIndex = nextPrayerIndex(timers),
                 nowMinute = nowMinutes.toDouble(),
+                onOpenPrayer = onOpenPrayer,
             )
             Spacer(Modifier.height(Space.xl))
         }

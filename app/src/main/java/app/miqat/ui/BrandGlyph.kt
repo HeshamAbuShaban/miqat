@@ -42,13 +42,14 @@ fun BrandGlyph(
 
         when (kind) {
             Glyph.HORIZON -> {
-                // the arc + the sun at its right end
+                // the sun sits ON the arc's apex — the same mark as the
+                // launcher and the hero, not a bullet glued to an endpoint
                 val p = Path().apply {
                     moveTo(w * 0.08f, h * 0.72f)
                     quadraticTo(w * 0.5f, h * 0.06f, w * 0.92f, h * 0.72f)
                 }
                 drawPath(p, color, style = Stroke(width = stroke, cap = StrokeCap.Round))
-                drawCircle(color, w * 0.055f, Offset(w * 0.92f, h * 0.72f))
+                drawCircle(color, w * 0.055f, Offset(w * 0.5f, h * 0.39f))
             }
 
             Glyph.TICKS -> {
@@ -64,18 +65,12 @@ fun BrandGlyph(
                     val mt = 1 - t
                     val x = w * (0.08f + 0.84f * t)
                     val y = h * (mt * mt * 0.74f + 2 * mt * t * 0.14f + t * t * 0.74f)
-                    drawLine(
-                        color = color,
-                        start = Offset(x, y),
-                        end = Offset(x, y - h * 0.07f),
-                        strokeWidth = stroke,
-                        cap = StrokeCap.Round,
-                    )
+                    drawCircle(color, stroke * 0.75f, Offset(x, y))
                 }
             }
 
             Glyph.BRACKET -> {
-                // the fast's window: an open bracket with the sun inside
+                // the fast's window: two end dots — not a sun inside a box
                 val y = h * 0.56f
                 drawLine(
                     color = color,
@@ -84,8 +79,7 @@ fun BrandGlyph(
                     strokeWidth = stroke,
                     cap = StrokeCap.Round,
                 )
-                // a SPAN: the legs RISE from the endpoints to the window,
-                // and the sun sits ON the bar — not floating over a box
+                // the legs rise to the two endpoints, as on the fasting arc
                 drawLine(
                     color = color,
                     start = Offset(w * 0.14f, y),
@@ -100,7 +94,9 @@ fun BrandGlyph(
                     strokeWidth = stroke,
                     cap = StrokeCap.Round,
                 )
-                drawCircle(color, w * 0.075f, Offset(w * 0.5f, y))
+                listOf(0.14f, 0.86f).forEach { fx ->
+                    drawCircle(color, w * 0.05f, Offset(w * fx, h * 0.30f))
+                }
             }
 
             Glyph.CELL -> {
@@ -113,19 +109,19 @@ fun BrandGlyph(
                     cornerRadius = androidx.compose.ui.geometry.CornerRadius(r, r),
                     style = Stroke(width = stroke),
                 )
+                // the cell's one real mark: the fast sigil, a short bar
                 drawLine(
                     color = color,
-                    start = Offset(w * 0.26f, h * 0.68f),
-                    end = Offset(w * 0.42f, h * 0.68f),
-                    strokeWidth = stroke * 1.4f,
+                    start = Offset(w * 0.26f, h * 0.70f),
+                    end = Offset(w * 0.56f, h * 0.70f),
+                    strokeWidth = 3.dp.toPx(),
                     cap = StrokeCap.Round,
                 )
-                drawCircle(color, w * 0.06f, Offset(w * 0.58f, h * 0.68f))
-                drawCircle(color, w * 0.05f, Offset(w * 0.72f, h * 0.68f))
             }
 
             Glyph.SPAN -> {
-                // the ACT RAIL in miniature: a span with a dot at its hour
+                // the ACT RAIL in miniature: a spine, a real window, and
+                // ONE crossing playhead — three marks, each a fact
                 drawLine(
                     color = color,
                     start = Offset(w * 0.12f, h * 0.58f),
@@ -135,19 +131,18 @@ fun BrandGlyph(
                 )
                 drawLine(
                     color = color,
-                    start = Offset(w * 0.34f, h * 0.34f),
-                    end = Offset(w * 0.34f, h * 0.82f),
-                    strokeWidth = stroke,
+                    start = Offset(w * 0.60f, h * 0.58f),
+                    end = Offset(w * 0.88f, h * 0.58f),
+                    strokeWidth = stroke * 1.6f,
                     cap = StrokeCap.Round,
                 )
                 drawLine(
                     color = color,
-                    start = Offset(w * 0.72f, h * 0.34f),
-                    end = Offset(w * 0.72f, h * 0.82f),
+                    start = Offset(w * 0.5f, h * 0.30f),
+                    end = Offset(w * 0.5f, h * 0.86f),
                     strokeWidth = stroke,
                     cap = StrokeCap.Round,
                 )
-                drawCircle(color, w * 0.08f, Offset(w * 0.53f, h * 0.58f))
             }
 
             Glyph.GRID -> {
