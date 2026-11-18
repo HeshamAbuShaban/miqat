@@ -35,6 +35,9 @@ enum class CalendarContext(val labelAr: String, val noteAr: String) {
     }
 }
 
+/** The occasion a day carries — a badge TYPE, not a decoration. */
+enum class DayOccasion { NONE, ARAFAH, HAJJ_RITE, EID, EVE_RAMADAN }
+
 /** One day of the window. */
 data class CalendarCell(
     val gregorianYear: Int,
@@ -46,7 +49,11 @@ data class CalendarCell(
     /** 0 = Saturday (the grid's first column in RTL). */
     val weekday: Int,
     val isFast: Boolean,
+    /** The specific act of the day — badges read this, not the boolean. */
+    val fastKind: IslamicDays.FastDay = IslamicDays.FastDay.NONE,
     val isRite: Boolean,
+    /** Which occasion badge this day carries (at most one alongside the fast). */
+    val occasion: DayOccasion = DayOccasion.NONE,
     val isToday: Boolean,
     /** The OTHER axis turns on this day. */
     val turnsHere: Boolean,
@@ -265,12 +272,17 @@ object CalendarWindows {
             // the weekday as the grid counts it (0 = Saturday, the first
             // column in RTL) — and the same value the fasting rules test
             weekday = if (weekday == Calendar.SATURDAY) 7 else weekday - 1,
-            isFast = IslamicDays.isWhiteDays(hijri) ||
-                IslamicDays.isMondayThursday(hijri) ||
-                IslamicDays.isDayOfArafah(hijri) ||
-                IslamicDays.isAshura(hijri) ||
-                IslamicDays.isSixOfShawwal(hijri),
-            isRite = hajjRiteOf(hijri) != null,
+            isFast = IslamicDays.fastKind(hijri).fasts,
+            fastKind = IslamicDays.fastKind(hijri),
+            isRite = hajjRiteOf(hijri) != null ||
+                IslamicDays.isDayOfArafah(hijri) || IslamicDays.isEidAlFitr(hijri),
+            occasion = when {
+                IslamicDays.isEidAlFitr(hijri) || IslamicDays.isEidAlAdha(hijri) -> DayOccasion.EID
+                IslamicDays.isEveOfRamadan(hijri) -> DayOccasion.EVE_RAMADAN
+                IslamicDays.isDayOfArafah(hijri) -> DayOccasion.ARAFAH
+                hajjRiteOf(hijri) != null -> DayOccasion.HAJJ_RITE
+                else -> DayOccasion.NONE
+            },
             isToday = gy == today.first && gm == today.second && gd == today.third,
             turnsHere = turnsHere,
             turnsToLabel = placard,

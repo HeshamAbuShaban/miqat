@@ -4,6 +4,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -70,6 +71,7 @@ fun CalendarScreen(
     fmt: Fmt,
     nowState: androidx.compose.runtime.State<Long>,
     onOpenDay: (Int, Int, Int) -> Unit,
+    onOpenPrayer: (Int) -> Unit = {},
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val now = nowState.value
@@ -115,6 +117,18 @@ fun CalendarScreen(
     val windowDays = remember(window) {
         window.days.map { Triple(it.gregorianYear, it.gregorianMonth, it.gregorianDay) }
     }
+    fun stepYear(delta: Int) {
+        if (axis == app.miqat.core.CalendarContext.HIJRI) {
+            val a = app.miqat.core.CalendarWindows.anchorForHijriMonth(
+                window.spineYear + delta, window.spineMonth, d.hijriOffsetDays,
+            )
+            year = a.first
+            month = a.second
+        } else {
+            year += delta
+        }
+    }
+
     // the step: a Hijri month in the Hijri context, a Gregorian month in the
     // Gregorian contexts
     fun stepMonth(delta: Int) {
@@ -236,6 +250,54 @@ fun CalendarScreen(
             }
         }
         Spacer(Modifier.height(Space.sm))
+        // «أقرب موعد ميقات» — one line, from the ONE proximity model; tapping
+        // it opens that prayer's own detail (no new screen, no second clock)
+        val nearToday = app.miqat.core.Dates.nextDay(
+            cityToday.first, cityToday.second, cityToday.third,
+        )
+        val nearLine = app.miqat.core.DayLine.of(
+            state.times(cityToday.first, cityToday.second, cityToday.third),
+            state.times(nearToday.first, nearToday.second, nearToday.third).fajr,
+            PRAYER_NAMES, ::minutesOf, state.imsakLeadMinutes,
+        )
+        val nearest = app.miqat.core.NearestMoment.find(
+            nearLine, (state.cityHourOfDay(now) * 60).toInt(),
+        )
+        if (nearest != null) {
+            val line = app.miqat.core.Proximity.timerLine(
+                app.miqat.core.TimerKind.PRAYER_REMAINING,
+                nearest.signedMin * 60L, nearest.slot.labelAr,
+            )
+            NavRow(
+                "أقرب موعد",
+                if (nearest.dayLabelAr != null)
+                    "${nearest.slot.labelAr} · ${nearest.dayLabelAr} · ${fmt.hhmm(nearest.clockMin)}"
+                else "${line.prefixAr} ${fmt.duration(nearest.signedMin)}",
+                onClick = { onOpenPrayer(PRAYER_KEY.indexOf(nearest.slot.kind).coerceAtLeast(0)) },
+            )
+            Divider(Modifier.padding(horizontal = Space.lg))
+        }
+
+        // year hop — the month arrows below step one month; these step a
+        // whole year on the SAME spine (no date picker, no new dependency)
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+        ) {
+            IconButton(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "السنة السابقة") {
+                stepYear(-1)
+            }
+            Text(
+                "${fmt.n(window.spineYear)} ${if (axis == app.miqat.core.CalendarContext.HIJRI) "هـ" else "م"}",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = Space.md),
+            )
+            IconButton(Icons.AutoMirrored.Filled.KeyboardArrowRight, "السنة التالية") {
+                stepYear(1)
+            }
+        }
 
         // the header — the SPINE names itself; the other axis is a SPAN, so a
         // month that turns halfway through is never hidden by a half-title
@@ -491,6 +553,15 @@ private fun DayCell(
                     .background(scheme.primary),
             )
         }
+        if (cell.isToday) {
+            Box(
+                Modifier
+                    .width(12.dp)
+                    .height(3.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(app.miqat.ui.Sky.sunMark),
+            )
+        }
         if (showPrimary) {
             Text(
                 text = if (primaryHijri) fmt.n(cell.hijriDay) else fmt.n(cell.gregorianDay),
@@ -514,26 +585,54 @@ private fun DayCell(
             )
         }
         if (showEvents && (emphasiseActs || cell.isFast || cell.isRite)) {
-            Spacer(Modifier.height(2.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                Box(
-                    Modifier
-                        .width(8.dp)
-                        .height(2.dp)
-                        .background(if (cell.isFast) scheme.secondary else scheme.outlineVariant),
-                )
-                Box(
-                    Modifier
-                        .size(5.dp)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(if (emphasiseActs) scheme.tertiary else scheme.outlineVariant),
-                )
-                Box(
-                    Modifier
-                        .size(4.dp)
-                        .clip(CircleShape)
-                        .background(if (cell.isRite) scheme.primary else scheme.outlineVariant),
-                )
+            Spacer(Modifier.height(3.dp))
+            // BADGES, not hairlines: SHAPE says the type, SIZE says the level
+            // (the founder's card-type language, without a game score).
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                verticalAlignment = androidx.compose.ui.Alignment.Bottom,
+            ) {
+                when (cell.fastKind) {
+                    app.miqat.core.IslamicDays.FastDay.RAMADAN -> Box(
+                        Modifier.width(44.dp).height(8.dp)
+                            .clip(RoundedCornerShape(2.dp)).background(scheme.secondary),
+                    )
+                    app.miqat.core.IslamicDays.FastDay.ARAFAH,
+                    app.miqat.core.IslamicDays.FastDay.ASHURA,
+                    app.miqat.core.IslamicDays.FastDay.SIX_SHAWWAL,
+                    app.miqat.core.IslamicDays.FastDay.WHITE -> Box(
+                        Modifier.width(16.dp).height(7.dp)
+                            .clip(RoundedCornerShape(2.dp)).background(scheme.secondary),
+                    )
+                    app.miqat.core.IslamicDays.FastDay.MON_THU -> Box(
+                        Modifier.width(12.dp).height(6.dp)
+                            .border(1.5.dp, scheme.secondary, RoundedCornerShape(2.dp)),
+                    )
+                    else -> Unit // Eid and tashreeq veto the fast badge
+                }
+                when (cell.occasion) {
+                    app.miqat.core.DayOccasion.ARAFAH -> Box(
+                        Modifier.size(12.dp).graphicsLayer { rotationZ = 45f }
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(scheme.onTertiaryContainer),
+                    )
+                    app.miqat.core.DayOccasion.EID -> Box(
+                        Modifier.width(8.dp).height(13.dp)
+                            .clip(RoundedCornerShape(4.dp, 4.dp, 0.dp, 0.dp))
+                            .background(scheme.onTertiaryContainer),
+                    )
+                    app.miqat.core.DayOccasion.HAJJ_RITE -> Box(
+                        Modifier.width(8.dp).height(13.dp)
+                            .clip(RoundedCornerShape(4.dp, 4.dp, 0.dp, 0.dp))
+                            .border(1.5.dp, scheme.onTertiaryContainer,
+                                RoundedCornerShape(4.dp, 4.dp, 0.dp, 0.dp)),
+                    )
+                    app.miqat.core.DayOccasion.EVE_RAMADAN -> Box(
+                        Modifier.width(12.dp).height(6.dp)
+                            .border(1.5.dp, scheme.onTertiaryContainer, RoundedCornerShape(2.dp)),
+                    )
+                    else -> Unit
+                }
             }
         }
     }

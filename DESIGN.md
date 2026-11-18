@@ -210,6 +210,18 @@ same ticks, same type scale, same words. Not a donor widget in our colours.
 - **Tokens live in `res/values/colors.xml`** (`miqat_*`) — no hex literals
   in the layout, no drift between files.
 
+## 8d. Calendar badges (shape = type, size = level)
+
+A day cell is at most TWO badges, in one 14dp row:
+- **Fast** = a bar. Ramadan 44×8dp filled teal · a narrated day 16×7dp
+  filled teal · Mon/Thu 12×6dp hollow teal bar.
+- **Occasion** = a form. Arafah 12×12dp cream diamond · Eid 8×13dp cream
+  pin · a Hajj rite 8×13dp hollow cream pin · Ramadan eve 12×6dp hollow
+  cream bar.
+- Eid and tashreeq VETO the fast badge. No scores, rarity colours, or
+  "level 3" numbers: a level is a real predicate, never a reward.
+- Today carries a 12×3dp saffron underline beneath its number.
+
 ## 8c. The Day-Line (the home's second drawing)
 
 The rail is a MAP, not a second table. Fajr sits at the right end, Isha at

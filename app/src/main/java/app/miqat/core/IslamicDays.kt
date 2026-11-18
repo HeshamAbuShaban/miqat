@@ -49,6 +49,39 @@ object IslamicDays {
     fun isEveOfRamadan(d: IslamicDay): Boolean = d.hMonth == 8 && d.hDay in 29..30
 
     /**
+     * WHAT KIND OF FAST-DAY this is — veto-first, so two atoms can never
+     * contradict each other. The old calendar OR-ed the positive atoms:
+     * Ramadan was NOT marked (every day is a fast) and 13 Dhul-Hijjah WAS
+     * marked as «أيام البيض» although it is a day of eating (tashreeq).
+     * The app states the narration; it never issues a ruling.
+     */
+    enum class FastDay(val fasts: Boolean, val labelAr: String?) {
+        EID(false, "عيد"),
+        TASHREEQ(false, "تشريق"),
+        RAMADAN(true, "رمضان"),
+        ARAFAH(true, "عرفة"),
+        ASHURA(true, "عاشوراء"),
+        SIX_SHAWWAL(true, "ست من شوال"),
+        WHITE(true, "أيام البيض"),
+        MON_THU(true, "الاثنين والخميس"),
+        NONE(false, null),
+    }
+
+    fun fastKind(d: IslamicDay): FastDay = when {
+        // 11–13 Dhul-Hijjah are tashreeq (eating days) — they outrank the
+        // broad Eid-al-Adha predicate that also covers them
+        d.hMonth == 12 && d.hDay in 11..13 -> FastDay.TASHREEQ
+        isEidAlFitr(d) || isEidAlAdha(d) -> FastDay.EID
+        isRamadan(d) -> FastDay.RAMADAN
+        isDayOfArafah(d) -> FastDay.ARAFAH
+        isAshura(d) || isTasuaa(d) -> FastDay.ASHURA
+        isSixOfShawwal(d) -> FastDay.SIX_SHAWWAL
+        isWhiteDays(d) -> FastDay.WHITE
+        isMondayThursday(d) -> FastDay.MON_THU
+        else -> FastDay.NONE
+    }
+
+    /**
      * Today's contextual card, highest priority first. Returns null on a plain
      * day — the home stays quiet unless there is something worth acting on.
      *

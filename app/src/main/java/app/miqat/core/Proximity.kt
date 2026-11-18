@@ -199,7 +199,7 @@ object Proximity {
 
     /** The facts a surface may show, nearest first. */
     fun of(line: DayLine, now: Int, surface: Surface): List<Judged> {
-        val rule = rules(surface)
+        val rule = Proximity.rules(surface)
         return line.slots.map { judge(it, now, rule, line) }
             .filter { it.verdict != Verdict.NOT_RELEVANT }
             .sortedWith(
@@ -235,5 +235,64 @@ object Proximity {
         TimerKind.AVAILABLE -> TimerLine("المتاح حتى $labelAr", kind, seconds)
         TimerKind.BETWEEN_ACTS -> TimerLine("بين $labelAr و${label2Ar.orEmpty()}", kind, seconds)
         TimerKind.ELAPSED -> TimerLine("منذ أذان $labelAr", kind, seconds)
+    }
+}
+
+/** The answer to «أقرب موعد» — signed, labelled by day, never wrapped. */
+data class Nearest(
+    val slot: Slot,
+    val verdict: Verdict,
+    val clockMin: Int,
+    val signedMin: Int,
+    val dayLabelAr: String?,
+)
+
+/**
+ * The nearest appointment from ONE classifier — no second sort, no wrap.
+ *
+ * [dayShiftMin] = (selectedDay − today) × 1440. The selected day is
+ * re-expressed on its own clock so every ContextRule gate still applies.
+ */
+object NearestMoment {
+    fun find(
+        line: DayLine,
+        nowMin: Int,
+        surface: Surface = Surface.DAY,
+        dayShiftMin: Int = 0,
+        allowPast: Boolean = false,
+    ): Nearest? {
+        val rule = Proximity.rules(surface)
+        val candidates = line.slots.mapNotNull { slot ->
+            val j = Proximity.judge(slot, nowMin - dayShiftMin, rule, line)
+            if (j.verdict == Verdict.NOT_RELEVANT) return@mapNotNull null
+            val signed = slot.atMin + dayShiftMin - nowMin
+            val absolute = slot.atMin + dayShiftMin
+            Nearest(
+                slot = slot,
+                verdict = j.verdict,
+                clockMin = ((absolute % 1440) + 1440) % 1440,
+                signedMin = signed,
+                dayLabelAr = when {
+                    absolute < 0 -> "أمس"
+                    absolute >= 1440 -> "غداً"
+                    else -> null
+                },
+            )
+        }
+        // «أقرب موعد ميقات» means the nearest PRAYER when one exists —
+        // the same preference Proximity.primary uses. Fasting boundaries
+        // are acts, not the appointment a Muslim waits for.
+        val pool = if (candidates.any { it.slot.category == MomentCategory.PRAYER })
+            candidates.filter { it.slot.category == MomentCategory.PRAYER }
+        else candidates
+        // allowPast: prefer the prayer that JUST entered (a DUE fact), not a
+        // future one — that is the honest answer to «مضى على أي موعد؟»
+        if (allowPast) {
+            val entered = pool.filter { it.signedMin < 0 }.maxByOrNull { it.signedMin }
+            if (entered != null) return entered
+        }
+        val ahead = pool.filter { it.signedMin >= 0 }.minByOrNull { it.signedMin }
+        if (ahead != null) return ahead
+        return if (allowPast) pool.maxByOrNull { it.signedMin } else null
     }
 }

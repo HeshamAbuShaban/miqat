@@ -158,11 +158,22 @@ private fun ActRail(
         )
         items.forEach { item ->
             when {
-                item.act.isWindow -> drawLine(
-                    scheme.secondary.copy(alpha = if (item.state == ActsCatalog.ActState.PASSED) 0.3f else 0.9f),
-                    Offset(xOf(item.startMinute), y), Offset(xOf(item.endMinute), y),
-                    strokeWidth = 5f, cap = StrokeCap.Round,
-                )
+                item.act.isWindow -> {
+                    val a = if (item.state == ActsCatalog.ActState.PASSED) 0.3f else 0.9f
+                    // a SPAN is held between two posts — not an ambiguous line
+                    drawLine(
+                        scheme.secondary.copy(alpha = a),
+                        Offset(xOf(item.startMinute), y), Offset(xOf(item.endMinute), y),
+                        strokeWidth = 8f, cap = StrokeCap.Round,
+                    )
+                    listOf(item.startMinute, item.endMinute).forEach { m ->
+                        drawLine(
+                            scheme.secondary.copy(alpha = a * 0.7f),
+                            Offset(xOf(m), y - 6f), Offset(xOf(m), y + 6f),
+                            strokeWidth = 2.5f,
+                        )
+                    }
+                }
                 item.act.isBoundary -> {
                     drawLine(
                         scheme.secondary.copy(alpha = 0.7f),
@@ -184,11 +195,13 @@ private fun ActRail(
             }
         }
         // now — the only saffron mark on the rail
+        val nx = xOf(nowMinute)
         drawLine(
             app.miqat.ui.Sky.sunMark,
-            Offset(xOf(nowMinute), y - 12f), Offset(xOf(nowMinute), y + 12f),
-            strokeWidth = 2f,
+            Offset(nx, y - 16f), Offset(nx, y + 16f),
+            strokeWidth = 3f,
         )
+        drawCircle(app.miqat.ui.Sky.sunMark, 4f, Offset(nx, y - 16f))
     }
 }
 @Composable

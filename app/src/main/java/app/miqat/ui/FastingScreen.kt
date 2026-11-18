@@ -1,8 +1,10 @@
 package app.miqat.ui
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,6 +19,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,6 +56,7 @@ import java.util.Calendar
  *  - the imsak is OUR convention (a lead before the Fajr), so it carries
  *    «تقديري بحسب الاصطلاح» — the iftar does not, because it is the sunset.
  */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun FastingScreen(
     state: AppState,
@@ -58,6 +64,7 @@ fun FastingScreen(
     nowState: androidx.compose.runtime.State<Long>,
 ) {
     val scheme = MaterialTheme.colorScheme
+    var fastsOpen by androidx.compose.runtime.remember { mutableStateOf(false) }
     val now = nowState.value
     val (y, m, d) = state.cityDate(now)
     val times = state.times(y, m, d)
@@ -330,67 +337,79 @@ fun FastingScreen(
 
         Spacer(Modifier.height(Space.md))
 
-        // أيام الصيام — the voluntary fasts, with the texts they rest on
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .cardSurface(RoundedCornerShape(Radius.panel))
-                .padding(Space.lg),
-        ) {
-            Text(
-                "أيام الصيام التطوعي",
-                style = MaterialTheme.typography.titleMedium,
-                color = scheme.onSurface,
-            )
-            Spacer(Modifier.height(Space.xs))
-            Text(
-                "ما يعرضه التطبيق قائمةُ أيام الصيام المعروفة، لا فتوى",
-                style = MaterialTheme.typography.labelSmall,
-                color = scheme.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(Space.sm))
-            FastingRow(
-                "الأيام البيض ١٣–١٥",
-                "من كل شهر هجري",
-                "﴿أَمَرَنَا رَسُولُ اللَّهِ ﷺ أَنْ نَصُومَ مِنَ الشَّهْرِ ثَلاَثَةَ أَيَّامِ الْبِيضِ﴾ — سنن النسائي ٢٤٢٢",
-                days = 3,
-            )
-            FastingRow(
-                "الاثنين والخميس",
-                "كل أسبوع",
-                "﴿كَانَ النَّبِيُّ ﷺ يَتَحَرَّى صَوْمَ الِاثْنَيْنِ وَالْخَمِيسِ﴾ — سنن الترمذي ٧٤٥",
-                days = 2,
-            )
-            FastingRow(
-                "يوم عرفة",
-                "٩ ذي الحجة",
-                "﴿صِيَامُ يَوْمِ عَرَفَةَ أَحْتَسِبُ عَلَى اللَّهِ أَنْ يُكَفِّرَ السَّنَةَ الَّتِي قَبْلَهُ وَالسَّنَةَ الَّتِي بَعْدَهُ﴾ — صحيح مسلم ١١٦٢",
-                days = 1, rite = true,
-            )
-            FastingRow(
-                "عاشوراء",
-                "١٠ المحرم",
-                "﴿هَذَا يَوْمُ عَاشُورَاءَ، وَلَمْ يُكْتَبْ عَلَيْكُمْ صِيَامُهُ، وَأَنَا صَائِمٌ﴾ — صحيح البخاري ٢٠٠٣",
-                days = 1, rite = true,
-            )
-            FastingRow(
-                "ستّ من شوال",
-                "٦ شوال",
-                "﴿مَنْ صَامَ رَمَضَانَ ثُمَّ أَتْبَعَهُ سِتًّا مِنْ شَوَّالٍ كَانَ كَصِيَامِ الدَّهْرِ﴾ — صحيح مسلم ١١٦٤",
-                days = 6,
-            )
-            FastingRow(
-                "أيام التشريق",
-                "١١–١٣ ذي الحجة",
-                "﴿أَيَّامُ التَّشْرِيقِ أَيَّامُ أَكْلٍ وَشُرْبٍ﴾ — صحيح مسلم ١١٤١",
-                days = 3, rite = true,
-            )
-        }
-
+        // the six narrated days live in a SHEET, not on the main screen —
+        // the founder: the fasting screen is stacked like its trimmed peer
+        NavRow(
+            "أيام الصيام التطوعي",
+            "ستة أيام مذكورة بنصوصها — اضغط للقائمة",
+            onClick = { fastsOpen = true },
+        )
+        Divider(Modifier.padding(horizontal = Space.lg))
         Spacer(Modifier.height(Space.md))
 
-        // the texts the fast rests on — the ancho        Spacer(Modifier.height(Space.xxl))
+        Spacer(Modifier.height(Space.xxl))
+
+    if (fastsOpen) {
+        androidx.compose.material3.ModalBottomSheet(
+            onDismissRequest = { fastsOpen = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+        ) {
+            Column(
+                Modifier.fillMaxWidth().verticalScroll(rememberScrollState())
+                    .padding(horizontal = Space.lg),
+            ) {
+                Text(
+                    "أيام الصيام التطوعي",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    "ما يعرضه التطبيق قائمةُ أيام الصيام المعروفة، لا فتوى",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(Space.sm))
+                FastingRow(
+                    "الأيام البيض ١٣–١٥",
+                    "من كل شهر هجري",
+                    "﴿أَمَرَنَا رَسُولُ اللَّهِ ﷺ أَنْ نَصُومَ مِنَ الشَّهْرِ ثَلاَثَةَ أَيَّامِ الْبِيضِ﴾ — سنن النسائي ٢٤٢٢",
+                    days = 3,
+                )
+                FastingRow(
+                    "الاثنين والخميس",
+                    "كل أسبوع",
+                    "﴿كَانَ النَّبِيُّ ﷺ يَتَحَرَّى صَوْمَ الِاثْنَيْنِ وَالْخَمِيسِ﴾ — سنن الترمذي ٧٤٥",
+                    days = 2,
+                )
+                FastingRow(
+                    "يوم عرفة",
+                    "٩ ذي الحجة",
+                    "﴿صِيَامُ يَوْمِ عَرَفَةَ أَحْتَسِبُ عَلَى اللَّهِ أَنْ يُكَفِّرَ السَّنَةَ الَّتِي قَبْلَهُ وَالسَّنَةَ الَّتِي بَعْدَهُ﴾ — صحيح مسلم ١١٦٢",
+                    days = 1, rite = true,
+                )
+                FastingRow(
+                    "عاشوراء",
+                    "١٠ المحرم",
+                    "﴿هَذَا يَوْمُ عَاشُورَاءَ، وَلَمْ يُكْتَبْ عَلَيْكُمْ صِيَامُهُ، وَأَنَا صَائِمٌ﴾ — صحيح البخاري ٢٠٠٣",
+                    days = 1, rite = true,
+                )
+                FastingRow(
+                    "ستّ من شوال",
+                    "٦ شوال",
+                    "﴿مَنْ صَامَ رَمَضَانَ ثُمَّ أَتْبَعَهُ سِتًّا مِنْ شَوَّالٍ كَانَ كَصِيَامِ الدَّهْرِ﴾ — صحيح مسلم ١١٦٤",
+                    days = 6,
+                )
+                FastingRow(
+                    "أيام التشريق",
+                    "١١–١٣ ذي الحجة",
+                    "﴿أَيَّامُ التَّشْرِيقِ أَيَّامُ أَكْلٍ وَشُرْبٍ﴾ — صحيح مسلم ١١٤١",
+                    days = 3, rite = true,
+                )
+                Spacer(Modifier.height(Space.xxl))
+            }
+        }
     }
+}
 }
 
 /** One line in the night card. */

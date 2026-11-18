@@ -102,7 +102,9 @@ fun DayRail(
                 }
                 // NOW — a playhead crossing the line, not a shy dot
                 val nx = nowX()
-                drawLine(Sky.sunMark, Offset(nx, 4f), Offset(nx, 21f), 2f)
+                // a NEEDLE with a head — a 2px hairline alone is invisible
+                drawLine(Sky.sunMark, Offset(nx, 4f), Offset(nx, 21f), 2.5f)
+                drawCircle(Sky.sunMark, 3.5f, Offset(nx, 21f))
             }
             // B — names + clocks for 1,3,5
             RailLabels(entries, fmt, railW, labelW, ::xOf, upper = false)

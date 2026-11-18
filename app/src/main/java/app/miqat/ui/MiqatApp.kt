@@ -186,7 +186,11 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                         onOpenActs = { sub = Route.Acts },
                     )
                     TopLevel.Fasting -> FastingScreen(state, fmt, now)
-                    TopLevel.Calendar -> CalendarScreen(state, fmt, now, onOpenDay = { y, m, d -> sub = Route.DayDetail(y, m, d) })
+                    TopLevel.Calendar -> CalendarScreen(
+                        state, fmt, now,
+                        onOpenDay = { y, m, d -> sub = Route.DayDetail(y, m, d) },
+                        onOpenPrayer = { sub = Route.PrayerDetailArgs(it) },
+                    )
                     TopLevel.Acts -> ActsScreen(
                         state, fmt, now,
                         onOpenAct = { sub = Route.ActDetail(it) },
