@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "note": "Verified citations for the donor's 21 prayer_events. The TEXTS stay in the donor DB (miqat-data-v1.db); only the references are versioned here. Unverified numbers are never invented — verified:false prints the collection-only line.",
+  "citations": [
+    { "id": 1, "source": "سنن أبي داود", "number": "٥٠٨١", "verified": true },
+    { "id": 2, "source": "سنن الترمذي", "number": "٣٣٨٨", "verified": true, "fullWording": true },
+    { "id": 3, "source": "صحيح البخاري", "number": "٦١٤", "verified": true },
+    { "id": 4, "source": "سنن الترمذي", "number": null, "verified": false },
+    { "id": 5, "source": "سورة الطلاق", "number": "٦٥:٣", "verified": true, "grade": "قرآن" },
+    { "id": 6, "source": "صحيح مسلم", "number": "٢٧٠٨", "verified": true },
+    { "id": 7, "source": "سنن الترمذي", "number": "٣٣٨٨", "verified": true },
+    { "id": 8, "source": "سنن ابن ماجه", "number": "٩٢٥", "verified": true },
+    { "id": 9, "source": "صحيح مسلم", "number": "٢٦٩١", "verified": true },
+    { "id": 10, "source": "سنن أبي داود", "number": null, "verified": false },
+    { "id": 11, "source": "سنن ابن ماجه", "number": null, "verified": false },
+    { "id": 12, "source": "سنن أبي داود", "number": "١٥٥٨", "verified": true },
+    { "id": 13, "source": "سورة الطلاق", "number": "٦٥:٣", "verified": true, "grade": "قرآن" },
+    { "id": 14, "source": "سورة الأنفال وطه", "number": "٨:٢٦ و٦٥:٤", "verified": true, "grade": "قرآن", "note": "بالمعنى" },
+    { "id": 15, "source": "سنن الترمذي", "number": "٣٥٢١", "verified": true },
+    { "id": 16, "source": "سنن أبي داود", "number": null, "verified": false },
+    { "id": 17, "source": "صحيح مسلم", "number": "٢٦٩١", "verified": true, "note": "نص مكرّر لـ٩" },
+    { "id": 18, "source": "سنن الترمذي", "number": "٣٣٨٨", "verified": true },
+    { "id": 19, "source": "سنن أبي داود", "number": null, "verified": false },
+    { "id": 20, "source": "سنن أبي داود", "number": null, "verified": false },
+    { "id": 21, "source": "صحيح مسلم وصحيح البخاري", "number": "٤٠٦ و٣٣٧٠", "verified": true }
+  ]
+}

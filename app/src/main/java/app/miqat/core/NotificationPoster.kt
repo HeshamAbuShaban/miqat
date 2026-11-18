@@ -248,6 +248,7 @@ object NotificationPoster {
      * verified citation printed under it (nothing ships uncited).
      */
     fun reminderPayload(context: Context, slot: Int): Pair<String, String?>? {
+        AdhkarCitations.load(context)
         val events = MiqatData.prayerEvents(context, slot)
         val event = events.firstOrNull { AdhkarCitations.citationFor(it.id) != null } ?: return null
         val citation = AdhkarCitations.lineFor(event.id)

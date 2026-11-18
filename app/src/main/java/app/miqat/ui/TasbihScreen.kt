@@ -43,6 +43,7 @@ import app.miqat.core.MiqatData
 @Composable
 fun TasbihScreen(onBack: () -> Unit) {
     val context = androidx.compose.ui.platform.LocalContext.current
+    AdhkarCitations.load(context)
     val scheme = MaterialTheme.colorScheme
     val texts = remember {
         (1..6).flatMap { MiqatData.prayerEvents(context, it) }

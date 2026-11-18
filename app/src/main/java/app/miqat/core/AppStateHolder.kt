@@ -15,6 +15,8 @@ object AppStateHolder {
         current = state
     }
 
-    fun state(context: android.content.Context): AppState =
-        current ?: AppState(context.applicationContext, armAlarms = false).also { current = it }
+    fun state(context: android.content.Context): AppState {
+        AdhkarCitations.load(context)
+        return current ?: AppState(context.applicationContext, armAlarms = false).also { current = it }
+    }
 }

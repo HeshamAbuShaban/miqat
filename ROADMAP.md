@@ -22,8 +22,9 @@ Statuses: todo / doing / done / dead. New idea → new entry, never hoard in cha
 - [x] P2.1/P2.2/P2.3 — ارتفاع الشمس الحقيقي + إخفاؤها ليلًا + ظلّ عند
       الظهر، مؤشر صيام حيّ وعلامة فجر، إصلاح هندسة الأيقونات (لقطة
       تحقق في ٣ أوقات).
-- [ ] P3.1/P3.2/P3.3 — أصل JSON واحد للأذكار/الطاعات، أرقام→أشكال،
-      توزيع الأحمال.
+- [x] P3.1 — `citations-v1.json` + `Citations.kt` + `CitationsTest`؛
+      `AdhkarCitations` واجهة فقط، والنص بقي في قاعدة المتبرع.
+- [ ] P3.2/P3.3 — أرقام→أشكال إضافية، توزيع الأحمال.
 
 Every step cites its donor lead (teardown §).
 
