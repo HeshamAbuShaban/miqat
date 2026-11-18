@@ -23,7 +23,6 @@ data class NotificationPrefs(
         NotifyKind.PREPARATORY to false,
         NotifyKind.DIRECT to true,
         NotifyKind.REMINDER to false,
-        NotifyKind.MOTIVATIONAL to false,
     ),
     /** Per-slot enable for the direct adhan (index 0..5 = fajr..isha). */
     val directPerPrayer: List<Boolean> = List(6) { true },

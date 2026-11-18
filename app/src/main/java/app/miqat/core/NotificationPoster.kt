@@ -190,27 +190,12 @@ object NotificationPoster {
         post(context, kind, if (label.isBlank()) "ذكرى" else label, 9)
     }
 
-    /** The standalone motivational notification (Islamic days / fasting). */
-    fun postMotivational(context: Context, text: String) {
-        val builder = NotificationCompat.Builder(context, NotifyChannels.MOTIVATIONAL)
-            .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("ذكرى اليوم")
-            .setContentText(text)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setAutoCancel(true)
-        try {
-            val nm = context.getSystemService(NotificationManager::class.java)
-            nm?.notify(8801, builder.build())
-        } catch (_: SecurityException) {
-        }
-    }
-
     private fun channelFor(kind: NotifyKind) = when (kind) {
         NotifyKind.PREPARATORY -> NotifyChannels.PREPARATORY
         NotifyKind.DIRECT -> NotifyChannels.DIRECT
         NotifyKind.REMINDER -> NotifyChannels.REMINDER
-        NotifyKind.MOTIVATIONAL -> NotifyChannels.MOTIVATIONAL
+        // the founder ruled: the motivational nudge rides the reminder
+        NotifyKind.MOTIVATIONAL -> NotifyChannels.REMINDER
     }
 
     private fun priorityFor(kind: NotifyKind) = when (kind) {

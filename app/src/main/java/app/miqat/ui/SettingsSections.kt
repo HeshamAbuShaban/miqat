@@ -378,11 +378,6 @@ fun NotificationsSection(state: AppState, fmt: Fmt) {
             "بعد الموعد بـ ${fmt.n(n.reminderDelayMinutes)} دقيقة",
             n.kindOn(NotifyKind.REMINDER),
         ) { v -> state.updateNotifications(n.copy(kindEnabled = n.kindEnabled + (NotifyKind.REMINDER to v))) }
-        ToggleRow(
-            "تحفيزية",
-            "المحتوى التحفيزي: فضائل الصيام وأيام الإسلام",
-            n.kindOn(NotifyKind.MOTIVATIONAL),
-        ) { v -> state.updateNotifications(n.copy(kindEnabled = n.kindEnabled + (NotifyKind.MOTIVATIONAL to v))) }
         Divider(Modifier.padding(horizontal = Space.lg, vertical = Space.sm))
         SectionLabel("الصيام", Modifier.padding(horizontal = Space.lg))
         Row(
@@ -464,10 +459,6 @@ fun NotificationsSection(state: AppState, fmt: Fmt) {
         Divider(Modifier.padding(horizontal = Space.lg))
         NavRow("معاينة التذكير", "ما يصل بعد الموعد", onClick = {
             app.miqat.core.NotificationPoster.preview(context, NotifyKind.REMINDER, "الظهر")
-        })
-        Divider(Modifier.padding(horizontal = Space.lg))
-        NavRow("معاينة المحتوى التحفيزي", "ما يرافق الإشعارات الأخرى", onClick = {
-            app.miqat.core.NotificationPoster.preview(context, NotifyKind.MOTIVATIONAL, "")
         })
         Divider(Modifier.padding(horizontal = Space.lg))
         ToggleRow("صوت الأذان", null, n.adhanSound) { v -> state.updateNotifications(n.copy(adhanSound = v)) }

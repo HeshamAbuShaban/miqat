@@ -31,7 +31,6 @@ object NotifyChannels {
     const val PREPARATORY = "miqat_preparatory"
     const val DIRECT = "miqat_direct"
     const val REMINDER = "miqat_reminder"
-    const val MOTIVATIONAL = "miqat_motivational"
     const val COUNTDOWN = "miqat_countdown"
 
     fun ensure(context: Context) {
@@ -46,7 +45,6 @@ object NotifyChannels {
         channel(PREPARATORY, "تنبيه تمهيدي", NotificationManager.IMPORTANCE_DEFAULT, "قبل الموعد بقليل")
         channel(DIRECT, "الأذان", NotificationManager.IMPORTANCE_HIGH, "عند دخول وقت الصلاة")
         channel(REMINDER, "تذكير", NotificationManager.IMPORTANCE_DEFAULT, "بعد الموعد")
-        channel(MOTIVATIONAL, "محتوى تحفيزي", NotificationManager.IMPORTANCE_LOW, "أيام الصيام والفضائل")
         channel(COUNTDOWN, "العدّاد", NotificationManager.IMPORTANCE_LOW, "عدّاد دائم للمتبقي")
     }
 }
@@ -162,7 +160,7 @@ object AlarmScheduler {
         }
 
         // --- the fasting / motivational nudge (the تحفيزية kind) ---
-        if (prefs.kindOn(NotifyKind.MOTIVATIONAL) && prefs.fastingReminderEnabled) {
+        if (prefs.motivationalAppended && prefs.fastingReminderEnabled) {
             for (dayAhead in 1..7) {
                 val (dy, dm, dd) = cityDateOf(city, offset, now + dayAhead * 86_400_000L)
                 val hijri = Hijri.at(dy, dm, dd)
