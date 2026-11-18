@@ -330,36 +330,6 @@ fun FastingScreen(
 
         Spacer(Modifier.height(Space.md))
 
-        // ليلك — the night: the suhur's window and the last third
-        val night = WorshipWindows.night(maghrib = times.maghrib, fajrNext = tomorrow.fajr)
-        val sahar = WorshipWindows.sahar(maghrib = times.maghrib, fajrNext = tomorrow.fajr)
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .cardSurface(RoundedCornerShape(Radius.panel))
-                .padding(Space.lg),
-        ) {
-            Text(
-                "ليلك",
-                style = MaterialTheme.typography.titleMedium,
-                color = scheme.onSurface,
-            )
-            Spacer(Modifier.height(Space.sm))
-            NightRow(
-                "وقت السحور",
-                "${fmt.hhmm(minutesOf(sahar.startHour))} — ${fmt.hhmm(minutesOf(sahar.endHour))}",
-                "﴿تَسَحَّرُوا فَإِنَّ فِي السُّحُورِ بَرَكَةً﴾ — صحيح البخاري ١٩٢٣ · صحيح مسلم ١٠٩٥",
-            )
-            Spacer(Modifier.height(Space.sm))
-            NightRow(
-                "الثلث الأخير من الليل",
-                fmt.hhmm(minutesOf(night.lastThirdStartHour)),
-                "﴿يَنْزِلُ رَبُّنَا تَبَارَكَ وَتَعَالَى… حِينَ يَبْقَى ثُلُثُ اللَّيْلِ الآخِرُ…﴾ — صحيح البخاري ١١٤٥ · صحيح مسلم ٧٥٨",
-            )
-        }
-
-        Spacer(Modifier.height(Space.md))
-
         // أيام الصيام — the voluntary fasts, with the texts they rest on
         Column(
             Modifier
@@ -450,31 +420,7 @@ fun FastingScreen(
 }
 
 /** One line in the night card. */
-@Composable
-private fun NightRow(title: String, time: String, source: String) {
-    val scheme = MaterialTheme.colorScheme
-    Column(Modifier.fillMaxWidth()) {
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(title, style = MaterialTheme.typography.bodyMedium, color = scheme.onSurface)
-            Text(
-                time,
-                style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = TabularFigures),
-                color = scheme.secondary,
-            )
-        }
-        Text(
-            source,
-            style = MaterialTheme.typography.labelSmall,
-            color = scheme.onSurfaceVariant,
-        )
-    }
-}
 
-/** One row of the voluntary-fasting catalogue. */
 @Composable
 private fun FastingRow(title: String, whenText: String, source: String) {
     val scheme = MaterialTheme.colorScheme

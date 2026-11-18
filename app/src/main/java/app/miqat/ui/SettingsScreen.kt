@@ -54,12 +54,6 @@ fun SettingsScreen(
         )
         Divider(Modifier.padding(horizontal = Space.lg))
         NavRow(
-            "التحقق من الموقع",
-            "إحداثيات ${fmt.decimal(state.city.lat, 4)}، ${fmt.decimal(state.city.lon, 4)}، ${methodNameAr(state.method.id)}",
-            onClick = { onOpen(SettingsRoute.Location) },
-        )
-        Divider(Modifier.padding(horizontal = Space.lg))
-        NavRow(
             "تحقّق من المواعيد",
             "أدخل جدول مدينتك الرسمي وقارنه بالحساب",
             onClick = { onOpen(SettingsRoute.Verify) },
@@ -73,23 +67,11 @@ fun SettingsScreen(
             onClick = { onOpen(SettingsRoute.Calculation) },
         )
         Divider(Modifier.padding(horizontal = Space.lg))
-        NavRow(
-            "تعديل الأوقات يدوياً",
-            if (state.adjusts.hasAny) "تعديلات سارية" else "بلا تعديلات",
-            onClick = { onOpen(SettingsRoute.Calculation) },
-        )
-        Divider(Modifier.padding(horizontal = Space.lg))
 
         SectionLabel("الإشعارات", Modifier.padding(horizontal = Space.lg, vertical = Space.sm))
         NavRow(
             "أنواع الإشعارات",
             "تمهيدية · مباشرة · تذكيرية · تحفيزية",
-            onClick = { onOpen(SettingsRoute.Notifications) },
-        )
-        Divider(Modifier.padding(horizontal = Space.lg))
-        NavRow(
-            "الأذان لكل صلاة",
-            "${fmt.n(n.directPerPrayer.count { it })} من ${fmt.n(6)} مفعّلة",
             onClick = { onOpen(SettingsRoute.Notifications) },
         )
         Divider(Modifier.padding(horizontal = Space.lg))
@@ -128,12 +110,6 @@ fun SettingsScreen(
         NavRow(
             "الخط والأرقام",
             if (d.arabicIndicDigits) "أرقام عربية-هندية" else "أرقام لاتينية",
-            onClick = { onOpen(SettingsRoute.Appearance) },
-        )
-        Divider(Modifier.padding(horizontal = Space.lg))
-        NavRow(
-            "الساعة",
-            if (d.use12h) "12 ساعة" else "24 ساعة",
             onClick = { onOpen(SettingsRoute.Appearance) },
         )
         Divider(Modifier.padding(horizontal = Space.lg))

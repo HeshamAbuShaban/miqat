@@ -392,17 +392,6 @@ fun CalendarScreen(
             )
         }
 
-        if (year != cy || month != cm) {
-            Text(
-                "العودة إلى شهر اليوم",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { year = cy; month = cm }
-                    .padding(vertical = Space.sm),
-            )
-        }
         Spacer(Modifier.height(Space.md))
     }
 

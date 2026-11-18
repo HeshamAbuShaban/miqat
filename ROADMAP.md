@@ -24,7 +24,9 @@ Statuses: todo / doing / done / dead. New idea → new entry, never hoard in cha
       تحقق في ٣ أوقات).
 - [x] P3.1 — `citations-v1.json` + `Citations.kt` + `CitationsTest`؛
       `AdhkarCitations` واجهة فقط، والنص بقي في قاعدة المتبرع.
-- [ ] P3.2/P3.3 — أرقام→أشكال إضافية، توزيع الأحمال.
+- [x] P3.3 — شاشة واحدة لكل حقيقة: حُذفت نوافذ/أدوات المواقيت المكرّرة،
+      وليلك الصيام، وزر العودة للتقويم، وأربعة صفوف إعدادات مكرّرة.
+- [ ] P3.2 — أرقام→أشكال إضافية للصيام والحج.
 
 Every step cites its donor lead (teardown §).
 

@@ -33,10 +33,6 @@ import app.miqat.core.UrgencyRules
 import app.miqat.core.WorshipWindows
 
 /** Minutes-of-day for a fractional hour (same round-half-up as the donor). */
-/** A window that does not exist that day prints "--:--", never ٠٠:٠٠. */
-private fun Fmt.hhmmSafe(hours: Double): String =
-    if (hours.isNaN()) "--:--" else hhmm(minutesOf(hours))
-
 fun minutesOf(hours: Double): Int {
     if (hours.isNaN()) return 0
     val total = (((hours + 0.5 / 60.0) % 24.0) + 24.0) % 24.0
@@ -54,12 +50,7 @@ fun TimesScreen(
     fmt: Fmt,
     nowState: State<Long>,
     onOpenPrayer: (Int) -> Unit,
-    onOpenWorship: (WorshipKind) -> Unit,
-    onOpenGaps: () -> Unit,
-    onOpenDistance: () -> Unit,
     onOpenActs: () -> Unit = {},
-    onOpenInterval: () -> Unit,
-    onOpenSunnah: () -> Unit,
 ) {
     val now = nowState.value
     val (y, m, d) = state.cityDate(now)
@@ -142,60 +133,14 @@ fun TimesScreen(
             Divider()
         }
 
+        // ONE entry to the acts that already own these windows; the day's
+        // times are the whole first screen (the founder's nearest-first)
         Spacer(Modifier.height(Space.lg))
-        Text(
-            "أوقات أخرى",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground,
+        NavRow(
+            "مواقيت العبادات",
+            "الضحى والأسحار والليل وأوقات السنة — في تبويب الطاعات",
+            onOpenActs,
         )
-        Text(
-            "لكل واحدٍ منها نافذتُه وشرحُه ودليلُه — اضغط لتفصيلها.",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(Space.sm))
-
-        WorshipRow(
-            "وقت الضحى",
-            "${fmt.hhmmSafe(duha.startHour)} — ${fmt.hhmmSafe(duha.endHour)}",
-            "من بعد الشروق إلى ما قبل الظهر",
-        ) { onOpenWorship(WorshipKind.DUHA) }
-        Divider()
-        WorshipRow(
-            "وقت الأسحار",
-            "${fmt.hhmmSafe(sahar.startHour)} — ${fmt.hhmmSafe(sahar.endHour)}",
-            "آخر الليل قبل الفجر، حين يُستغفر",
-        ) { onOpenWorship(WorshipKind.SAHAR) }
-        Divider()
-        WorshipRow(
-            "منتصف الليل",
-            fmt.hhmmSafe(night.midnightHour),
-            "نصف الليل بين المغرب والفجر",
-        ) { onOpenWorship(WorshipKind.MIDNIGHT) }
-        Divider()
-        WorshipRow(
-            "الثلث الأخير من الليل",
-            fmt.hhmmSafe(night.lastThirdStartHour),
-            "آخر ثلث الليل — وقت الاستغفار",
-        ) { onOpenWorship(WorshipKind.LAST_THIRD) }
-        Divider()
-
-        Spacer(Modifier.height(Space.lg))
-        Text(
-            "أدوات",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
-        Spacer(Modifier.height(Space.xs))
-        NavRow("مواقيت العبادات", "كل أوقات الصلاة والعبادات والسنة", onOpenActs)
-        Divider(Modifier.padding(horizontal = Space.lg))
-        NavRow("كم بعدت عن هذا الوقت؟", "قياس البُعد عن أي ميقوت", onOpenDistance)
-        Divider(Modifier.padding(horizontal = Space.lg))
-        NavRow("المدد بين المواقيت", "كم يبقى بين كل موعد والذي يليه", onOpenGaps)
-        Divider(Modifier.padding(horizontal = Space.lg))
-        NavRow("احسب بين ميقوتين", "أي ميقوتين كان — من أي نوع", onOpenInterval)
-        Divider(Modifier.padding(horizontal = Space.lg))
-        NavRow("مواقيت السنة", "النوم والسحور والقيلولة وقراءة القرآن", onOpenSunnah)
         Spacer(Modifier.height(Space.xxl))
     }
 }
@@ -276,124 +221,3 @@ private fun WorshipRow(
 }
 
 /** A worship window gets a FULL SCREEN: what it is, when it is, and its source. */
-@Composable
-fun WorshipDetailScreen(state: AppState, fmt: Fmt, kind: WorshipKind, onBack: () -> Unit) {
-    val nowState = rememberNowState()
-    val now = nowState.value
-    val (year, month, day) = state.cityDate(now)
-    val (ty, tm, td) = state.cityTomorrow(now)
-    val times = state.times(year, month, day)
-    val tomorrow = state.times(ty, tm, td)
-    val night = WorshipWindows.night(maghrib = times.maghrib, fajrNext = tomorrow.fajr)
-    val duha = WorshipWindows.duha(sunrise = times.sunrise, dhuhr = times.dhuhr)
-    val sahar = WorshipWindows.sahar(maghrib = times.maghrib, fajrNext = tomorrow.fajr)
-
-    val content: Quad = when (kind) {
-        WorshipKind.DUHA -> Quad(
-            "من بعد الشروق إلى ما قبل الظهر",
-            fmt.hhmm(minutesOf(duha.startHour)), fmt.hhmm(minutesOf(duha.endHour)),
-            "صلاة الضحى — سنّة مؤكدة",
-            "وقت الضحى رُكنٌ من أركان الصلاة التي سنّها النبي ﷺ. يبدأ بعد ارتفاع الشمس قدر رمح، " +
-                "وينتهي قبل دخول وقت الظهر، ويُسنّ أن يُصليها من كثر أهلها.",
-        )
-        WorshipKind.SAHAR -> Quad(
-            "آخر الليل قبل الفجر",
-            fmt.hhmm(minutesOf(sahar.startHour)), fmt.hhmm(minutesOf(sahar.endHour)),
-            "﴿…وَبِٱلْأَسْحَارِ هُمْ يَسْتَغْفِرُونَ﴾ — الذاريات ١٨",
-            "وقت الأسحار هو آخر الليل قبل طلوع الفجر، وفيه يُستغفر ويُدعى. " +
-                "ووقت السحور — الطعام الذي يُؤكل قبل الصبح — وقتٌ من أوّله، والسحور لا يلزم الفطر.",
-        )
-        WorshipKind.MIDNIGHT -> Quad(
-            "نصف الليل بين المغرب والفجر",
-            fmt.hhmmSafe(night.midnightHour), fmt.hhmmSafe(night.midnightHour),
-            "منتصف الليل",
-            "نعدّ الليل من المغرب إلى الفجر، فنتصفه بينهما. " +
-                "وهو وقتٌ من أوقات الاستغفار والدعاء والقيام.",
-        )
-        WorshipKind.LAST_THIRD -> Quad(
-            "آخر ثلث الليل",
-            fmt.hhmmSafe(night.lastThirdStartHour), fmt.hhmm(minutesOf(tomorrow.fajr)),
-            "الثلث الأخير من الليل",
-            "آخر ثلث الليل بعد منتصفه، وهو وقتٌ للتقرب إلى الله بالقيام والدعاء والاستغفار، " +
-                "وهو وقتٌ نعلمه من حديث النَّوميّ عن رجوع النبي ﷺ من قنادته.",
-        )
-    }
-
-    MiqatScaffold(kind.label, onBack = onBack) {
-        Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = Space.lg),
-        ) {
-            Spacer(Modifier.height(Space.sm))
-            // the window itself — the reason the screen exists
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .background(
-                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = .5f),
-                        RoundedCornerShape(20.dp),
-                    )
-                    .padding(Space.lg),
-            ) {
-                Column {
-                    Text(
-                        content.window,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(Modifier.height(Space.sm))
-                    Text(
-                        if (content.start == content.end) content.start else "${content.start} — ${content.end}",
-                        style = MaterialTheme.typography.displaySmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                    Spacer(Modifier.height(Space.sm))
-                    ApproxChip()
-                }
-            }
-            Spacer(Modifier.height(Space.lg))
-            Text(
-                "ما هو هذا الوقت؟",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-            Spacer(Modifier.height(Space.xs))
-            Text(
-                content.note,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(Space.lg))
-            Text(
-                "دليله",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-            Spacer(Modifier.height(Space.xs))
-            Text(
-                content.source,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(Modifier.height(Space.lg))
-            Divider()
-            InfoRow("التاريخ", "${fmt.n(year)}/${fmt.n(month)}/${fmt.n(day)}")
-            InfoRow(
-                "أصل الحساب",
-                when (kind) {
-                    WorshipKind.DUHA -> "من الشروق إلى الظهر"
-                    else -> "من المغرب إلى الفجر"
-                },
-            )
-            InfoRow("الطبيعة", "تقديري بحسب الاصطلاح")
-            Spacer(Modifier.height(Space.xxl))
-        }
-    }
-}
-
-private data class Quad(
-    val window: String,
-    val start: String,
-    val end: String,
-    val source: String,
-    val note: String,
-)

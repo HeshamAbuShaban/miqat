@@ -83,7 +83,6 @@ enum class TopLevel(val label: String, val glyph: Glyph) {
 /** Sub-routes pushed on top of a top-level destination (their own screens). */
 sealed interface Route {
     data class PrayerDetailArgs(val index: Int) : Route
-    data class WorshipDetail(val kind: WorshipKind) : Route
     data object LocationSettings : Route
     data object CalculationSettings : Route
     data object NotificationsSettings : Route
@@ -107,12 +106,6 @@ sealed interface Route {
 }
 
 /** The worship windows that deserve their own screen (R5 «زوائد غابت»). */
-enum class WorshipKind(val label: String, val blurb: String) {
-    DUHA("وقت الضحى", "من بعد الشروق إلى ما قبل الظهر"),
-    SAHAR("وقت الأسحار", "آخر الليل قبل الفجر، حين يُستغفر"),
-    MIDNIGHT("منتصف الليل", "نصف الليل بين المغرب والفجر"),
-    LAST_THIRD("الثلث الأخير من الليل", "آخر ثلث الليل — وقت الاستغفار"),
-}
 
 @Composable
 fun MiqatApp(state: AppState, fmt: Fmt) {
@@ -174,12 +167,7 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                     TopLevel.Times -> TimesScreen(
                         state, fmt, now,
                         onOpenPrayer = { sub = Route.PrayerDetailArgs(it) },
-                        onOpenWorship = { sub = Route.WorshipDetail(it) },
-                        onOpenGaps = { sub = Route.Gaps },
-                        onOpenDistance = { sub = Route.Distance },
                         onOpenActs = { sub = Route.Acts },
-                        onOpenInterval = { sub = Route.Interval },
-                        onOpenSunnah = { sub = Route.Sunnah },
                     )
                     TopLevel.Fasting -> FastingScreen(state, fmt, now)
                     TopLevel.Calendar -> CalendarScreen(state, fmt, now, onOpenDay = { y, m, d -> sub = Route.DayDetail(y, m, d) })
@@ -202,7 +190,6 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                     })
                 }
                 is Route.PrayerDetailArgs -> PrayerDetailScreen(state, fmt, route.index) { sub = null }
-                is Route.WorshipDetail -> WorshipDetailScreen(state, fmt, route.kind) { sub = null }
                 is Route.DayDetail -> DayDetailScreen(
                     state, fmt, route.year, route.month, route.day,
                     onBack = { sub = null },
