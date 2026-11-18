@@ -48,7 +48,7 @@ fun BrandGlyph(
                     quadraticTo(w * 0.5f, h * 0.06f, w * 0.92f, h * 0.72f)
                 }
                 drawPath(p, color, style = Stroke(width = stroke, cap = StrokeCap.Round))
-                drawCircle(color, w * 0.09f, Offset(w * 0.92f, h * 0.72f))
+                drawCircle(color, w * 0.055f, Offset(w * 0.92f, h * 0.72f))
             }
 
             Glyph.TICKS -> {
@@ -58,13 +58,16 @@ fun BrandGlyph(
                     quadraticTo(w * 0.5f, h * 0.14f, w * 0.92f, h * 0.74f)
                 }
                 drawPath(p, color, style = Stroke(width = stroke, cap = StrokeCap.Round))
-                listOf(0.12f, 0.38f, 0.62f, 0.88f).forEach { t ->
+                // ticks sit ON the curve (the old y formula floated 0.28h
+                // above it): the exact quadratic, with the sunrise omitted
+                listOf(0f, 0.47f, 0.68f, 0.86f, 1f).forEach { t ->
+                    val mt = 1 - t
                     val x = w * (0.08f + 0.84f * t)
-                    val y = h * (0.74f - 0.58f * (4 * t * (1 - t)))
+                    val y = h * (mt * mt * 0.74f + 2 * mt * t * 0.14f + t * t * 0.74f)
                     drawLine(
                         color = color,
                         start = Offset(x, y),
-                        end = Offset(x, y - h * 0.14f),
+                        end = Offset(x, y - h * 0.07f),
                         strokeWidth = stroke,
                         cap = StrokeCap.Round,
                     )
@@ -81,21 +84,23 @@ fun BrandGlyph(
                     strokeWidth = stroke,
                     cap = StrokeCap.Round,
                 )
+                // a SPAN: the legs RISE from the endpoints to the window,
+                // and the sun sits ON the bar — not floating over a box
                 drawLine(
                     color = color,
                     start = Offset(w * 0.14f, y),
-                    end = Offset(w * 0.14f, h * 0.86f),
+                    end = Offset(w * 0.14f, h * 0.30f),
                     strokeWidth = stroke,
                     cap = StrokeCap.Round,
                 )
                 drawLine(
                     color = color,
                     start = Offset(w * 0.86f, y),
-                    end = Offset(w * 0.86f, h * 0.86f),
+                    end = Offset(w * 0.86f, h * 0.30f),
                     strokeWidth = stroke,
                     cap = StrokeCap.Round,
                 )
-                drawCircle(color, w * 0.1f, Offset(w * 0.62f, y - h * 0.2f))
+                drawCircle(color, w * 0.075f, Offset(w * 0.5f, y))
             }
 
             Glyph.CELL -> {
@@ -120,15 +125,21 @@ fun BrandGlyph(
             }
 
             Glyph.GRID -> {
-                // the grid: four dots
-                listOf(0.3f, 0.7f).forEach { fx ->
-                    listOf(0.3f, 0.7f).forEach { fy ->
-                        drawCircle(
-                            color = color,
-                            radius = w * 0.08f,
-                            center = Offset(w * fx, h * fy),
-                        )
-                    }
+                // settings are ADJUSTMENTS: three sliders in the app's own
+                // line-and-dot language (a 2×2 dot grid says "grid", not this)
+                listOf(0.3f, 0.5f, 0.7f).forEachIndexed { i, fy ->
+                    drawLine(
+                        color = color,
+                        start = Offset(w * 0.14f, h * fy),
+                        end = Offset(w * 0.86f, h * fy),
+                        strokeWidth = stroke,
+                        cap = StrokeCap.Round,
+                    )
+                    drawCircle(
+                        color = color,
+                        radius = w * 0.07f,
+                        center = Offset(w * listOf(0.32f, 0.66f, 0.5f)[i], h * fy),
+                    )
                 }
             }
         }

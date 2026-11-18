@@ -119,7 +119,7 @@ object ArcRenderer {
         // prayer), the sunrise in saffron, the rest pale
         val dot = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
         ticks.forEachIndexed { index, t ->
-            val (x, y) = DayArc.point(t, w, h, baseY, apexY)
+            val (x, y) = DayArc.point(DayArc.travelled(t), w, h, baseY, apexY)
             val isNext = index == nextIndex
             dot.color = if (isNext || index == 1) SAFFRON else TICK
             canvas.drawCircle(x, y, (if (isNext) 5f else 3.2f) * scale, dot)

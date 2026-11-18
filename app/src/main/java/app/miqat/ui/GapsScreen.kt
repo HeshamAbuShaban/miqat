@@ -202,7 +202,8 @@ fun IntervalScreen(state: AppState, fmt: Fmt, onBack: () -> Unit) {
                     Spacer(Modifier.height(Space.sm))
                     val until = Moments.until(to!!, nowMinute.toInt())
                     Text(
-                        "من الآن حتى ${to!!.labelAr}: ${fmt.duration(until)}",
+                        if (until < 0) "مضى على ${to!!.labelAr}: ${fmt.duration(-until)}"
+                        else "من الآن حتى ${to!!.labelAr}: ${fmt.duration(until)}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

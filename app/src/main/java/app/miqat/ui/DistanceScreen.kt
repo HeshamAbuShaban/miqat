@@ -62,11 +62,12 @@ fun DistanceScreen(state: AppState, fmt: Fmt, onBack: () -> Unit) {
 
             // the answer, first
             if (moment != null) {
-                val delta = Moments.until(moment, nowMinutes)
-                val signed = moment.minute - nowMinutes
+                // signed: never wrap a passed moment into a future one
+                val signed = Moments.until(moment, nowMinutes)
                 val after = signed >= 0
-                val hours = delta / 60
-                val minutes = delta % 60
+                val away = kotlin.math.abs(signed)
+                val hours = away / 60
+                val minutes = away % 60
                 Column(
                     Modifier
                         .fillMaxWidth()
@@ -115,6 +116,7 @@ private fun MomentRow(
     onClick: () -> Unit,
 ) {
     val delta = Moments.until(moment, nowMinutes)
+    val away = kotlin.math.abs(delta)
     Row(
         Modifier
             .fillMaxWidth()
@@ -148,7 +150,8 @@ private fun MomentRow(
             )
             Spacer(Modifier.width(Space.md))
             Text(
-                "بعد ${fmt.n(delta / 60)}:${fmt.n(delta % 60)}",
+                if (delta < 0) "منذ ${fmt.n(away / 60)}:${fmt.n(away % 60)}"
+                else "بقي ${fmt.n(away / 60)}:${fmt.n(away % 60)}",
                 style = MaterialTheme.typography.labelMedium.copy(fontFeatureSettings = TabularFigures),
                 color = if (selected) MaterialTheme.colorScheme.primary
                 else MaterialTheme.colorScheme.onSurfaceVariant,

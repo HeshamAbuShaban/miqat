@@ -72,11 +72,13 @@ fun FastingScreen(
     val nextFajr = minutesOf(tomorrow.fajr)
     val imsakPassed = nowMinute >= imsak
     val iftarPassed = nowMinute >= iftar
-    // after the iftar the fast is done: the countdown points at tomorrow's
-    val nextIftar = minutesOf(tomorrow.maghrib)
-    val remainingMinutes = if (iftarPassed) 0 else (iftar - nowMinute).coerceAtLeast(0)
-    val countdownMinutes = if (iftarPassed) (nextIftar - nowMinute + 1440) % 1440 else remainingMinutes
-    val countdownLabel = if (iftarPassed) "بقي على إفطار الغد" else "بقي على الإفطار"
+    // PROXIMITY (the founder, 2026-11-18): the fast is TODAY's fast.
+    // Tomorrow's Fajr is not a fact of this screen — showing it all night was
+    // "شيء غير ذكي". After the iftar the honest fact is the time since it.
+    val remainingMinutes = (iftar - nowMinute).coerceAtLeast(0)
+    val countdownLabel = if (iftarPassed) "انتهى صيام اليوم" else "بقي على الإفطار"
+    // (the proximity gate that keeps tomorrow's Fajr off this screen is
+    // pinned by ProximityTest — a UI crash-check has no place here)
     // the fast's own progress (0 = the imsak, 1 = the iftar)
     val span = (iftar - imsak).coerceAtLeast(1)
     val progress = ((nowMinute - imsak).toFloat() / span).coerceIn(0f, 1f)
@@ -148,7 +150,7 @@ fun FastingScreen(
                 // warm panel, and a colour that meant nothing)
                 drawPath(
                     arc,
-                    scheme.secondary.copy(alpha = 0.55f),
+                    scheme.secondary.copy(alpha = if (iftarPassed) 0.25f else 0.55f),
                     style = Stroke(width = 2f, cap = StrokeCap.Round),
                 )
 
@@ -171,14 +173,58 @@ fun FastingScreen(
                     )
                 }
 
-                // the sun at the hour, the iftar at the end
-                val sun = pointAt(progress)
-                drawCircle(Color(0xFFFFB25C).copy(alpha = .18f), 22f, sun)
-                drawCircle(Color(0xFFFFE0A8), 7f, sun)
-                val end = pointAt(1f)
-                drawCircle(Color(0xFFE8C46A), 5f, end)
-                val start = pointAt(0f)
-                drawCircle(scheme.secondary.copy(alpha = 0.8f), 4f, start)
+                // The Fajr tick — the moment the fast becomes obligatory,
+                // drawn INSIDE the window it belongs to (council P2.2).
+                val fastT = ((fajr - imsak).toFloat() / span).coerceIn(0f, 1f)
+                val fajrPoint = pointAt(fastT)
+                fun normalAt(t: Float): androidx.compose.ui.geometry.Offset {
+                    val tx = 2 * (1 - t) * (p1.x - p0.x) + 2 * t * (p2.x - p1.x)
+                    val ty = 2 * (1 - t) * (p1.y - p0.y) + 2 * t * (p2.y - p1.y)
+                    val len = kotlin.math.hypot(tx, ty).coerceAtLeast(0.001f)
+                    var n = androidx.compose.ui.geometry.Offset(-ty / len, tx / len)
+                    if (n.y > 0f) n = androidx.compose.ui.geometry.Offset(-n.x, -n.y)
+                    return n
+                }
+                val fn = normalAt(fastT)
+                drawLine(
+                    Color(0xFFFFB25C),
+                    fajrPoint + androidx.compose.ui.geometry.Offset(fn.x * 4f, fn.y * 4f),
+                    fajrPoint - androidx.compose.ui.geometry.Offset(fn.x * 4f, fn.y * 4f),
+                    strokeWidth = 2f,
+                )
+
+                // THE PLAYHEAD — alive only while the fast is actually open.
+                // The old dot sat clamped on an endpoint for most of the day:
+                // that is the founder's «الخط غير حيوي ولا يشير لشيء».
+                when {
+                    progress <= 0f -> {
+                        drawCircle(
+                            Color(0xFFFFB25C), 5f, pointAt(0f),
+                            style = Stroke(width = 2f),
+                        )
+                    }
+                    progress >= 1f -> {
+                        // the window has closed: the marker has LEFT the arc
+                        drawCircle(Color(0xFFFFB25C), 3.5f, Offset(p2.x, horizon))
+                    }
+                    else -> {
+                        val here = pointAt(progress)
+                        val n = normalAt(progress)
+                        drawLine(
+                            Color(0xFFFFB25C),
+                            here + androidx.compose.ui.geometry.Offset(n.x * 3f, n.y * 3f),
+                            here + androidx.compose.ui.geometry.Offset(n.x * 9f, n.y * 9f),
+                            strokeWidth = 2.5f,
+                        )
+                        drawCircle(Color(0xFFFFE0A8), 3.5f, here)
+                    }
+                }
+                // sunset is the clock's moment — saffron ring, not a gold dot
+                drawCircle(
+                    Color(0xFFFFB25C), 5f, pointAt(1f),
+                    style = Stroke(width = 2f),
+                )
+                drawCircle(scheme.secondary.copy(alpha = 0.8f), 4f, pointAt(0f))
             }
 
             Spacer(Modifier.height(Space.sm))
@@ -188,13 +234,21 @@ fun FastingScreen(
                 style = MaterialTheme.typography.labelMedium,
                 color = scheme.onSurfaceVariant,
             )
-            BigCountdown(
-                text = fmt.hms(countdownMinutes * 60L),
-                color = scheme.onSurface,
-            )
+            if (iftarPassed) {
+                Text(
+                    "منذ الإفطار ${fmt.duration((nowMinute - iftar).coerceAtLeast(0))}",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = scheme.onSurface,
+                )
+            } else {
+                BigCountdown(
+                    text = fmt.hms(remainingMinutes * 60L),
+                    color = scheme.onSurface,
+                )
+            }
             if (imsakPassed && !iftarPassed) {
                 Text(
-                    "مرّ من الإمساك ${fmt.hms(elapsedMinutes * 60L)}",
+                    "منذ الإمساك ${fmt.hms(elapsedMinutes * 60L)}",
                     style = MaterialTheme.typography.labelSmall,
                     color = scheme.onSurfaceVariant,
                 )
@@ -205,11 +259,10 @@ fun FastingScreen(
 
         // the four anchors — a 2×2 grid, not four rows: this is what stops
         // the screen from being a list
-        val anchors = listOf(
-            Triple("الإمساك", fmt.hhmm(imsak), if (imsakPassed) "مضى" else "يبقى ${fmt.n(imsak - nowMinute)} د"),
-            Triple("الفجر", fmt.hhmm(fajr), if (nowMinute >= fajr) "مضى" else "يبقى ${fmt.n(fajr - nowMinute)} د"),
-            Triple("الإفطار", fmt.hhmm(iftar), if (iftarPassed) "مضى" else "يبقى ${fmt.n(remainingMinutes)} د"),
-            Triple("فجر الغد", fmt.hhmm(nextFajr), "يبقى ${fmt.n((nextFajr - nowMinute + 1440) % 1440)} د"),
+        val anchors = mutableListOf(
+            Triple("الإمساك", fmt.hhmm(imsak), if (imsakPassed) "مضى" else "بقي ${fmt.n(imsak - nowMinute)} د"),
+            Triple("الفجر", fmt.hhmm(fajr), if (nowMinute >= fajr) "مضى" else "بقي ${fmt.n(fajr - nowMinute)} د"),
+            Triple("الإفطار", fmt.hhmm(iftar), if (iftarPassed) "مضى" else "بقي ${fmt.n(remainingMinutes)} د"),
         )
         Column(Modifier.fillMaxWidth()) {
             anchors.chunked(2).forEach { pair ->

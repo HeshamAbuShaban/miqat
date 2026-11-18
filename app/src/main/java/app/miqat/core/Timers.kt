@@ -57,6 +57,10 @@ data class Timers(
     val iqamaSeconds: Long,
     /** Which prayer the pending iqama belongs to. */
     val iqamaPrayer: String?,
+    /** The iqama that has ALREADY entered, while its hour is still fresh. */
+    val sinceIqamaPrayer: String? = null,
+    /** Seconds since that iqama — its own line, never mixed with a countdown. */
+    val sinceIqamaSeconds: Long = 0L,
 ) {
     /**
      * Is the elapsed worth a line of its own?
@@ -138,6 +142,19 @@ data class Timers(
                 }
             }
 
+            // «منذ الإقامة» — the founder's own line. Only the iqama that
+            // actually entered, and only for its first hour; the pending
+            // iqama keeps its own line above.
+            var sinceIqamaPrayer: String? = null
+            var sinceIqamaSeconds = 0L
+            if (iqamaMinutes > 0 && current.isPrayer) {
+                val entered = current.hour + iqamaMinutes / 60.0
+                if (nowHour in entered..(entered + 1.0)) {
+                    sinceIqamaPrayer = current.name
+                    sinceIqamaSeconds = ((nowHour - entered) * 3600.0).roundToLong()
+                }
+            }
+
             return Timers(
                 currentPrayer = if (current.isPrayer) current.name else null,
                 sinceCurrent = if (current.isPrayer) (sinceSeconds / 60).toInt() else null,
@@ -150,6 +167,8 @@ data class Timers(
                 iqamaIn = iqamaIn,
                 iqamaSeconds = iqamaSeconds,
                 iqamaPrayer = iqamaPrayer,
+                sinceIqamaPrayer = sinceIqamaPrayer,
+                sinceIqamaSeconds = sinceIqamaSeconds,
             )
         }
     }

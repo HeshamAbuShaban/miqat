@@ -80,7 +80,7 @@ fun TasbihScreen(onBack: () -> Unit) {
                     Spacer(Modifier.height(Space.xs))
                     Text(
                         AdhkarCitations.lineFor(item.id)
-                            ?: "رواه: الأذكار — رقم الحديث غير متحقق منه",
+                            ?: "المرجع قيد التوثيق",
                         style = MaterialTheme.typography.labelSmall,
                         color = scheme.onSurfaceVariant,
                     )

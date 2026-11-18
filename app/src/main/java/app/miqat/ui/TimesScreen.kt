@@ -25,11 +25,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import app.miqat.core.Moments
+import app.miqat.core.Proximity
+import app.miqat.core.Surface
+import app.miqat.core.TimerKind
 import app.miqat.core.Urgency
 import app.miqat.core.UrgencyRules
 import app.miqat.core.WorshipWindows
 
 /** Minutes-of-day for a fractional hour (same round-half-up as the donor). */
+/** A window that does not exist that day prints "--:--", never ٠٠:٠٠. */
+private fun Fmt.hhmmSafe(hours: Double): String =
+    if (hours.isNaN()) "--:--" else hhmm(minutesOf(hours))
+
 fun minutesOf(hours: Double): Int {
     if (hours.isNaN()) return 0
     val total = (((hours + 0.5 / 60.0) % 24.0) + 24.0) % 24.0
@@ -82,11 +89,14 @@ fun TimesScreen(
         )
         Spacer(Modifier.height(Space.sm))
 
-        val timeline = rememberTimeline(state, now)
-        val gapAfter = Moments.gaps(timeline).associateBy { it.from.kind }
+        // the bridges are between PRAYERS, never between a prayer and a
+        // sunnah marker parked on the same minute (that printed «٠ د»)
+        val gapAfter = Moments.prayerGaps(times, tomorrow.fajr, PRAYER_NAMES, ::minutesOf).toMap()
 
         PRAYER_NAMES.forEachIndexed { i, name ->
-            val isNext = timers.nextPrayer == name && !timers.nextIsTomorrow
+            // after the Isha the countdown BELONGS to tomorrow's Fajr — the
+            // night must not go silent, and the row says «غداً»
+            val isNext = timers.nextPrayer == name
             val isCurrent = timers.currentPrayer == name
             val urgency = if (state.display.urgencyEnabled && isNext) {
                 UrgencyRules.of(
@@ -97,9 +107,12 @@ fun TimesScreen(
             } else Urgency.CALM
             PrayerRow(
                 name = name,
-                time = fmt.hhmm(minutesOf(times.list[i])),
+                time = fmt.hhmm(minutesOf(times.list[i])) +
+                    if (isNext && timers.nextIsTomorrow) " · غداً" else "",
                 clock = when {
-                    isNext -> "بعد " + fmt.hms(timers.remainingSeconds)
+                    isNext -> Proximity.timerLine(
+                        TimerKind.PRAYER_REMAINING, timers.remainingSeconds, name,
+                    ).prefixAr + " " + fmt.hms(timers.remainingSeconds)
                     // the elapsed only exists inside the prayer's own window
                     isCurrent && timers.sinceWorthShowing ->
                         "منذ " + fmt.hms(timers.sinceSeconds)
@@ -109,12 +122,12 @@ fun TimesScreen(
                 urgency = urgency,
                 onClick = { onOpenPrayer(i) },
             )
-            // the gap to the next moment — drawn, not stacked
-            val gap = gapAfter[PRAYER_KEY[i]]
-            if (state.display.showGaps && gap != null &&
-                state.display.gapCategories.contains(gap.to.category.labelAr)
+            // the gap to the NEXT PRAYER — a real span, never a ٠ د sunnah marker
+            val gap = gapAfter[PRAYER_KEY[i]] ?: 0
+            if (state.display.showGaps && gap > 0 &&
+                state.display.gapCategories.contains(app.miqat.core.MomentCategory.PRAYER.labelAr)
             ) {
-                GapBridge(gap.minutes, fmt.duration(gap.minutes))
+                GapBridge(gap, fmt.duration(gap))
             }
             Divider()
         }
@@ -134,25 +147,25 @@ fun TimesScreen(
 
         WorshipRow(
             "وقت الضحى",
-            "${fmt.hhmm(minutesOf(duha.startHour))} — ${fmt.hhmm(minutesOf(duha.endHour))}",
+            "${fmt.hhmmSafe(duha.startHour)} — ${fmt.hhmmSafe(duha.endHour)}",
             "من بعد الشروق إلى ما قبل الظهر",
         ) { onOpenWorship(WorshipKind.DUHA) }
         Divider()
         WorshipRow(
             "وقت الأسحار",
-            "${fmt.hhmm(minutesOf(sahar.startHour))} — ${fmt.hhmm(minutesOf(sahar.endHour))}",
+            "${fmt.hhmmSafe(sahar.startHour)} — ${fmt.hhmmSafe(sahar.endHour)}",
             "آخر الليل قبل الفجر، حين يُستغفر",
         ) { onOpenWorship(WorshipKind.SAHAR) }
         Divider()
         WorshipRow(
             "منتصف الليل",
-            fmt.hhmm(minutesOf(night.midnightHour)),
+            fmt.hhmmSafe(night.midnightHour),
             "نصف الليل بين المغرب والفجر",
         ) { onOpenWorship(WorshipKind.MIDNIGHT) }
         Divider()
         WorshipRow(
             "الثلث الأخير من الليل",
-            fmt.hhmm(minutesOf(night.lastThirdStartHour)),
+            fmt.hhmmSafe(night.lastThirdStartHour),
             "آخر ثلث الليل — وقت الاستغفار",
         ) { onOpenWorship(WorshipKind.LAST_THIRD) }
         Divider()
@@ -282,14 +295,14 @@ fun WorshipDetailScreen(state: AppState, fmt: Fmt, kind: WorshipKind, onBack: ()
         )
         WorshipKind.MIDNIGHT -> Quad(
             "نصف الليل بين المغرب والفجر",
-            fmt.hhmm(minutesOf(night.midnightHour)), fmt.hhmm(minutesOf(night.midnightHour)),
+            fmt.hhmmSafe(night.midnightHour), fmt.hhmmSafe(night.midnightHour),
             "منتصف الليل",
             "نعدّ الليل من المغرب إلى الفجر، فنتصفه بينهما. " +
                 "وهو وقتٌ من أوقات الاستغفار والدعاء والقيام.",
         )
         WorshipKind.LAST_THIRD -> Quad(
             "آخر ثلث الليل",
-            fmt.hhmm(minutesOf(night.lastThirdStartHour)), fmt.hhmm(minutesOf(tomorrow.fajr)),
+            fmt.hhmmSafe(night.lastThirdStartHour), fmt.hhmm(minutesOf(tomorrow.fajr)),
             "الثلث الأخير من الليل",
             "آخر ثلث الليل بعد منتصفه، وهو وقتٌ للتقرب إلى الله بالقيام والدعاء والاستغفار، " +
                 "وهو وقتٌ نعلمه من حديث النَّوميّ عن رجوع النبي ﷺ من قنادته.",

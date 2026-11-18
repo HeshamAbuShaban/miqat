@@ -399,6 +399,7 @@ fun HomeScreen(
             fmt = fmt,
             times = times,
             timers = timers,
+            now = now,
             nowHour = nowHour,
             nowMinutes = nowMinutes,
             upcoming = upcomingMoments(timeline, nowMinutes),
@@ -559,6 +560,7 @@ private fun nextPrayerIndex(timers: app.miqat.core.Timers): Int {
 @Composable
 private fun HeroCard(
     state: AppState,
+    now: Long,
     fmt: Fmt,
     times: app.miqat.core.LocalPrayerTimes,
     timers: app.miqat.core.Timers,
@@ -651,6 +653,28 @@ private fun HeroCard(
                 size = androidx.compose.ui.geometry.Size(w, h - horizon),
             )
 
+            // THE SUN'S HEIGHT IS A FACT, NOT A DECORATION (council, 2026-11-18).
+            // Solar altitude from the same declination the engine uses, with
+            // refraction folded in so the disc touches the horizon exactly at
+            // the drawn sunrise/maghrib ticks. No new dependency, no clock of
+            // its own — the date and the hour come from the app's one clock.
+            val (sy, sm, sd) = state.cityDate(now)
+            val declDeg = app.miqat.core.PrayerTimes
+                .sunPosition(app.miqat.core.PrayerTimes.julian(sy, sm, sd)).first
+            val phi = Math.toRadians(state.city.lat)
+            val delta = Math.toRadians(declDeg)
+            val noon = (times.sunrise + times.maghrib) / 2.0
+            val hourAngle = Math.toRadians(15.0 * (nowHour - noon))
+            val refr = Math.sin(Math.toRadians(0.83))
+            val sinNum = kotlin.math.sin(phi) * kotlin.math.sin(delta) +
+                kotlin.math.cos(phi) * kotlin.math.cos(delta) * kotlin.math.cos(hourAngle) + refr
+            val sinDen = kotlin.math.sin(phi) * kotlin.math.sin(delta) +
+                kotlin.math.cos(phi) * kotlin.math.cos(delta) + refr
+            val elevationNorm = (sinNum / sinDen).coerceIn(-1.0, 1.0)
+            val elevation = Math.asin(sinNum.coerceIn(-1.0, 1.0))
+            val sunVisible = elevationNorm > 0.0
+            val progress = travelledFraction(times, nowHour)
+
             // the rim — in two weights: what the day has travelled (gold) and
             // what is left (a hairline). The progress is read as LENGTH.
             val rim = Path().apply {
@@ -666,7 +690,7 @@ private fun HeroCard(
             val travelled = Path()
             val steps = 40
             for (i in 0..steps) {
-                val t = 0.07f + 0.86f * travelledFraction(times, nowHour) * i / steps
+                val t = 0.07f + 0.86f * progress * i / steps
                 val pt = pointAt(t)
                 if (i == 0) travelled.moveTo(pt.x, pt.y) else travelled.lineTo(pt.x, pt.y)
             }
@@ -698,11 +722,40 @@ private fun HeroCard(
                 )
             }
 
-            // the sun, where the day actually is
-            val sun = pointAt(0.07f + 0.86f * travelledFraction(times, nowHour))
-            drawCircle(Color(0xFFFFB25C).copy(alpha = .18f), radius = 26f, center = sun)
-            drawCircle(Color(0xFFFFB25C).copy(alpha = .35f), radius = 15f, center = sun)
-            drawCircle(Color(0xFFFFE0A8), radius = 8.5f, center = sun)
+            // the gnomon at the Dhuhr tick and its shadow — a second checkable
+            // fact: shortest at noon, longer through the afternoon, gone at
+            // night. The founder asked for the shadow to mean something.
+            if (elevation > Math.toRadians(4.0)) {
+                val dhuhrT = tickParams.getOrNull(2) ?: 0.5f
+                val baseX = pointAt(0.07f + 0.86f * dhuhrT).x
+                val gnomon = 14f
+                drawLine(
+                    Sky.rim.copy(alpha = 0.8f),
+                    Offset(baseX, horizon), Offset(baseX, horizon - gnomon),
+                    strokeWidth = 2f,
+                )
+                val sunX = pointAt(0.07f + 0.86f * progress).x
+                val shadow = (gnomon / kotlin.math.tan(elevation))
+                    .coerceIn(4.0, 42.0).toFloat()
+                val dir = if (sunX < baseX) 1f else -1f
+                drawLine(
+                    Sky.rim.copy(alpha = 0.55f),
+                    Offset(baseX, horizon), Offset(baseX + dir * shadow, horizon),
+                    strokeWidth = 2f,
+                )
+            }
+
+            // the sun, at its REAL height — hidden below the horizon, just as
+            // the widget hides it (they used to disagree about the same fact)
+            if (sunVisible) {
+                val sun = Offset(
+                    pointAt(0.07f + 0.86f * progress).x,
+                    horizon - elevationNorm.toFloat().coerceAtLeast(0f) * (horizon - 10f),
+                )
+                drawCircle(Color(0xFFFFB25C).copy(alpha = .18f), radius = 26f, center = sun)
+                drawCircle(Color(0xFFFFB25C).copy(alpha = .35f), radius = 15f, center = sun)
+                drawCircle(Color(0xFFFFE0A8), radius = 8.5f, center = sun)
+            }
         }
 
         // the typographic unit: the caption, the NAME, the number
@@ -786,9 +839,25 @@ private fun HeroCard(
             if (state.display.showTimerIqama && timers.iqamaIn != null) {
                 Spacer(Modifier.height(Space.xs))
                 Text(
-                    "إقامة ${timers.iqamaPrayer} · بعد ${fmt.hms(timers.iqamaSeconds)}",
+                    app.miqat.core.Proximity.timerLine(
+                        app.miqat.core.TimerKind.PRAYER_REMAINING,
+                        timers.iqamaSeconds, "إقامة ${timers.iqamaPrayer}",
+                    ).prefixAr + " " + fmt.hms(timers.iqamaSeconds),
                     style = MaterialTheme.typography.labelSmall,
                     color = scheme.tertiary,
+                )
+            }
+            // «منذ الإقامة» — its OWN line: an elapsed fact about the iqama
+            // that entered, never folded into the next prayer's countdown
+            if (state.display.showTimerIqama && timers.sinceIqamaPrayer != null) {
+                Spacer(Modifier.height(Space.xs))
+                Text(
+                    app.miqat.core.Proximity.timerLine(
+                        app.miqat.core.TimerKind.SINCE_IQAMA,
+                        timers.sinceIqamaSeconds, timers.sinceIqamaPrayer!!,
+                    ).prefixAr + " " + fmt.hms(timers.sinceIqamaSeconds),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = scheme.onSurfaceVariant,
                 )
             }
         }

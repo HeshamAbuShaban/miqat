@@ -17,10 +17,10 @@
         </aapt:attr>
     </path>
     <path
-        android:pathData="M36,79 Q54,63 72,79"
+        android:pathData="M36,79 Q54,50 72,79"
         android:strokeColor="#E8C46A" android:strokeWidth="1.6"
         android:strokeLineCap="round"/>
     <path
-        android:pathData="M51.2,74.04a2.8,2.8 0 1,1 5.6,0a2.8,2.8 0 1,1 -5.6,0"
-        android:fillColor="#F8E7AE"/>
+        android:pathData="M51.2,71a2.8,2.8 0 1,1 5.6,0a2.8,2.8 0 1,1 -5.6,0"
+        android:fillColor="#FFE0A8"/>
 </vector>

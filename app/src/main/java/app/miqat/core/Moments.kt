@@ -146,13 +146,33 @@ object Moments {
 
     /** Does this rite belong to the given Hijri day? */
     private fun Moment.appliesTo(hijriMonth: Int, hijriDay: Int): Boolean = when (kind) {
-        // the Eid prayer: the first of Shawwal, and the days of Eid al-Adha
-        EID_PRAYER -> hijriMonth == 10 && hijriDay == 1 || hijriMonth == 12 && hijriDay in 10..13
+        // the EID PRAYER is the 10th of Dhul-Hijjah (or 1 Shawwal) — never
+        // the 11th-13th (those are tashreeq), never the night before
+        EID_PRAYER, EID_PRAYER_END ->
+            hijriMonth == 10 && hijriDay == 1 || hijriMonth == 12 && hijriDay == 10
         // the takbir of Arafah: from the Dhuhr of the 9th of Dhul-Hijjah
         ARAFAH_TAKBIR -> hijriMonth == 12 && hijriDay == 9
         // the stoning of the pillars: the 10th–12th of Dhul-Hijjah
         RAMI -> hijriMonth == 12 && hijriDay in 10..12
         else -> true
+    }
+
+    /**
+     * The gaps between PRAYERS only (the «المدد بين المواقيت» on the Times
+     * screen). The full timeline has sunnah markers at the exact same minute
+     * as a prayer (القيلولة at الظهر، قراءة الفجر at الشروق …); gapping that
+     * timeline produced bridges of «٠ د» under five prayers — a wrong
+     * «مουاقيت مصاحبة» the founder called out (2026-11-18).
+     */
+    fun prayerGaps(
+        times: LocalPrayerTimes,
+        tomorrowFajr: Double,
+        labels: List<String>,
+        minuteOf: (Double) -> Int,
+    ): List<Pair<String, Int>> {
+        val points = prayers(times, labels, minuteOf).map { it.kind to it.minute }.toMutableList()
+        points += FAJR to (minuteOf(tomorrowFajr) + 1440) // the night's real span
+        return points.zipWithNext { a, b -> a.first to (b.second - a.second) }
     }
 
     /** The gaps between consecutive moments (the «المدد بين المواقيت»). */
@@ -168,12 +188,12 @@ object Moments {
         return d
     }
 
-    /** How long until a moment (from now, in minutes). */
-    fun until(moment: Moment, nowMinute: Int): Int {
-        var d = moment.minute - nowMinute
-        if (d < 0) d += 1440
-        return d
-    }
+    /**
+     * SIGNED distance to a moment (negative = passed). The old version added
+     * 1440 to negatives, so a passed Fajr read "in 16 hours" — the twelve-hour
+     * lie back through another door (council P0, 2026-11-18).
+     */
+    fun until(moment: Moment, nowMinute: Int): Int = moment.minute - nowMinute
 }
 
 /** A span between two consecutive moments. */

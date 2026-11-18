@@ -348,24 +348,15 @@ fun GapBridge(minutes: Int, label: String? = null) {
             style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = TabularFigures),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(Modifier.width(Space.sm))
-        Text(
-            "المدة",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .6f),
-        )
     }
 }
 
 /** "1:17" / "2:04:30" — the duration format used across the app. */
-fun durationLabel(minutes: Int): String {
+fun durationLabel(minutes: Int, arabicIndic: Boolean = true): String {
     val sign = if (minutes < 0) "−" else ""
     val m = kotlin.math.abs(minutes)
-    return if (m >= 60) {
-        val h = m / 60
-        val mm = m % 60
-        "$sign$h:%02d".format(mm)
-    } else "$sign$m د"
+    val raw = if (m >= 60) "$sign${m / 60}:%02d".format(m % 60) else "$sign$m"
+    return app.miqat.core.NumFmt.digits(raw, arabicIndic) + if (m >= 60) "" else " د"
 }
 
 /** The chip that marks an approximate, convention-based value («تقديري»). */

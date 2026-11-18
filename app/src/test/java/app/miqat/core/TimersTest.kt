@@ -173,4 +173,20 @@ class TimersTest {
         val sorted = points.sortedBy { it.hour }
         assertEquals(sorted.size, points.size)
     }
+
+    @Test
+    fun `since the iqama has its own line and stops after an hour`() {
+        // 12:30 — Dhuhr entered at 12:05, its iqama at 12:20
+        val fresh = at(12.5, iqama = 15)
+        assertEquals("الظهر", fresh.sinceIqamaPrayer)
+        assertEquals(600L, fresh.sinceIqamaSeconds)
+        // 13:30 — more than an hour later: the elapsed is no longer news
+        val stale = at(13.5, iqama = 15)
+        assertEquals(null, stale.sinceIqamaPrayer)
+        // 13:00 — the Dhuhr iqama passed (12:20) AND the Asr one is pending:
+        // two facts, two lines, never one mixed number
+        val both = at(13.0, iqama = 15)
+        assertEquals("الظهر", both.sinceIqamaPrayer)
+        assertEquals("العصر", both.iqamaPrayer)
+    }
 }
