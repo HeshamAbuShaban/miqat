@@ -34,7 +34,6 @@ data class NotificationPrefs(
     /** Append the motivational text to other kinds' payloads (vs. standalone). */
     val motivationalAppended: Boolean = true,
     /** Standalone motivational notifications (fasting virtues, Islamic days). */
-    val motivationalStandalone: Boolean = false,
     /** Play the adhan audio (vs. a plain notification). */
     val adhanSound: Boolean = true,
     /** Which adhan pack to play (standard / maghrebi / haramayn). */
@@ -59,7 +58,6 @@ data class NotificationPrefs(
     /** Full-screen lockscreen intent (the alarm experience). */
     val fullScreenAlarm: Boolean = true,
     /** Keep a persistent countdown notification. */
-    val continuousNotification: Boolean = false,
     /** Quiet hours — notifications suppressed between these minutes (0..1439). */
     val quietFromMinute: Int = -1,
     val quietToMinute: Int = -1,
@@ -102,7 +100,6 @@ object NotificationPrefsStore {
             preparatoryLeadMinutes = p.getInt("prep_lead", defaults.preparatoryLeadMinutes),
             reminderDelayMinutes = p.getInt("reminder_delay", defaults.reminderDelayMinutes),
             motivationalAppended = p.getBoolean("mot_appended", defaults.motivationalAppended),
-            motivationalStandalone = p.getBoolean("mot_standalone", defaults.motivationalStandalone),
             adhanSound = p.getBoolean("adhan_sound", defaults.adhanSound),
             adhanPack = p.getString(K_ADHAN_PACK, defaults.adhanPack) ?: defaults.adhanPack,
             adhanVersion = p.getInt(K_ADHAN_VERSION, defaults.adhanVersion),
@@ -122,7 +119,6 @@ object NotificationPrefsStore {
             alwaysOnCountdown = p.getBoolean(K_COUNTDOWN, defaults.alwaysOnCountdown),
             vibrate = p.getBoolean("vibrate", defaults.vibrate),
             fullScreenAlarm = p.getBoolean("fsi", defaults.fullScreenAlarm),
-            continuousNotification = p.getBoolean("continuous", defaults.continuousNotification),
             quietFromMinute = p.getInt("quiet_from", -1),
             quietToMinute = p.getInt("quiet_to", -1),
         )
@@ -135,7 +131,6 @@ object NotificationPrefsStore {
         e.putInt("prep_lead", n.preparatoryLeadMinutes)
         e.putInt("reminder_delay", n.reminderDelayMinutes)
         e.putBoolean("mot_appended", n.motivationalAppended)
-        e.putBoolean("mot_standalone", n.motivationalStandalone)
         e.putBoolean("adhan_sound", n.adhanSound)
         e.putString(K_ADHAN_PACK, n.adhanPack)
         e.putInt(K_ADHAN_VERSION, n.adhanVersion)
@@ -151,7 +146,6 @@ object NotificationPrefsStore {
         e.putBoolean(K_COUNTDOWN, n.alwaysOnCountdown)
         e.putBoolean("vibrate", n.vibrate)
         e.putBoolean("fsi", n.fullScreenAlarm)
-        e.putBoolean("continuous", n.continuousNotification)
         e.putInt("quiet_from", n.quietFromMinute)
         e.putInt("quiet_to", n.quietToMinute)
         e.apply()

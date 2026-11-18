@@ -110,6 +110,30 @@ fun DayCard(
             }
         }
 
+        // THE HAJJ WEEK — six pins for 8–13 Dhul-Hijjah (ihram, Arafah,
+        // Eid+rami, three tashreeq). The day in question becomes a POSITION,
+        // not a word; today's pin is saffron (the clock).
+        if (hijri.hMonth == 12) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                (8..13).forEach { hd ->
+                    val isToday = hijri.hDay == hd
+                    Box(
+                        Modifier
+                            .width(2.dp)
+                            .height(if (isToday) 8.dp else 6.dp)
+                            .clip(RoundedCornerShape(1.dp))
+                            .background(
+                                if (isToday) scheme.tertiary else scheme.onTertiaryContainer,
+                            ),
+                    )
+                }
+            }
+            Spacer(Modifier.height(Space.md))
+        }
+
         Spacer(Modifier.height(Space.md))
         DaySpine(
             fmt = fmt,

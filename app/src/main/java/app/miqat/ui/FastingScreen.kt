@@ -353,76 +353,53 @@ fun FastingScreen(
                 "الأيام البيض ١٣–١٥",
                 "من كل شهر هجري",
                 "﴿أَمَرَنَا رَسُولُ اللَّهِ ﷺ أَنْ نَصُومَ مِنَ الشَّهْرِ ثَلاَثَةَ أَيَّامِ الْبِيضِ﴾ — سنن النسائي ٢٤٢٢",
+                days = 3,
             )
             FastingRow(
                 "الاثنين والخميس",
                 "كل أسبوع",
                 "﴿كَانَ النَّبِيُّ ﷺ يَتَحَرَّى صَوْمَ الِاثْنَيْنِ وَالْخَمِيسِ﴾ — سنن الترمذي ٧٤٥",
+                days = 2,
             )
             FastingRow(
                 "يوم عرفة",
                 "٩ ذي الحجة",
                 "﴿صِيَامُ يَوْمِ عَرَفَةَ أَحْتَسِبُ عَلَى اللَّهِ أَنْ يُكَفِّرَ السَّنَةَ الَّتِي قَبْلَهُ وَالسَّنَةَ الَّتِي بَعْدَهُ﴾ — صحيح مسلم ١١٦٢",
+                days = 1, rite = true,
             )
             FastingRow(
                 "عاشوراء",
                 "١٠ المحرم",
                 "﴿هَذَا يَوْمُ عَاشُورَاءَ، وَلَمْ يُكْتَبْ عَلَيْكُمْ صِيَامُهُ، وَأَنَا صَائِمٌ﴾ — صحيح البخاري ٢٠٠٣",
+                days = 1, rite = true,
             )
             FastingRow(
                 "ستّ من شوال",
                 "٦ شوال",
                 "﴿مَنْ صَامَ رَمَضَانَ ثُمَّ أَتْبَعَهُ سِتًّا مِنْ شَوَّالٍ كَانَ كَصِيَامِ الدَّهْرِ﴾ — صحيح مسلم ١١٦٤",
+                days = 6,
             )
             FastingRow(
                 "أيام التشريق",
                 "١١–١٣ ذي الحجة",
                 "﴿أَيَّامُ التَّشْرِيقِ أَيَّامُ أَكْلٍ وَشُرْبٍ﴾ — صحيح مسلم ١١٤١",
+                days = 3, rite = true,
             )
         }
 
         Spacer(Modifier.height(Space.md))
 
-        // the texts the fast rests on — the anchor and the iftar
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .cardSurface(RoundedCornerShape(Radius.panel))
-                .padding(Space.lg),
-        ) {
-            Text(
-                "على أيّ نصٍّ يقوم هذا؟",
-                style = MaterialTheme.typography.titleMedium,
-                color = scheme.onSurface,
-            )
-            Spacer(Modifier.height(Space.sm))
-            Text(
-                "﴿كُلُوا وَاشْرَبُوا حَتَّى يَتَبَيَّنَ لَكُمُ الْخَيْطُ الْأَبْيَضُ مِنَ الْخَيْطِ الْأَسْوَدِ مِنَ الْفَجْرِ﴾ — سورة البقرة ١٨٧",
-                style = MaterialTheme.typography.bodySmall,
-                color = scheme.onSurface,
-            )
-            Spacer(Modifier.height(Space.xs))
-            Text(
-                "﴿لَا يَزَالُ النَّاسُ بِخَيْرٍ مَا عَجَّلُوا الْفَطْرَ﴾ — صحيح البخاري ١٩٥٧",
-                style = MaterialTheme.typography.bodySmall,
-                color = scheme.onSurface,
-            )
-            Spacer(Modifier.height(Space.xs))
-            Text(
-                "﴿تَسَحَّرْنَا مَعَ النَّبِيِّ ﷺ… قُلْتُ كَمْ كَانَ بَيْنَ الأَذَانِ وَالسَّحُورِ؟ قَالَ قَدْرُ خَمْسِينَ آيَةً﴾ — صحيح البخاري ١٩٢١",
-                style = MaterialTheme.typography.bodySmall,
-                color = scheme.onSurface,
-            )
-        }
-
-        Spacer(Modifier.height(Space.xxl))
+        // the texts the fast rests on — the ancho        Spacer(Modifier.height(Space.xxl))
     }
 }
 
 /** One line in the night card. */
 
 @Composable
-private fun FastingRow(title: String, whenText: String, source: String) {
+private fun FastingRow(
+    title: String, whenText: String, source: String,
+    days: Int, rite: Boolean = false,
+) {
     val scheme = MaterialTheme.colorScheme
     Column(
         Modifier
@@ -439,6 +416,21 @@ private fun FastingRow(title: String, whenText: String, source: String) {
                 style = MaterialTheme.typography.labelSmall,
                 color = scheme.onSurfaceVariant,
             )
+        }
+        // the NUMBER in the narration becomes countable cells — no meter,
+        // no "2 of 6" score (we log acts, we never verify them)
+        Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+            repeat(days) {
+                Box(
+                    Modifier
+                        .width(4.dp)
+                        .height(8.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(
+                            if (rite) scheme.onTertiaryContainer else scheme.secondary,
+                        ),
+                )
+            }
         }
         Text(
             source,
