@@ -53,6 +53,10 @@ class AppState(
     var imsakLeadMinutes: Int = 15
         private set
 
+    /** The effective iqama delay: a per-prayer override, else the default. */
+    fun iqamaMinutesFor(key: String): Int =
+        notifications.iqamaByPrayer[key] ?: notifications.iqamaMinutes
+
     /** Has the user adopted their city's official timetable? */
     var officialAdopted: Boolean = false
         private set

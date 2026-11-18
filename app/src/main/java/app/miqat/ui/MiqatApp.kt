@@ -326,6 +326,7 @@ fun HomeScreen(
         app.miqat.core.prayerPoints(times, tomorrowHome.fajr, PRAYER_NAMES),
         nowHour,
         state.notifications.iqamaMinutes,
+        iqamaFor = { state.iqamaMinutesFor(it) },
     )
     val timeline = rememberTimeline(state, now)
     val nowMinutes = (nowHour * 60).toInt()

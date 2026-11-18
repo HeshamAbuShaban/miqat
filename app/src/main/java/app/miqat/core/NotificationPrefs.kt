@@ -48,8 +48,10 @@ data class NotificationPrefs(
     val fastingReminderTime: String = "maghrib",
     /** Which days the reminder mentions. */
     val fastingReminderDays: Set<String> = setOf("monday", "thursday", "white", "arafah", "ashura", "shawwal"),
-    /** The iqama (the second call) — minutes after the adhan; 0 = off. */
+    /** The default iqama (the second call) — minutes after the adhan; 0 = off. */
     val iqamaMinutes: Int = 0,
+    /** Per-prayer overrides of that default, keyed by [PRAYER_KEY] ("fajr" …). */
+    val iqamaByPrayer: Map<String, Int> = emptyMap(),
     /** The always-on countdown notification. */
     val alwaysOnCountdown: Boolean = false,
     /** Vibration on the direct adhan. */
@@ -83,6 +85,7 @@ object NotificationPrefsStore {
     private const val K_FASTING_TIME = "fasting_time"
     private const val K_FASTING_DAYS = "fasting_days"
     private const val K_IQAMA = "iqama_minutes"
+    private const val K_IQAMA_BY_PRAYER = "iqama_by_prayer"
     private const val K_COUNTDOWN = "always_on_countdown"
 
     private fun prefs(context: Context): SharedPreferences =
@@ -109,6 +112,13 @@ object NotificationPrefsStore {
                 K_FASTING_DAYS, defaults.fastingReminderDays,
             ) ?: defaults.fastingReminderDays,
             iqamaMinutes = p.getInt(K_IQAMA, defaults.iqamaMinutes),
+            iqamaByPrayer = (p.getString(K_IQAMA_BY_PRAYER, "") ?: "")
+                .split(',').filter { it.contains(':') }
+                .mapNotNull { pair ->
+                    val parts = pair.split(':')
+                    val delay = parts.getOrNull(1)?.toIntOrNull()
+                    if (parts.size == 2 && delay != null && delay >= 0) parts[0] to delay else null
+                }.toMap(),
             alwaysOnCountdown = p.getBoolean(K_COUNTDOWN, defaults.alwaysOnCountdown),
             vibrate = p.getBoolean("vibrate", defaults.vibrate),
             fullScreenAlarm = p.getBoolean("fsi", defaults.fullScreenAlarm),
@@ -133,6 +143,11 @@ object NotificationPrefsStore {
         e.putString(K_FASTING_TIME, n.fastingReminderTime)
         e.putStringSet(K_FASTING_DAYS, n.fastingReminderDays)
         e.putInt(K_IQAMA, n.iqamaMinutes)
+        e.putString(
+            K_IQAMA_BY_PRAYER,
+            n.iqamaByPrayer.entries.sortedBy { it.key }
+                .joinToString(",") { "${it.key}:${it.value}" },
+        )
         e.putBoolean(K_COUNTDOWN, n.alwaysOnCountdown)
         e.putBoolean("vibrate", n.vibrate)
         e.putBoolean("fsi", n.fullScreenAlarm)

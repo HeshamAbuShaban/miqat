@@ -189,4 +189,21 @@ class TimersTest {
         assertEquals("الظهر", both.sinceIqamaPrayer)
         assertEquals("العصر", both.iqamaPrayer)
     }
+
+    @Test
+    fun `per-prayer iqama overrides replace the single global delay`() {
+        // 12:30: Dhuhr's own iqama is 5 minutes, others keep 15
+        val t = Timers.of(
+            prayerPoints(day, tomorrowFajr, labels), 12.5, 15,
+            iqamaFor = { if (it == "الظهر") 5 else 15 },
+        )
+        assertEquals("الظهر", t.sinceIqamaPrayer)
+        assertEquals(1200L, t.sinceIqamaSeconds) // 12:30 − (12:05 + 5)
+        // a per-prayer value of 0 disables that prayer only
+        val off = Timers.of(
+            prayerPoints(day, tomorrowFajr, labels), 12.5, 15,
+            iqamaFor = { if (it == "الظهر") 0 else 15 },
+        )
+        assertEquals(null, off.sinceIqamaPrayer)
+    }
 }

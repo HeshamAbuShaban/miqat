@@ -93,6 +93,7 @@ class CountdownService : android.app.Service() {
             ),
             state.cityHourOfDay(now),
             state.notifications.iqamaMinutes,
+            iqamaFor = { state.iqamaMinutesFor(it) },
         )
         val title = if (timers.nextPrayer != null) "المتبقي لميقات ${timers.nextPrayer}" else "المواقيت"
         val body = if (timers.nextPrayer != null) {

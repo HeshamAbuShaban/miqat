@@ -72,6 +72,7 @@ fun TimesScreen(
         app.miqat.core.prayerPoints(times, tomorrow.fajr, PRAYER_NAMES),
         nowHour,
         state.notifications.iqamaMinutes,
+        iqamaFor = { state.iqamaMinutesFor(it) },
     )
 
     val night = WorshipWindows.night(maghrib = times.maghrib, fajrNext = tomorrow.fajr)

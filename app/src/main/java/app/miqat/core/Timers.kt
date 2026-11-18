@@ -89,9 +89,16 @@ data class Timers(
          * @param points the day's ABSOLUTE timeline (yesterday's Isha → today's
          *   points → midnight → tomorrow's Fajr), as built by [prayerPoints]
          * @param nowHour the city's fractional hour of the day right now
-         * @param iqamaMinutes the iqama delay in minutes (0 = the iqama is off)
+         * @param iqamaMinutes the DEFAULT iqama delay (0 = off)
+         * @param iqamaFor the effective delay per prayer (per-prayer settings).
+         *   The default lambda keeps every old caller honest.
          */
-        fun of(points: List<Point>, nowHour: Double, iqamaMinutes: Int = 0): Timers {
+        fun of(
+            points: List<Point>,
+            nowHour: Double,
+            iqamaMinutes: Int = 0,
+            iqamaFor: (String) -> Int = { iqamaMinutes },
+        ): Timers {
             if (points.isEmpty()) return EMPTY
             val line = points.sortedBy { it.hour }
 
@@ -127,10 +134,14 @@ data class Timers(
             var iqamaIn: Int? = null
             var iqamaSeconds = 0L
             var iqamaPrayer: String? = null
-            if (iqamaMinutes > 0) {
+            run {
                 val candidates = ArrayList<Pair<Double, String>>(2)
-                if (current.isPrayer) candidates.add(current.hour + iqamaMinutes / 60.0 to current.name)
-                candidates.add(next.hour + iqamaMinutes / 60.0 to next.name)
+                if (current.isPrayer && iqamaFor(current.name) > 0) {
+                    candidates.add(current.hour + iqamaFor(current.name) / 60.0 to current.name)
+                }
+                if (iqamaFor(next.name) > 0) {
+                    candidates.add(next.hour + iqamaFor(next.name) / 60.0 to next.name)
+                }
                 val pending = candidates
                     .map { (h, n) -> (h - nowHour) * 3600.0 to n }
                     .filter { it.first > 0 }
@@ -147,8 +158,9 @@ data class Timers(
             // iqama keeps its own line above.
             var sinceIqamaPrayer: String? = null
             var sinceIqamaSeconds = 0L
-            if (iqamaMinutes > 0 && current.isPrayer) {
-                val entered = current.hour + iqamaMinutes / 60.0
+            val currentDelay = iqamaFor(current.name)
+            if (currentDelay > 0 && current.isPrayer) {
+                val entered = current.hour + currentDelay / 60.0
                 if (nowHour in entered..(entered + 1.0)) {
                     sinceIqamaPrayer = current.name
                     sinceIqamaSeconds = ((nowHour - entered) * 3600.0).roundToLong()

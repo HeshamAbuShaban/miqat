@@ -481,6 +481,29 @@ fun NotificationsSection(state: AppState, fmt: Fmt) {
             },
         )
         Divider(Modifier.padding(horizontal = Space.lg))
+        // per-prayer iqama — a default plus five real overrides (no dumpling
+        // ground: this is the one fact it controls)
+        val iqamaOptions = listOf(-1, 0, 10, 15, 20, 30)
+        listOf(
+            "fajr" to "الفجر", "dhuhr" to "الظهر", "asr" to "العصر",
+            "maghrib" to "المغرب", "isha" to "العشاء",
+        ).forEach { (key, label) ->
+            val override = n.iqamaByPrayer[key]
+            NavRow(
+                "إقامة $label",
+                if (override == null) "حسب العامّة — " +
+                    (if (n.iqamaMinutes <= 0) "معطّلة" else "بعد ${fmt.n(n.iqamaMinutes)} دقيقة")
+                else if (override == 0) "معطّلة"
+                else "بعد ${fmt.n(override)} دقيقة من الأذان",
+                onClick = {
+                    val next = iqamaOptions[(iqamaOptions.indexOf(override ?: -1) + 1) % iqamaOptions.size]
+                    val map = if (next < 0) n.iqamaByPrayer - key else n.iqamaByPrayer + (key to next)
+                    state.updateNotifications(n.copy(iqamaByPrayer = map))
+                },
+            )
+            Divider(Modifier.padding(horizontal = Space.lg))
+        }
+        Divider(Modifier.padding(horizontal = Space.lg))
         ToggleRow(
             "العدّاد الدائم",
             "إشعار مستمر بالمتبقي على شاشة القفل",

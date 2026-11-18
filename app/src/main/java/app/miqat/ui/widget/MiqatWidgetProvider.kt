@@ -139,6 +139,7 @@ class MiqatWidgetProvider : AppWidgetProvider() {
                 prayerPoints(times, tomorrow.fajr, PRAYER_NAMES),
                 state.cityHourOfDay(now),
                 state.notifications.iqamaMinutes,
+                iqamaFor = { state.iqamaMinutesFor(it) },
             )
 
             val views = android.widget.RemoteViews(context.packageName, R.layout.widget_miqat)
