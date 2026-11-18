@@ -191,8 +191,11 @@ private fun DaySpine(
                     .clip(RoundedCornerShape(4.dp))
                     .background(
                         when (category) {
-                            MomentCategory.FASTING -> scheme.secondary.copy(alpha = .55f)
-                            MomentCategory.WORSHIP -> scheme.tertiary.copy(alpha = .45f)
+                            // every span is teal — the palette's one meaning
+                            // for a window (Duha was saffron = "now"; night
+                            // was gold = "ours"; both were lies)
+                            MomentCategory.FASTING, MomentCategory.WORSHIP,
+                            MomentCategory.NIGHT -> scheme.secondary.copy(alpha = .55f)
                             else -> scheme.primary.copy(alpha = .28f)
                         },
                     ),

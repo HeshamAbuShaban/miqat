@@ -89,7 +89,7 @@ fun ActsScreen(
         // THE ACT RAIL — the day as a SHAPE: every act at its real geometry,
         // not a list of labels with a time stapled on (the founder: «الطاعات
         // توضح بغير هذا الشكل .. أصلا الشكل الحالي لا ينم عن أي طاعة»).
-        ActRail(live, nowMinute)
+        ActRail(state, year = y, month = m, dayOfMonth = d, live, nowMinute)
         Spacer(Modifier.height(Space.lg))
 
         // grouped by STATE — «الأقرب فالأقرب»: what is open, then what comes,
@@ -116,7 +116,10 @@ fun ActsScreen(
  * pins, and NOW is one saffron tick — the legend the app already teaches.
  */
 @Composable
-private fun ActRail(items: List<ActsCatalog.Live>, nowMinute: Int) {
+private fun ActRail(
+    state: AppState, year: Int, month: Int, dayOfMonth: Int,
+    items: List<ActsCatalog.Live>, nowMinute: Int,
+) {
     val scheme = MaterialTheme.colorScheme
     Canvas(
         Modifier
@@ -127,6 +130,26 @@ private fun ActRail(items: List<ActsCatalog.Live>, nowMinute: Int) {
         val h = size.height
         val y = h * 0.55f
         val xOf: (Int) -> Float = { m -> w * (0.92f - 0.84f * (m.coerceIn(0, 1440) / 1440f)) }
+        // the day's REAL light: night before Fajr / after Maghrib, daylight
+        // between sunrise and Maghrib — the rail finally has a scale
+        val times = state.times(year, month, dayOfMonth)
+        val sunrise = minutesOf(times.sunrise)
+        val maghrib = minutesOf(times.maghrib)
+        drawLine(
+            scheme.surfaceVariant,
+            Offset(xOf(0), y), Offset(xOf(sunrise), y),
+            strokeWidth = 7f, cap = StrokeCap.Round,
+        )
+        drawLine(
+            Sky.sunMark.copy(alpha = 0.12f),
+            Offset(xOf(sunrise), y), Offset(xOf(maghrib), y),
+            strokeWidth = 7f,
+        )
+        drawLine(
+            scheme.surfaceVariant,
+            Offset(xOf(maghrib), y), Offset(xOf(1440), y),
+            strokeWidth = 7f, cap = StrokeCap.Round,
+        )
         // the spine
         drawLine(
             scheme.outlineVariant,
@@ -146,8 +169,13 @@ private fun ActRail(items: List<ActsCatalog.Live>, nowMinute: Int) {
                         Offset(xOf(item.startMinute), y - 6f), Offset(xOf(item.endMinute), y - 6f),
                         strokeWidth = 2f,
                     )
-                    listOf(item.startMinute, item.endMinute).forEach { m ->
-                        drawCircle(scheme.primary, 3f, Offset(xOf(m), y))
+                    listOf(item.startMinute, item.endMinute).forEach { minute ->
+                        drawLine(
+                            scheme.secondary.copy(alpha = 0.7f),
+                            Offset(xOf(minute), y - 6f), Offset(xOf(minute), y),
+                            strokeWidth = 2f,
+                        )
+                        drawCircle(scheme.primary, 3f, Offset(xOf(minute), y))
                     }
                 }
                 else -> drawCircle(

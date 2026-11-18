@@ -638,6 +638,27 @@ private fun HeroCard(
                 ),
             )
 
+            // the glow belongs to the SUN's side of the sky, not to the whole
+            // band: at dawn/sunset the light comes from where the sun actually
+            // is (the same parameter the disc and the ticks use)
+            if (skyPhase == app.miqat.ui.SkyPhase.DAWN ||
+                skyPhase == app.miqat.ui.SkyPhase.SUNSET
+            ) {
+                val glowX = pointAt(0.07f + 0.86f * travelledFraction(times, nowHour)).x
+                drawCircle(
+                    brush = androidx.compose.ui.graphics.Brush.radialGradient(
+                        listOf(
+                            Sky.sunMark.copy(alpha = 0.28f),
+                            Sky.sunMark.copy(alpha = 0f),
+                        ),
+                        center = Offset(glowX, horizon),
+                        radius = 110f,
+                    ),
+                    radius = 110f,
+                    center = Offset(glowX, horizon),
+                )
+            }
+
             // the stars — only when the sky is dark enough to hold them
             val starStrength = Sky.starAlpha(skyPhase)
             if (starStrength > 0.01f) {
@@ -652,7 +673,9 @@ private fun HeroCard(
                     drawCircle(
                         Sky.tick.copy(alpha = alpha),
                         radius = if (i % 4 == 0) 2.2f else 1.4f,
-                        center = Offset(p.x, p.y * (fy * 2.2f)),
+                        // the sky is the space between the arc and its apex,
+                        // never a height derived from the parameter itself
+                        center = Offset(p.x, p.y - (p.y - 10f) * (0.25f + 0.6f * fy)),
                     )
                 }
             }
@@ -662,6 +685,19 @@ private fun HeroCard(
                 Sky.ground,
                 topLeft = Offset(0f, horizon),
                 size = androidx.compose.ui.geometry.Size(w, h - horizon),
+            )
+
+            // DAYLIGHT is a different fact from the appointed span: the sun
+            // is above this horizon only from sunrise to maghrib. The bar's
+            // ends sit exactly under those two ticks — checkable.
+            val sunriseT = 0.07f + 0.86f * (tickParams.getOrNull(1) ?: 0f)
+            val maghribT = 0.07f + 0.86f * (tickParams.getOrNull(4) ?: 1f)
+            drawLine(
+                Sky.sunMark.copy(alpha = 0.55f),
+                Offset(pointAt(sunriseT).x, horizon + 7f),
+                Offset(pointAt(maghribT).x, horizon + 7f),
+                strokeWidth = 3f,
+                cap = StrokeCap.Round,
             )
 
             // THE SUN'S HEIGHT IS A FACT, NOT A DECORATION (council, 2026-11-18).
@@ -737,8 +773,14 @@ private fun HeroCard(
             // fact: shortest at noon, longer through the afternoon, gone at
             // night. The founder asked for the shadow to mean something.
             if (elevation > Math.toRadians(4.0)) {
-                val dhuhrT = tickParams.getOrNull(2) ?: 0.5f
-                val baseX = pointAt(0.07f + 0.86f * dhuhrT).x
+                // true noon, NOT the Dhuhr tick: several methods shift Dhuhr
+                // by +2..+5 minutes, which would move the shadow's minimum
+                val fajrM = minutesOf(times.fajr).toDouble()
+                val ishaM = minutesOf(times.isha).toDouble().let { if (it < fajrM) it + 1440.0 else it }
+                val noonM = (noon * 60.0).let { if (it < fajrM) it + 1440.0 else it }
+                val noonT = ((noonM - fajrM) / (ishaM - fajrM).coerceAtLeast(1.0))
+                    .coerceIn(0.0, 1.0).toFloat()
+                val baseX = pointAt(0.07f + 0.86f * noonT).x
                 val gnomon = 14f
                 drawLine(
                     Sky.rim.copy(alpha = 0.8f),
