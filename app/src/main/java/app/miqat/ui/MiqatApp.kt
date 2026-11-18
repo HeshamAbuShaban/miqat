@@ -43,6 +43,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.geometry.Offset
@@ -77,7 +78,6 @@ enum class TopLevel(val label: String, val glyph: Glyph) {
     Fasting("الصيام", Glyph.BRACKET),
     Calendar("التقويم", Glyph.CELL),
     Acts("الطاعات", Glyph.SPAN),
-    More("المزيد", Glyph.GRID),
 }
 
 /** Sub-routes pushed on top of a top-level destination (their own screens). */
@@ -95,6 +95,8 @@ sealed interface Route {
     data object Acts : Route
     data object Settings : Route
     data object Tasbih : Route
+    /** The tools are a CONTEXTUAL layer, not a dumping-ground tab. */
+    data object More : Route
     data class ActDetail(val id: String) : Route
     data object CalendarSettings : Route
     data object AppearanceSettings : Route
@@ -157,6 +159,19 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {
+            // the fifth place is CONTEXTUAL: tools and settings live one tap
+            // away on every screen, not as a bottom-nav bucket
+            if (sub == null) {
+                androidx.compose.material3.IconButton(
+                    onClick = { sub = Route.More },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = 104.dp, end = Space.sm)
+                        .zIndex(2f),
+                ) {
+                    BrandGlyph(kind = Glyph.GRID, active = false, size = 20.dp)
+                }
+            }
             when (val route = sub) {
                 null -> when (top) {
                     TopLevel.Home -> HomeScreen(
@@ -176,18 +191,6 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                         onOpenAct = { sub = Route.ActDetail(it) },
                         onOpenTasbih = { sub = Route.Tasbih },
                     )
-                    TopLevel.More -> MoreScreen(state, fmt, now, onOpen = { target ->
-                        sub = when (target) {
-                            MoreTarget.QIBLA -> Route.Qibla
-                            MoreTarget.TASBIH -> Route.Tasbih
-                            MoreTarget.ACTS -> Route.Acts
-                            MoreTarget.SUNNAH -> Route.Sunnah
-                            MoreTarget.DISTANCE -> Route.Distance
-                            MoreTarget.GAPS -> Route.Gaps
-                            MoreTarget.INTERVAL -> Route.Interval
-                            MoreTarget.SETTINGS -> Route.Settings
-                        }
-                    })
                 }
                 is Route.PrayerDetailArgs -> PrayerDetailScreen(state, fmt, route.index) { sub = null }
                 is Route.DayDetail -> DayDetailScreen(
@@ -228,6 +231,18 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                         SettingsRoute.About -> Route.AboutSettings
                     }
                 })
+                    Route.More -> MoreScreen(state, fmt, now, onOpen = { target ->
+                        sub = when (target) {
+                            MoreTarget.QIBLA -> Route.Qibla
+                            MoreTarget.TASBIH -> Route.Tasbih
+                            MoreTarget.ACTS -> Route.Acts
+                            MoreTarget.SUNNAH -> Route.Sunnah
+                            MoreTarget.DISTANCE -> Route.Distance
+                            MoreTarget.GAPS -> Route.Gaps
+                            MoreTarget.INTERVAL -> Route.Interval
+                            MoreTarget.SETTINGS -> Route.Settings
+                        }
+                    })
                 Route.Tasbih -> TasbihScreen { sub = null }
                 is Route.ActDetail -> ActDetailScreen(state, fmt, now, route.id) { sub = null }
                 Route.Distance -> DistanceScreen(state, fmt) { sub = null }
