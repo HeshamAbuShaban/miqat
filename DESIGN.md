@@ -25,17 +25,17 @@
 
 | Token | Dark | Light | Role |
 |---|---|---|---|
-| `bg` | `#141210` | `#F7F4EE` | page — warm ink / dawn paper |
-| `surface` | `#1C1A18` | `#FDFBF7` | cards, rows — one quiet step up |
-| `surfaceHigh` | `#262421` | `#EFE9DF` | raised: pressed, pill, sheet header |
-| `outline` | `#322F2B` | `#D9D1C2` | the hairline (onSurface at ~10%), the switch's border |
+| `bg` | `#0A0D18` | `#F7F4EE` | page — indigo-black (Meridian) / dawn paper |
+| `surface` | `#161A28` | `#FDFBF7` | cards, rows — one quiet step up |
+| `surfaceHigh` | `#1E2438` | `#EFE9DF` | raised: pressed, pill, sheet header |
+| `outline` | `#262F48` | `#D9D1C2` | the hairline (onSurface at ~10%), the switch's border |
 | `outlineVariant` | `#2A2724` | `#E7E0D3` | the faint hairline inside a card |
-| `gold` (`primary`) | `#E8C46A` | `#6F5610` | **chosen / ours**: the brand, the active destination, the selection, today's cell, the focus ring, the app's own marks |
-| `saffron` (`tertiary`) | `#FFB25C` | `#96500A` | **now / the clock**: the sun, the next prayer's tick, the countdown, the "now" dot |
-| `teal` (`secondary`) | `#7FD0C8` | `#1F6A62` | **a window**: a span of time given to an act — never a number, never a marker |
+| `gold` (`primary`) | `#D4A857` | `#6F5610` | **chosen / ours**: the brand, the active destination, the selection, today's cell, the focus ring, the app's own marks |
+| `saffron` (`tertiary`) | `#F0C875` | `#96500A` | **now / the clock**: the sun, the next prayer's tick, the countdown, the "now" dot |
+| `teal` (`secondary`) | `#5CC4B8` | `#1F6A62` | **a window**: a span of time given to an act — never a number, never a marker |
 | `cream` (`onTertiaryContainer`) | `#F8E7AE` | `#6E5A3C` | **an occasion, or a caution**: the Eids, the rites, the warnings, the citations' notes |
 | `text` | `#EDEBE3` | `#16181F` | primary text |
-| `dim` | `#AAA398` | `#5E554A` | secondary text, inactive nav, citations |
+| `dim` | `#7A7F95` | `#5E554A` | secondary text, inactive nav, citations |
 
 - The four meanings are strict: **gold = ours, saffron = now, teal = a window,
   cream = an occasion**. The sun is saffron (the clock), a worship window is

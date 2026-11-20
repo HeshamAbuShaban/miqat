@@ -23,7 +23,7 @@ enum class Accent(
     val lightOnContainer: Long,
 ) {
     GOLD(
-        "الذهبي", 0xFFE8C46A, 0xFF241C00, 0xFF2C2518, 0xFFF0DCA0,
+        "الذهبي", 0xFFD4A857, 0xFF241C00, 0xFF2C2518, 0xFFFFF2C8,
         0xFF6F5610, 0xFFFFFFFF, 0xFFF0E7CE, 0xFF4A3A10,
     ),
     TEAL(
