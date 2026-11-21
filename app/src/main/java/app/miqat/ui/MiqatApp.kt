@@ -763,7 +763,7 @@ private fun HeroCard(
                     )
                 }
                 // the sun: bloom, limb and a bright core — an object, not a bead
-                val sx = w * (1f - progress)
+                val sx = (w * (1f - progress)).coerceIn(24f, w - 24f)
                 // below the horizon the sun is DIM, not deleted — the disc
                 // still shows where it truly is under the day (the reference
                 // keeps the sun on screen at every hour)
@@ -815,25 +815,27 @@ private fun HeroCard(
                 val sec = app.miqat.core.NumFmt.digits(
                     ":%02d".format(timers.remainingSeconds % 60), fmt.ar,
                 )
-                val clock = buildAnnotatedString {
-                    append("\u2066") // one LTR-isolated numeric run, like the HTML
-                    append(big)
-                    withStyle(
-                        SpanStyle(
-                            fontSize = 24.sp,
-                            color = numberColor.copy(alpha = 0.78f),
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        big,
+                        style = MaterialTheme.typography.displayLarge.copy(
+                            fontFamily = Cairo, fontSize = 52.sp, fontWeight = FontWeight.Bold,
+                            fontFeatureSettings = TabularFigures,
+                            textDirection = androidx.compose.ui.text.style.TextDirection.Ltr,
                         ),
-                    ) { append(sec) }
-                    append("\u2069")
+                        color = numberColor,
+                    )
+                    Text(
+                        sec,
+                        style = MaterialTheme.typography.displaySmall.copy(
+                            fontFamily = Cairo, fontSize = 24.sp, fontWeight = FontWeight.Medium,
+                            fontFeatureSettings = TabularFigures,
+                            textDirection = androidx.compose.ui.text.style.TextDirection.Ltr,
+                        ),
+                        color = numberColor.copy(alpha = 0.78f),
+                        modifier = Modifier.padding(bottom = 6.dp),
+                    )
                 }
-                Text(
-                    clock,
-                    style = MaterialTheme.typography.displayLarge.copy(
-                        fontFamily = Kufi, fontSize = 52.sp, fontWeight = FontWeight.Bold,
-                        fontFeatureSettings = TabularFigures,
-                    ),
-                    color = numberColor,
-                )
                 Text(
                     timers.nextPrayer ?: "—",
                     style = MaterialTheme.typography.headlineMedium.copy(

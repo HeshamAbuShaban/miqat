@@ -134,6 +134,14 @@ val Kufi = FontFamily(
     Font(R.font.notokufiarabic_bold, FontWeight.Bold),
 )
 
+/** Cairo — kept for numerals: this bundled file has every Arabic-Indic
+ *  digit, unlike the Noto Kufi subset (which lacks the zero glyph). */
+val Cairo = FontFamily(
+    Font(R.font.cairo_regular, FontWeight.Normal),
+    Font(R.font.cairo_medium, FontWeight.Medium),
+    Font(R.font.cairo_bold, FontWeight.Bold),
+)
+
 /** IBM Plex Sans Arabic — the interface body. Bundled, never CDN. */
 val Plex = FontFamily(
     Font(R.font.ibmplexsansarabic_regular, FontWeight.Normal),
