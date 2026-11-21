@@ -457,49 +457,21 @@ fun CalendarScreen(
 
         Spacer(Modifier.height(Space.md))
 
-        // the DRIFT — a collapsed pill that expands into the real axis.
-        // Same PrayerStrip, same data; only its reveal changes.
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(14.dp))
-                .background(MaterialTheme.colorScheme.surface)
-                .animateContentSize(
-                    animationSpec = androidx.compose.animation.core.spring(
-                        dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy,
-                        stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow,
-                    ),
-                ),
+        // the DRIFT — one shared Expando, the very same PrayerStrip data
+        Expando(
+            id = "drift",
+            openId = if (driftOpen) "drift" else null,
+            onToggle = { driftOpen = it == "drift" },
+            title = "انحراف ${PRAYER_NAMES[stripPrayer]} · هذا الشهر",
         ) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .clickable { driftOpen = !driftOpen }
-                    .padding(horizontal = Space.md, vertical = Space.md),
-                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-            ) {
-                Text(
-                    "انحراف ${PRAYER_NAMES[stripPrayer]} · هذا الشهر",
-                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = Plex),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f),
-                )
-                Text(
-                    if (driftOpen) "−" else "+",
-                    style = MaterialTheme.typography.titleMedium.copy(fontFamily = Kufi),
-                    color = MaterialTheme.colorScheme.primary,
-                )
-            }
-            if (driftOpen) {
-                PrayerStrip(
-                    state = state,
-                    fmt = fmt,
-                    days = windowDays,
-                    prayer = stripPrayer,
-                    onPick = { stripPrayer = it; state.updateDisplay(d.copy(calendarPrayer = it)) },
-                    onLongPress = { yearOpen = true },
-                )
-            }
+            PrayerStrip(
+                state = state,
+                fmt = fmt,
+                days = windowDays,
+                prayer = stripPrayer,
+                onPick = { stripPrayer = it; state.updateDisplay(d.copy(calendarPrayer = it)) },
+                onLongPress = { yearOpen = true },
+            )
         }
 
         Spacer(Modifier.height(Space.sm))
