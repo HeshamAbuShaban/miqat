@@ -101,7 +101,34 @@ fun ActsScreen(
         // THE ACT RAIL — the day as a SHAPE: every act at its real geometry,
         // not a list of labels with a time stapled on (the founder: «الطاعات
         // توضح بغير هذا الشكل .. أصلا الشكل الحالي لا ينم عن أي طاعة»).
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = Space.sm),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                "مسار اليوم",
+                style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
+                color = scheme.onSurfaceVariant,
+            )
+            Text(
+                "${fmt.n(live.size)} من ${fmt.n(8)} طاعات",
+                style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
+                color = scheme.onSurfaceVariant,
+            )
+        }
         ActRail(state, year = y, month = m, dayOfMonth = d, live, nowMinute)
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = Space.sm),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            listOf("الإمساك", "الفجر", "الضحى", "العشاء", "الأسحار").forEach { label ->
+                Text(
+                    label,
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                    color = scheme.onSurfaceVariant,
+                )
+            }
+        }
         Spacer(Modifier.height(Space.lg))
 
         if (closings.isNotEmpty()) {
@@ -122,7 +149,11 @@ fun ActsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            c.labelAr,
+                            c.slot.labelAr + " · " + when (c.role) {
+                                CloseRole.ANCHOR -> "جارٍ"
+                                CloseRole.CLOSES_AT -> "ينتهي"
+                                CloseRole.INSIDE -> "قادم"
+                            },
                             style = MaterialTheme.typography.bodySmall.copy(fontFamily = Plex),
                             color = if (c.role == CloseRole.ANCHOR) scheme.secondary else scheme.onSurface,
                             modifier = Modifier.weight(1f),
@@ -378,10 +409,12 @@ private fun ActRow(item: ActsCatalog.Live, fmt: Fmt, onClick: () -> Unit) {
             Text(
                 when (item.state) {
                     ActsCatalog.ActState.UPCOMING -> Proximity.timerLine(
-                        TimerKind.ACT_REMAINING, item.minutesAway * 60L, item.act.name,
+                        TimerKind.ACT_REMAINING, item.minutesAway * 60L,
+                        item.act.name.removePrefix("وقت "),
                     ).prefixAr + " " + fmt.duration(item.minutesAway)
                     ActsCatalog.ActState.RUNNING -> Proximity.timerLine(
-                        TimerKind.AVAILABLE, item.minutesAway * 60L, item.act.name,
+                        TimerKind.AVAILABLE, item.minutesAway * 60L,
+                        item.act.name.removePrefix("وقت "),
                     ).prefixAr + " " + fmt.duration(item.minutesAway)
                     ActsCatalog.ActState.PASSED -> "مضى"
                 },
@@ -457,7 +490,7 @@ fun ActDetailScreen(
                 if (live.elapsedMinutes != null) {
                     Text(
                         Proximity.timerLine(
-                            TimerKind.ELAPSED, live.elapsedMinutes * 60L, act.name,
+                            TimerKind.ELAPSED, live.elapsedMinutes * 60L, act.name.removePrefix("وقت "),
                         ).prefixAr + " " + fmt.duration(live.elapsedMinutes),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,

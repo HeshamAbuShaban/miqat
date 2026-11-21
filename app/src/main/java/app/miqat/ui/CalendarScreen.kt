@@ -275,12 +275,12 @@ fun CalendarScreen(
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    window.titleAr,
+                    app.miqat.core.NumFmt.digits(window.titleAr, fmt.ar),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onBackground,
                 )
                 Text(
-                    window.subtitleAr,
+                    app.miqat.core.NumFmt.digits(window.subtitleAr, fmt.ar),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
