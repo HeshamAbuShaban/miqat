@@ -111,7 +111,19 @@ fun ActsScreen(
                 color = scheme.onSurfaceVariant,
             )
             Text(
-                "${fmt.n(live.size)} من ${fmt.n(8)} طاعات",
+                "${
+                    fmt.n(
+                        live.sortedWith(
+                            compareBy<ActsCatalog.Live> {
+                                when (it.state) {
+                                    ActsCatalog.ActState.RUNNING -> 0
+                                    ActsCatalog.ActState.UPCOMING -> 1
+                                    ActsCatalog.ActState.PASSED -> 2
+                                }
+                            },
+                        ).indexOfFirst { it.state == ActsCatalog.ActState.RUNNING } + 1,
+                    )
+                } من ${fmt.n(live.size)} طاعات",
                 style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
                 color = scheme.onSurfaceVariant,
             )
