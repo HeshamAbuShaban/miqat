@@ -352,7 +352,7 @@ object ClosingList {
                 CloseRole.CLOSES_AT -> "ينتهي مع " + (((slot.endMin ?: slot.atMin) % 1440).let {
                     "%02d:%02d".format(it / 60, it % 60)
                 })
-                CloseRole.INSIDE -> if (j.startIn in 0..60) "بعد ${j.startIn} د" else slot.labelAr
+                CloseRole.INSIDE -> slot.labelAr // one number only, shown ONCE
             }
             Closing(
                 slot = slot, verdict = j.verdict, role = role,

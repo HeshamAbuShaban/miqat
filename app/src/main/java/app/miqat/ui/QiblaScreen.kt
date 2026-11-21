@@ -111,18 +111,22 @@ fun QiblaScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         fmt.decimal(bearing.toDouble(), 1),
-                        style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = TabularFigures),
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontFamily = Kufi, fontFeatureSettings = TabularFigures,
+                        ),
                         color = if (aligned) scheme.primary else scheme.onSurface,
                     )
-                    Text("درجة عن الشمال", style = MaterialTheme.typography.labelSmall, color = scheme.onSurfaceVariant)
+                    Text("درجة عن الشمال", style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex), color = scheme.onSurfaceVariant)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         fmt.n(distanceKm.toInt()),
-                        style = MaterialTheme.typography.headlineSmall.copy(fontFeatureSettings = TabularFigures),
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontFamily = Kufi, fontFeatureSettings = TabularFigures,
+                        ),
                         color = scheme.onSurface,
                     )
-                    Text("كم إلى الكعبة", style = MaterialTheme.typography.labelSmall, color = scheme.onSurfaceVariant)
+                    Text("كم إلى الكعبة", style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex), color = scheme.onSurfaceVariant)
                 }
             }
 
@@ -130,9 +134,12 @@ fun QiblaScreen(
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .background(
-                        if (aligned) scheme.primaryContainer else scheme.surfaceVariant,
-                        RoundedCornerShape(Radius.panel),
+                    .clip(RoundedCornerShape(Radius.panel))
+                    .background(scheme.surface)
+                    .then(
+                        if (aligned) Modifier.background(
+                            scheme.primaryContainer, RoundedCornerShape(Radius.panel),
+                        ) else Modifier,
                     )
                     .padding(Space.md),
             ) {
@@ -149,7 +156,7 @@ fun QiblaScreen(
                     if (sensor.available) {
                         Text(
                             "اتجاهك الحالي: ${fmt.decimal(heading.toDouble(), 1)}°",
-                            style = MaterialTheme.typography.labelSmall,
+                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
                             color = scheme.onSurfaceVariant,
                         )
                     }
@@ -216,7 +223,7 @@ private fun CompassRose(
                 val a = Math.toRadians((deg - 90).toDouble())
                 val outer = radius
                 val inner = radius - if (major) 16f else 7f
-                val c = if (major) Color(0xFFE6E2D6) else Sky.tick
+                val c = if (major) Color(0xFFEBE8E0) else Sky.tick
                 drawLine(
                     color = c,
                     start = Offset(
@@ -261,7 +268,7 @@ private fun CompassRose(
                 lineTo(top.x + 9f, top.y - 15f)
                 close()
             },
-            color = scheme.secondary,
+            color = Color(0xFFFF8566), // the phone's "now", not a window
         )
 
         // the Kaaba's needle — the gold that means something

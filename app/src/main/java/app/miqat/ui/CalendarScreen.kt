@@ -331,7 +331,10 @@ fun CalendarScreen(
                                 androidx.compose.animation.core.animate(
                                     initialValue = from,
                                     targetValue = 0f,
-                                    animationSpec = androidx.compose.animation.core.tween(180),
+                                    animationSpec = androidx.compose.animation.core.spring(
+                                dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy,
+                                stiffness = androidx.compose.animation.core.Spring.StiffnessMedium,
+                            ),
                                 ) { value, _ -> swipe = value }
                             }
                         },
@@ -341,7 +344,10 @@ fun CalendarScreen(
                                 androidx.compose.animation.core.animate(
                                     initialValue = from,
                                     targetValue = 0f,
-                                    animationSpec = androidx.compose.animation.core.tween(180),
+                                    animationSpec = androidx.compose.animation.core.spring(
+                                dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy,
+                                stiffness = androidx.compose.animation.core.Spring.StiffnessMedium,
+                            ),
                                 ) { value, _ -> swipe = value }
                             }
                         },
@@ -576,7 +582,9 @@ private fun DayCell(
         "مناسبات" -> cell.isRite
         else -> true
     }
-    val cellAlpha = if (relevant) 1f else 0.32f
+    val cellAlpha by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = if (relevant) 1f else 0.32f, label = "lens",
+    )
     Column(
         Modifier
             .fillMaxWidth()

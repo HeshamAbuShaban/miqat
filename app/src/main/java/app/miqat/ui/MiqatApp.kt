@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -51,6 +52,10 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,6 +71,7 @@ import app.miqat.core.Qibla
 import app.miqat.core.WorshipWindows
 import kotlinx.coroutines.delay
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import app.miqat.core.Moment
 import app.miqat.core.MomentCategory
 
@@ -138,11 +144,17 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 12.dp)
+                        .padding(horizontal = 20.dp, vertical = 20.dp)
                         .height(66.dp)
+                        .shadow(
+                            elevation = 18.dp,
+                            shape = RoundedCornerShape(24.dp),
+                            ambientColor = Color.Black,
+                            spotColor = Color.Black,
+                        )
                         .clip(RoundedCornerShape(24.dp))
-                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
-                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant,
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.94f))
+                        .border(1.dp, MaterialTheme.colorScheme.outline,
                             RoundedCornerShape(24.dp))
                         .padding(horizontal = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -209,6 +221,9 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                         onOpenQibla = { sub = Route.Qibla },
                         onOpenPrayer = { sub = Route.PrayerDetailArgs(it) },
                         onOpenMore = { sub = Route.More },
+                        onOpenFasting = { top = TopLevel.Fasting },
+                        onOpenDistance = { sub = Route.Distance },
+                        onOpenSunnah = { sub = Route.Sunnah },
                     )
                     TopLevel.Times -> TimesScreen(
                         state, fmt, now,
@@ -352,6 +367,9 @@ fun HomeScreen(
     onOpenQibla: () -> Unit = {},
     onOpenPrayer: (Int) -> Unit = {},
     onOpenMore: () -> Unit = {},
+    onOpenFasting: () -> Unit = {},
+    onOpenDistance: () -> Unit = {},
+    onOpenSunnah: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val now = nowState.value
@@ -468,6 +486,46 @@ fun HomeScreen(
             upcoming = upcomingMoments(timeline, nowMinutes),
         )
 
+        Spacer(Modifier.height(Space.md))
+        // «الأقرب إليك» — three REAL cards, each opening its own screen
+        val imsakMinute = minutesOf(times.fajr) - state.imsakLeadMinutes
+        val saharMoment = timeline.firstOrNull { it.kind == app.miqat.core.Moments.SAHAR_START }
+        val sinceImsak = (nowMinutes - imsakMinute).coerceAtLeast(0)
+        Text(
+            "الأقرب إليك",
+            style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = Space.sm),
+        )
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .horizontalScroll(androidx.compose.foundation.rememberScrollState())
+                .padding(horizontal = Space.sm),
+            horizontalArrangement = Arrangement.spacedBy(Space.sm),
+        ) {
+            ShelfCard(
+                label = "صيام · منذ الإمساك",
+                value = fmt.duration(sinceImsak),
+                meta = "متبقٍ " + fmt.duration((minutesOf(times.maghrib) - nowMinutes).coerceAtLeast(0)),
+                tint = MaterialTheme.colorScheme.secondary,
+                onClick = onOpenFasting,
+            )
+            ShelfCard(
+                label = "احسب بين ميقاتين",
+                value = "المسافة",
+                meta = "بين أي لحظتين",
+                tint = MaterialTheme.colorScheme.onSurface,
+                onClick = onOpenDistance,
+            )
+            ShelfCard(
+                label = "بعد المغرب",
+                value = "الأسحار",
+                meta = "يبدأ " + (saharMoment?.let { fmt.hhmmShort(it.minuteOfDay) } ?: "—"),
+                tint = Gold,
+                onClick = onOpenSunnah,
+            )
+        }
         Spacer(Modifier.height(Space.xl))
 
         // the daylight-saving notice — the clock will change, and that moves
@@ -609,6 +667,29 @@ private fun nextPrayerIndex(timers: app.miqat.core.Timers): Int {
  * name is the question); the seconds are smaller than the minutes (the clock
  * reads as one object); and the foot carries the day's shape — «بعد ذلك».
  */
+@Composable
+private fun ShelfCard(
+    label: String, value: String, meta: String, tint: Color, onClick: () -> Unit,
+) {
+    val scheme = MaterialTheme.colorScheme
+    Column(
+        Modifier
+            .width(172.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(scheme.surface)
+            .clickable(onClick = onClick)
+            .padding(Space.md),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(label, style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
+            color = scheme.onSurfaceVariant)
+        Text(value, style = MaterialTheme.typography.titleMedium.copy(fontFamily = Kufi),
+            color = tint)
+        Text(meta, style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
+            color = scheme.onSurfaceVariant)
+    }
+}
+
 /**
  * THE HERO — "Meridian": a sky, a sun with real light, and one answer.
  *
@@ -683,21 +764,25 @@ private fun HeroCard(
                 }
                 // the sun: bloom, limb and a bright core — an object, not a bead
                 val sx = w * (1f - progress)
-                val sy2 = h * 0.62f - elevationNorm.coerceAtLeast(0f) * h * 0.40f
-                if (elevationNorm > -0.05f) {
-                    drawCircle(
-                        brush = Brush.radialGradient(
-                            listOf(Color(0xFFFFF2C8).copy(alpha = 0.75f),
-                                Gold.copy(alpha = 0.42f), Sunset.copy(alpha = 0f)),
-                            center = Offset(sx, sy2), radius = 96f,
-                        ),
-                        radius = 96f, center = Offset(sx, sy2),
-                    )
-                    drawCircle(Gold, 21f, Offset(sx, sy2))
-                    drawCircle(Color(0xFFF0C875), 17f, Offset(sx, sy2))
-                    drawCircle(Color(0xFFFFF2C8).copy(alpha = 0.55f), 7f,
-                        Offset(sx - 3f, sy2 - 3f))
-                }
+                // below the horizon the sun is DIM, not deleted — the disc
+                // still shows where it truly is under the day (the reference
+                // keeps the sun on screen at every hour)
+                val below = elevationNorm < 0f
+                val sy2 = (h * 0.62f - elevationNorm.coerceIn(-0.45f, 1f) * h * 0.40f)
+                    .coerceAtMost(h * 0.95f)
+                val a = if (below) 0.28f else 1f
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        listOf(Color(0xFFFFF2C8).copy(alpha = 0.75f * a),
+                            Gold.copy(alpha = 0.42f * a), Sunset.copy(alpha = 0f)),
+                        center = Offset(sx, sy2), radius = 96f,
+                    ),
+                    radius = 96f, center = Offset(sx, sy2),
+                )
+                drawCircle(Gold.copy(alpha = a), 21f, Offset(sx, sy2))
+                drawCircle(Color(0xFFF0C875).copy(alpha = a), 17f, Offset(sx, sy2))
+                drawCircle(Color(0xFFFFF2C8).copy(alpha = 0.55f * a), 7f,
+                    Offset(sx - 3f, sy2 - 3f))
             }
             // the answer, printed on the sky
             Column(
@@ -730,25 +815,25 @@ private fun HeroCard(
                 val sec = app.miqat.core.NumFmt.digits(
                     ":%02d".format(timers.remainingSeconds % 60), fmt.ar,
                 )
-                Row(verticalAlignment = Alignment.Bottom) {
-                    Text(
-                        big,
-                        style = MaterialTheme.typography.displayLarge.copy(
-                            fontFamily = Kufi, fontSize = 52.sp, fontWeight = FontWeight.Bold,
-                            fontFeatureSettings = TabularFigures,
+                val clock = buildAnnotatedString {
+                    append("\u2066") // one LTR-isolated numeric run, like the HTML
+                    append(big)
+                    withStyle(
+                        SpanStyle(
+                            fontSize = 24.sp,
+                            color = numberColor.copy(alpha = 0.78f),
                         ),
-                        color = numberColor,
-                    )
-                    Text(
-                        sec,
-                        style = MaterialTheme.typography.displaySmall.copy(
-                            fontFamily = Kufi, fontSize = 24.sp, fontWeight = FontWeight.Medium,
-                            fontFeatureSettings = TabularFigures,
-                        ),
-                        color = numberColor.copy(alpha = 0.78f),
-                        modifier = Modifier.padding(bottom = 6.dp),
-                    )
+                    ) { append(sec) }
+                    append("\u2069")
                 }
+                Text(
+                    clock,
+                    style = MaterialTheme.typography.displayLarge.copy(
+                        fontFamily = Kufi, fontSize = 52.sp, fontWeight = FontWeight.Bold,
+                        fontFeatureSettings = TabularFigures,
+                    ),
+                    color = numberColor,
+                )
                 Text(
                     timers.nextPrayer ?: "—",
                     style = MaterialTheme.typography.headlineMedium.copy(
