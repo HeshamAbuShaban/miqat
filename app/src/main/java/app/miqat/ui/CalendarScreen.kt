@@ -3,6 +3,7 @@ package app.miqat.ui
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -44,8 +45,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import app.miqat.core.DstInfo
 import app.miqat.core.Hijri
 import app.miqat.core.IslamicDay
@@ -81,6 +84,7 @@ fun CalendarScreen(
     var stripPrayer by remember { mutableIntStateOf(state.display.calendarPrayer) }
     var ledgerOpen by remember { mutableStateOf(false) }
     var yearOpen by remember { mutableStateOf(false) }
+    var driftOpen by remember { mutableStateOf(false) }
 
     val d = state.display
     // WHAT THE CALENDAR IS ORGANIZED AROUND — the founder's "the method
@@ -162,7 +166,14 @@ fun CalendarScreen(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = Space.lg),
     ) {
-        Spacer(Modifier.height(Space.md))
+        Text(
+            "التقويم",
+            style = MaterialTheme.typography.headlineMedium.copy(
+                fontFamily = Kufi, fontSize = 22.sp, fontWeight = FontWeight.Bold,
+            ),
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+        Spacer(Modifier.height(Space.sm))
 
         // THE SPINE — the calendar is organized around ONE axis, not three
         // competing tabs (the founder: «التقسيم للتبويب غبي»).
@@ -177,20 +188,20 @@ fun CalendarScreen(
                 val selected = c == axis
                 Text(
                     c.labelAr,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = if (selected) MaterialTheme.colorScheme.onPrimary
+                    style = MaterialTheme.typography.labelMedium.copy(fontFamily = Plex),
+                    color = if (selected) MaterialTheme.colorScheme.primary
                     else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier
-                        .clip(RoundedCornerShape(Radius.chip))
+                        .clip(RoundedCornerShape(9.dp))
                         .background(
-                            if (selected) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.surfaceVariant,
+                            if (selected) MaterialTheme.colorScheme.surfaceVariant
+                            else MaterialTheme.colorScheme.surface,
                         )
                         .clickable {
                             axis = c
                             state.updateDisplay(d.copy(calendarContext = c.name))
                         }
-                        .padding(horizontal = Space.md, vertical = 6.dp),
+                        .padding(horizontal = Space.md, vertical = 7.dp),
                 )
             }
             Spacer(Modifier.weight(1f))
@@ -268,14 +279,38 @@ fun CalendarScreen(
                 app.miqat.core.TimerKind.PRAYER_REMAINING,
                 nearest.signedMin * 60L, nearest.slot.labelAr,
             )
-            NavRow(
-                "أقرب موعد",
-                if (nearest.dayLabelAr != null)
-                    "${nearest.slot.labelAr} · ${nearest.dayLabelAr} · ${fmt.hhmm(nearest.clockMin)}"
-                else "${line.prefixAr} ${fmt.duration(nearest.signedMin)}",
-                onClick = { onOpenPrayer(PRAYER_KEY.indexOf(nearest.slot.kind).coerceAtLeast(0)) },
-            )
-            Divider(Modifier.padding(horizontal = Space.lg))
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .clickable {
+                        onOpenPrayer(PRAYER_KEY.indexOf(nearest.slot.kind).coerceAtLeast(0))
+                    }
+                    .padding(horizontal = Space.md, vertical = Space.sm),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            ) {
+                Box(
+                    Modifier.size(6.dp).clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.secondary),
+                )
+                Spacer(Modifier.width(Space.sm))
+                Text(
+                    "أقرب موعد: " + nearest.slot.labelAr,
+                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = Plex),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    if (nearest.dayLabelAr != null) "${nearest.dayLabelAr} ${fmt.hhmm(nearest.clockMin)}"
+                    else fmt.duration(nearest.signedMin),
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontFamily = Kufi, fontFeatureSettings = TabularFigures,
+                    ),
+                    color = MaterialTheme.colorScheme.secondary,
+                )
+            }
+            Spacer(Modifier.height(Space.sm))
         }
 
         // year hop — the month arrows below step one month; these step a
@@ -422,16 +457,50 @@ fun CalendarScreen(
 
         Spacer(Modifier.height(Space.md))
 
-        // the PRAYER STRIP — the drift axis; a chip re-plots it, a long press
-        // opens the year overlay
-        PrayerStrip(
-            state = state,
-            fmt = fmt,
-            days = windowDays,
-            prayer = stripPrayer,
-            onPick = { stripPrayer = it; state.updateDisplay(d.copy(calendarPrayer = it)) },
-            onLongPress = { yearOpen = true },
-        )
+        // the DRIFT — a collapsed pill that expands into the real axis.
+        // Same PrayerStrip, same data; only its reveal changes.
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(14.dp))
+                .background(MaterialTheme.colorScheme.surface)
+                .animateContentSize(
+                    animationSpec = androidx.compose.animation.core.spring(
+                        dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy,
+                        stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow,
+                    ),
+                ),
+        ) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clickable { driftOpen = !driftOpen }
+                    .padding(horizontal = Space.md, vertical = Space.md),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            ) {
+                Text(
+                    "انحراف ${PRAYER_NAMES[stripPrayer]} · هذا الشهر",
+                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = Plex),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    if (driftOpen) "−" else "+",
+                    style = MaterialTheme.typography.titleMedium.copy(fontFamily = Kufi),
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+            if (driftOpen) {
+                PrayerStrip(
+                    state = state,
+                    fmt = fmt,
+                    days = windowDays,
+                    prayer = stripPrayer,
+                    onPick = { stripPrayer = it; state.updateDisplay(d.copy(calendarPrayer = it)) },
+                    onLongPress = { yearOpen = true },
+                )
+            }
+        }
 
         Spacer(Modifier.height(Space.sm))
         Row(

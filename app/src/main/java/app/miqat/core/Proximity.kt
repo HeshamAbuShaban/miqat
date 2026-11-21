@@ -296,3 +296,72 @@ object NearestMoment {
         return if (allowPast) pool.maxByOrNull { it.signedMin } else null
     }
 }
+
+/** A set of events that CLOSE TOWARD the one running now — with a lifetime. */
+enum class CloseRole { ANCHOR, INSIDE, CLOSES_AT }
+
+data class Closing(
+    val slot: Slot,
+    val verdict: Verdict,
+    val role: CloseRole,
+    /** Signed minutes from now; never wrapped past the anchor. */
+    val startIn: Int,
+    val endIn: Int?,
+    /** Position inside the anchor's window, 0..1. */
+    val fracOfAnchor: Float,
+    val labelAr: String,
+)
+
+/**
+ * The founder's team asked for «الأحداث المتقاربة حاليًا»: not a flat ranking,
+ * but the events that live INSIDE the window that is open now, ordered by
+ * their real time, and expiring with it. Nothing wraps, nothing survives the
+ * horizon — unlike a 23-hour countdown.
+ */
+object ClosingList {
+    fun of(line: DayLine, now: Int, surface: Surface = Surface.ACTS): List<Closing> {
+        val rule = Proximity.rules(surface)
+        val facts = Proximity.of(line, now, surface)
+        // the anchor: an OPEN window, else the soonest appointment ahead
+        val anchor = facts.firstOrNull {
+            it.verdict == Verdict.DUE && it.slot.endMin != null && now < it.slot.endMin!!
+        } ?: facts.firstOrNull { it.startIn >= 0 } ?: return emptyList()
+
+        // a POINT anchor (a prayer's adhan) closes at the next appointed
+        // moment — otherwise the horizon would be its own minute and every
+        // later row would be outside it
+        val anchorEnd = if (anchor.slot.endMin != null) anchor.slot.endMin!!
+        else line.slots.filter { it.atMin > anchor.slot.atMin }
+            .minOfOrNull { it.atMin } ?: (anchor.slot.atMin + 1440)
+        val horizon = anchorEnd - now
+        if (horizon <= 0) return emptyList()
+        val base = anchor.slot.atMin
+        val span = (anchorEnd - base).coerceAtLeast(1)
+
+        return line.slots.mapNotNull { slot ->
+            if (slot.atMin >= anchorEnd) return@mapNotNull null
+            val j = Proximity.judge(slot, now, rule, line)
+            if (j.verdict == Verdict.NOT_RELEVANT) return@mapNotNull null
+            val role = when {
+                slot.kind == anchor.slot.kind && anchor.verdict == Verdict.DUE -> CloseRole.ANCHOR
+                slot.endMin != null && slot.endMin!! <= anchorEnd -> CloseRole.CLOSES_AT
+                else -> CloseRole.INSIDE
+            }
+            val labelAr = when (role) {
+                CloseRole.ANCHOR -> "جارٍ الآن · ${slot.labelAr}"
+                CloseRole.CLOSES_AT -> "ينتهي مع " + (((slot.endMin ?: slot.atMin) % 1440).let {
+                    "%02d:%02d".format(it / 60, it % 60)
+                })
+                CloseRole.INSIDE -> if (j.startIn in 0..60) "بعد ${j.startIn} د" else slot.labelAr
+            }
+            Closing(
+                slot = slot, verdict = j.verdict, role = role,
+                startIn = slot.atMin - now, endIn = slot.endMin,
+                fracOfAnchor = ((slot.atMin - base).toFloat() / span).coerceIn(0f, 1f),
+                labelAr = labelAr,
+            )
+        }.sortedWith(compareBy<Closing> {
+            when (it.role) { CloseRole.ANCHOR -> 0; CloseRole.INSIDE -> 1; CloseRole.CLOSES_AT -> 2 }
+        }.thenBy { it.slot.atMin })
+    }
+}

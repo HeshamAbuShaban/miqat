@@ -30,7 +30,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import app.miqat.core.ActsCatalog
+import app.miqat.core.ClosingList
+import app.miqat.core.CloseRole
+import app.miqat.core.DayLine
 import app.miqat.core.Hijri
 import app.miqat.core.Moments
 import app.miqat.core.Proximity
@@ -52,6 +56,7 @@ fun ActsScreen(
     onOpenTasbih: () -> Unit = {},
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
+    val scheme = MaterialTheme.colorScheme
     val now = nowState.value
     val nowMinute = (state.cityHourOfDay(now) * 60).toInt()
     val (y, m, d) = state.cityDate(now)
@@ -64,6 +69,14 @@ fun ActsScreen(
             imsakLeadMinutes = state.imsakLeadMinutes,
         )
     }
+    // THE DYNAMIC CLOSING LIST — events inside the window open now, ordered
+    // in it and expiring with it (no wrapped countdown).
+    val closeLine = DayLine.of(
+        state.times(y, m, d), state.times(ty, tm, td).fajr,
+        PRAYER_NAMES, ::minutesOf, state.imsakLeadMinutes,
+    )
+    val closings = ClosingList.of(closeLine, nowMinute)
+
     val acts = remember { ActsCatalog.acts(context) }
     val live = remember(acts, timeline, nowMinute) { ActsCatalog.live(acts, timeline, nowMinute) }
 
@@ -91,6 +104,43 @@ fun ActsScreen(
         // توضح بغير هذا الشكل .. أصلا الشكل الحالي لا ينم عن أي طاعة»).
         ActRail(state, year = y, month = m, dayOfMonth = d, live, nowMinute)
         Spacer(Modifier.height(Space.lg))
+
+        if (closings.isNotEmpty()) {
+            Text(
+                "الأحداث المتقاربة",
+                style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex, fontSize = 11.sp),
+                color = scheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = Space.sm),
+            )
+            Column(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
+                    .background(scheme.surface).padding(Space.md),
+            ) {
+                closings.take(4).forEach { c ->
+                    Row(
+                        Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            c.labelAr,
+                            style = MaterialTheme.typography.bodySmall.copy(fontFamily = Plex),
+                            color = if (c.role == CloseRole.ANCHOR) scheme.secondary else scheme.onSurface,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Text(
+                            if (c.role == CloseRole.ANCHOR) "جارٍ"
+                            else fmt.duration(c.startIn.coerceAtLeast(0)),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontFamily = Kufi, fontFeatureSettings = TabularFigures,
+                            ),
+                            color = scheme.secondary,
+                        )
+                    }
+                }
+            }
+            Spacer(Modifier.height(Space.lg))
+        }
 
         // grouped by STATE — «الأقرب فالأقرب»: what is open, then what comes,
         // then what passed (never a fake countdown for a passed act)
