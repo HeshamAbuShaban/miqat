@@ -67,16 +67,16 @@ object Sky {
         // surface never reads as a colour; the sky is the one moment where
         // the blue is allowed, and even here it stays low-saturation)
         SkyPhase.NIGHT -> listOf(
-            Color(0xFF0A0B12),
-            Color(0xFF10131F),
-            Color(0xFF191E30),
-            Color(0xFF262C42),
+            Color(0xFF070B1C),
+            Color(0xFF0E1528),
+            Color(0xFF1A1E32),
+            Color(0xFF33252C),
         )
         SkyPhase.DAWN -> listOf(
             Color(0xFF0A0B12),
             Color(0xFF121422),
             Color(0xFF242230),
-            Color(0xFF4A3A2B),
+            Color(0xFF4A2F28),
         )
         SkyPhase.DAY -> listOf(
             Color(0xFF0A0B12),
@@ -88,7 +88,7 @@ object Sky {
             Color(0xFF0A0B12),
             Color(0xFF131320),
             Color(0xFF2E2527),
-            Color(0xFF5B3726),
+            Color(0xFF6A3D27),
         )
     }
 

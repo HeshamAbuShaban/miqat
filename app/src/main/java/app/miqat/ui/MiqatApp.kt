@@ -197,7 +197,7 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                 .padding(padding)
                 .background(
                     Brush.verticalGradient(
-                        listOf(Color(0xFF0A0D18), Color(0xFF06070D)),
+                        listOf(Color(0xFF0A0D18), Color(0xFF04050A)),
                     ),
                 ),
         ) {
@@ -756,7 +756,9 @@ private fun HeroCard(
                     ),
                     color = scheme.onSurface,
                 )
-                if (state.display.showTimerIqama && timers.iqamaIn != null) {
+                if (state.display.showTimerIqama && timers.iqamaIn != null &&
+                timers.sinceIqamaPrayer == null
+            ) {
                     Text(
                         "الإقامة " + fmt.hhmm(minutesOf(times.list[
                             PRAYER_NAMES.indexOf(timers.iqamaPrayer).coerceAtLeast(0)

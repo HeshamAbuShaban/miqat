@@ -206,4 +206,12 @@ class TimersTest {
         )
         assertEquals(null, off.sinceIqamaPrayer)
     }
+
+    @Test
+    fun `iqama state walks from pending to since without two competing lines`() {
+        val before = at(12.0 + 10.0 / 60.0, iqama = 15)
+        assertEquals(IqamaPhase.PENDING, before.iqamaPhase)
+        val after = at(12.5, iqama = 15)
+        assertEquals(IqamaPhase.SINCE, after.iqamaPhase)
+    }
 }

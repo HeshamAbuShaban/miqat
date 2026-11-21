@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.remember
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import app.miqat.ui.AppState
 import app.miqat.ui.Fmt
 import app.miqat.ui.MiqatApp
@@ -34,7 +35,10 @@ class MainActivity : ComponentActivity() {
                 dark = state.display.darkTheme,
                 accent = app.miqat.ui.Accent.of(state.display.accent),
             ) {
-                Surface(modifier = Modifier.fillMaxSize()) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = Color.Transparent, // let the page gradient show through
+                ) {
                     MiqatApp(state, fmt)
                 }
             }

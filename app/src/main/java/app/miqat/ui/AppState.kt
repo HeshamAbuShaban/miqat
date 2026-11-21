@@ -148,8 +148,23 @@ class AppState(
      * the coordinates: the device's own zone when the GPS fix is in use, the
      * city's zone (with its DST rules) when the city is. Never mixed.
      */
+    /**
+     * ONE ledger for every adjustment. New code reads THIS, never a raw pref.
+     * The older fields remain the persisted source; the ledger only reads them.
+     */
+    val offsetLedger: app.miqat.core.OffsetLedger
+        get() = app.miqat.core.OffsetLedger.from(
+            hijriOffsetDays = display.hijriOffsetDays,
+            manualUtcMinutes = display.manualUtcOffsetMinutes,
+            prayerAdjusts = adjusts.asMap(),
+            imsakLeadMinutes = imsakLeadMinutes,
+            dstZone = city.zone.takeIf { it.isNotBlank() },
+        )
+
     fun utcOffsetAt(epochMillis: Long): Double {
-        display.manualUtcOffsetMinutes?.let { return it / 60.0 }
+        if (display.manualUtcOffsetMinutes != null) {
+            return offsetLedger.utcClockMinutes / 60.0
+        }
         if (gpsFix != null) return deviceOffsetAt(epochMillis)
         // the PLATFORM's timezone database is current; the bundled donor
         // table's rules stop in 2023, so a city in a DST country was an hour
@@ -261,12 +276,12 @@ class AppState(
     fun times(year: Int, month: Int, day: Int): LocalPrayerTimes {
         val t = rawTimes(year, month, day)
         return LocalPrayerTimes(
-            fajr = t.fajr + adjusts.fajr / 60.0,
-            sunrise = t.sunrise + adjusts.sunrise / 60.0,
-            dhuhr = t.dhuhr + adjusts.dhuhr / 60.0,
-            asr = t.asr + adjusts.asr / 60.0,
-            maghrib = t.maghrib + adjusts.maghrib / 60.0,
-            isha = t.isha + adjusts.isha / 60.0,
+            fajr = t.fajr + offsetLedger.prayerMinutes("fajr") / 60.0,
+            sunrise = t.sunrise + offsetLedger.prayerMinutes("sunrise") / 60.0,
+            dhuhr = t.dhuhr + offsetLedger.prayerMinutes("dhuhr") / 60.0,
+            asr = t.asr + offsetLedger.prayerMinutes("asr") / 60.0,
+            maghrib = t.maghrib + offsetLedger.prayerMinutes("maghrib") / 60.0,
+            isha = t.isha + offsetLedger.prayerMinutes("isha") / 60.0,
         )
     }
 

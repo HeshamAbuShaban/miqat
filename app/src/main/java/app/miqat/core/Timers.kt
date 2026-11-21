@@ -13,6 +13,8 @@ import kotlin.math.roundToLong
  * after the last appointment of the day it called "today's Fajr" the next one
  * and counted twelve hours since Isha as if they were news.
  */
+enum class IqamaPhase { BEFORE_ADHAN, PENDING, SINCE }
+
 data class Point(val name: String, val hour: Double, val isPrayer: Boolean)
 
 /**
@@ -73,6 +75,13 @@ data class Timers(
      * العشاء»).
      */
     val sinceWorthShowing: Boolean get() = currentPrayer != null && sinceSeconds in 1..3600
+
+    /** The single state of the second call: أذان → إقامة → منذ الإقامة. */
+    val iqamaPhase: IqamaPhase get() = when {
+        sinceIqamaPrayer != null -> IqamaPhase.SINCE
+        iqamaIn != null -> IqamaPhase.PENDING
+        else -> IqamaPhase.BEFORE_ADHAN
+    }
 
     /** The state line: what the clock is inside right now (not a timer). */
     val stateAr: String?

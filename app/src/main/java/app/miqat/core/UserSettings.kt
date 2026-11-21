@@ -18,6 +18,11 @@ data class PrayerAdjusts(
     val maghrib: Int = 0,
     val isha: Int = 0,
 ) {
+    fun asMap(): Map<String, Int> = mapOf(
+        "fajr" to fajr, "sunrise" to sunrise, "dhuhr" to dhuhr,
+        "asr" to asr, "maghrib" to maghrib, "isha" to isha,
+    )
+
     fun forIndex(i: Int): Int = when (i) {
         0 -> fajr; 1 -> sunrise; 2 -> dhuhr; 3 -> asr; 4 -> maghrib; else -> isha
     }
