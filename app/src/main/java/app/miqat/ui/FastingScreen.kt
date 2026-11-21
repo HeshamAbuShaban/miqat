@@ -118,153 +118,125 @@ fun FastingScreen(
 
         Spacer(Modifier.height(Space.lg))
 
-        // THE FAST'S ARC — the same shape as the hero, but the span is the
-        // fast, not the day: from the imsak to the iftar.
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .cardSurface(RoundedCornerShape(Radius.panel))
-                .padding(Space.lg),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
+        // THE FAST BAR — the approved hero: a measured span, not a drawing
+        // of a day. The arc is gone; the Windows and their cited texts stay.
+        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Radius.panel))) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                Color(0xFF0A0D18), Color(0xFF0E1424), Color(0xFF121E22),
+                            ),
+                        ),
+                    )
+                    .padding(horizontal = Space.lg, vertical = Space.lg),
+            ) {
+                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        "صيام اليوم",
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontFamily = Kufi, fontSize = 22.sp, fontWeight = FontWeight.Bold,
+                        ),
+                        color = scheme.onSurface,
+                    )
+                    Spacer(Modifier.height(Space.md))
+                    Text(
+                        if (iftarPassed) "انتهى صيام اليوم" else "الإفطار بعد",
+                        style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
+                        color = scheme.onSurfaceVariant,
+                    )
+                    if (iftarPassed) {
+                        Text(
+                            app.miqat.core.Proximity.timerLine(
+                                app.miqat.core.TimerKind.ELAPSED,
+                                (nowMinute - iftar).coerceAtLeast(0) * 60L, "الإفطار",
+                            ).prefixAr + " " + fmt.hms((nowMinute - iftar).coerceAtLeast(0) * 60L),
+                            style = MaterialTheme.typography.titleMedium.copy(fontFamily = Kufi),
+                            color = scheme.onSurface,
+                        )
+                    } else {
+                        BigCountdown(
+                            text = fmt.hms(remainingMinutes * 60L),
+                            color = Color(0xFFF0C875),
+                            sizeSp = 48f,
+                        )
+                    }
+                    if (imsakPassed && !iftarPassed) {
+                        Text(
+                            app.miqat.core.Proximity.timerLine(
+                                app.miqat.core.TimerKind.ELAPSED,
+                                elapsedMinutes * 60L, "الإمساك",
+                            ).prefixAr + " " + fmt.hms(elapsedMinutes * 60L),
+                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
+                            color = scheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+            // the bar itself — track, elapsed fill, three real ticks, two ends
             Canvas(
                 Modifier
                     .fillMaxWidth()
-                    .height(120.dp),
+                    .height(50.dp)
+                    .padding(horizontal = Space.md),
             ) {
                 val w = size.width
                 val h = size.height
-                val horizon = h - 14f
-                // RTL: the imsak at the right, the iftar at the left
-                val p0 = Offset(w * 0.93f, horizon)
-                val p2 = Offset(w * 0.07f, horizon)
-                val p1 = Offset(w * 0.5f, 10f)
-
-                fun pointAt(t: Float): Offset {
-                    val mt = 1 - t
-                    return Offset(
-                        mt * mt * p0.x + 2 * mt * t * p1.x + t * t * p2.x,
-                        mt * mt * p0.y + 2 * mt * t * p1.y + t * t * p2.y,
-                    )
-                }
-
-                val arc = Path().apply {
-                    moveTo(p0.x, p0.y)
-                    quadraticBezierTo(p1.x, p1.y, p2.x, p2.y)
-                }
-                // the window arc is TEAL — the palette's meaning for a span
-                // (it used to borrow the sky's steel blue: a cold line on a
-                // warm panel, and a colour that meant nothing)
-                drawPath(
-                    arc,
-                    scheme.secondary.copy(alpha = if (iftarPassed) 0.25f else 0.55f),
-                    style = Stroke(width = 2f, cap = StrokeCap.Round),
+                val dp = 1.dp.toPx()
+                val y = h / 2f
+                val trackH = 24f * dp
+                val radius = androidx.compose.ui.geometry.CornerRadius(trackH / 2f, trackH / 2f)
+                drawRoundRect(
+                    Brush.horizontalGradient(
+                        listOf(Color(0xFF132430), Color(0xFF20181A)),
+                        startX = w, endX = 0f,
+                    ),
+                    topLeft = Offset(0f, y - trackH / 2f),
+                    size = androidx.compose.ui.geometry.Size(w, trackH),
+                    cornerRadius = radius,
                 )
-
-                // the fast already travelled
-                if (progress > 0.001f) {
-                    val travelled = Path()
-                    val steps = 40
-                    for (i in 0..steps) {
-                        val t = progress * i / steps
-                        val pt = pointAt(t)
-                        if (i == 0) travelled.moveTo(pt.x, pt.y) else travelled.lineTo(pt.x, pt.y)
-                    }
-                    drawPath(
-                        travelled,
+                if (progress > 0f) {
+                    drawRoundRect(
                         Brush.horizontalGradient(
-                            listOf(Color(0xFFE8C46A), Color(0xFFFFB25C)),
-                            startX = p0.x, endX = p2.x,
+                            listOf(Color(0xFF3E9C90), Color(0xFF5CC4B8), Color(0xFFC8F0E8)),
+                            startX = w, endX = w * (1f - progress),
                         ),
-                        style = Stroke(width = 5f, cap = StrokeCap.Round),
+                        topLeft = Offset(w * (1f - progress.coerceIn(0f, 1f)), y - trackH / 2f),
+                        size = androidx.compose.ui.geometry.Size(w * progress.coerceIn(0f, 1f), trackH),
+                        cornerRadius = radius,
                     )
                 }
-
-                // The Fajr tick — the moment the fast becomes obligatory,
-                // drawn INSIDE the window it belongs to (council P2.2).
-                val fastT = ((fajr - imsak).toFloat() / span).coerceIn(0f, 1f)
-                val fajrPoint = pointAt(fastT)
-                fun normalAt(t: Float): androidx.compose.ui.geometry.Offset {
-                    val tx = 2 * (1 - t) * (p1.x - p0.x) + 2 * t * (p2.x - p1.x)
-                    val ty = 2 * (1 - t) * (p1.y - p0.y) + 2 * t * (p2.y - p1.y)
-                    val len = kotlin.math.hypot(tx, ty).coerceAtLeast(0.001f)
-                    var n = androidx.compose.ui.geometry.Offset(-ty / len, tx / len)
-                    if (n.y > 0f) n = androidx.compose.ui.geometry.Offset(-n.x, -n.y)
-                    return n
+                listOf(0f, 0.5f, 1f).forEach { t ->
+                    drawCircle(Color(0xFF3A9B8E), 1.8f * dp,
+                        Offset(w * (1f - t), y))
                 }
-                val fn = normalAt(fastT)
-                drawLine(
-                    Color(0xFFFFB25C),
-                    fajrPoint + androidx.compose.ui.geometry.Offset(fn.x * 4f, fn.y * 4f),
-                    fajrPoint - androidx.compose.ui.geometry.Offset(fn.x * 4f, fn.y * 4f),
-                    strokeWidth = 2f,
-                )
-
-                // THE PLAYHEAD — alive only while the fast is actually open.
-                // The old dot sat clamped on an endpoint for most of the day:
-                // that is the founder's «الخط غير حيوي ولا يشير لشيء».
-                when {
-                    progress <= 0f -> {
-                        drawCircle(
-                            Color(0xFFFFB25C), 5f, pointAt(0f),
-                            style = Stroke(width = 2f),
-                        )
-                    }
-                    progress >= 1f -> {
-                        // the window has closed: the marker has LEFT the arc
-                        drawCircle(Color(0xFFFFB25C), 3.5f, Offset(p2.x, horizon))
-                    }
-                    else -> {
-                        val here = pointAt(progress)
-                        val n = normalAt(progress)
-                        drawLine(
-                            Color(0xFFFFB25C),
-                            here + androidx.compose.ui.geometry.Offset(n.x * 3f, n.y * 3f),
-                            here + androidx.compose.ui.geometry.Offset(n.x * 9f, n.y * 9f),
-                            strokeWidth = 2.5f,
-                        )
-                        drawCircle(Color(0xFFFFE0A8), 3.5f, here)
-                    }
-                }
-                // sunset is the clock's moment — saffron ring, not a gold dot
-                drawCircle(
-                    Color(0xFFFFB25C), 5f, pointAt(1f),
-                    style = Stroke(width = 2f),
-                )
-                drawCircle(scheme.secondary.copy(alpha = 0.8f), 4f, pointAt(0f))
+                drawCircle(Color(0xFFC8F0E8), 2.5f * dp, Offset(w, y)) // imsak
+                drawCircle(Color(0xFFF06544), 3.5f * dp, Offset(0f, y)) // iftar
+                drawCircle(Color(0xFFF06544).copy(alpha = 0.45f), 7f * dp,
+                    Offset(0f, y), style = Stroke(width = 0.8f * dp))
+                val nx = w * (1f - progress.coerceIn(0f, 1f))
+                drawLine(Color(0xFFFF8566), Offset(nx, y - 20f * dp),
+                    Offset(nx, y + 20f * dp), 6f * dp, StrokeCap.Round)
+                drawCircle(Color(0xFFFFE9B5), 3.2f * dp, Offset(nx, y))
             }
-
-            Spacer(Modifier.height(Space.sm))
-
-            Text(
-                countdownLabel,
-                style = MaterialTheme.typography.labelMedium,
-                color = scheme.onSurfaceVariant,
-            )
-            if (iftarPassed) {
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = Space.md),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
                 Text(
-                    app.miqat.core.Proximity.timerLine(
-                        app.miqat.core.TimerKind.ELAPSED,
-                        (nowMinute - iftar).coerceAtLeast(0) * 60L, "الإفطار",
-                    ).prefixAr + " " + fmt.hms((nowMinute - iftar).coerceAtLeast(0) * 60L),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = scheme.onSurface,
-                )
-            } else {
-                BigCountdown(
-                    text = fmt.hms(remainingMinutes * 60L),
-                    color = scheme.onSurface,
-                )
-            }
-            if (imsakPassed && !iftarPassed) {
-                Text(
-                    app.miqat.core.Proximity.timerLine(
-                        app.miqat.core.TimerKind.ELAPSED, elapsedMinutes * 60L, "الإمساك",
-                    ).prefixAr + " " + fmt.hms(elapsedMinutes * 60L),
-                    style = MaterialTheme.typography.labelSmall,
+                    "الإمساك " + fmt.hhmm(imsak),
+                    style = MaterialTheme.typography.labelSmall.copy(fontFamily = Kufi),
                     color = scheme.onSurfaceVariant,
                 )
+                Text(
+                    "الإفطار " + fmt.hhmm(iftar),
+                    style = MaterialTheme.typography.labelSmall.copy(fontFamily = Kufi),
+                    color = Color(0xFFFF8566),
+                )
             }
+            Spacer(Modifier.height(Space.md))
         }
 
         Spacer(Modifier.height(Space.md))

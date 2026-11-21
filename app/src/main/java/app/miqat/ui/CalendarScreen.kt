@@ -39,6 +39,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
@@ -261,79 +262,6 @@ fun CalendarScreen(
             }
         }
         Spacer(Modifier.height(Space.sm))
-        // «أقرب موعد ميقات» — one line, from the ONE proximity model; tapping
-        // it opens that prayer's own detail (no new screen, no second clock)
-        val nearToday = app.miqat.core.Dates.nextDay(
-            cityToday.first, cityToday.second, cityToday.third,
-        )
-        val nearLine = app.miqat.core.DayLine.of(
-            state.times(cityToday.first, cityToday.second, cityToday.third),
-            state.times(nearToday.first, nearToday.second, nearToday.third).fajr,
-            PRAYER_NAMES, ::minutesOf, state.imsakLeadMinutes,
-        )
-        val nearest = app.miqat.core.NearestMoment.find(
-            nearLine, (state.cityHourOfDay(now) * 60).toInt(),
-        )
-        if (nearest != null) {
-            val line = app.miqat.core.Proximity.timerLine(
-                app.miqat.core.TimerKind.PRAYER_REMAINING,
-                nearest.signedMin * 60L, nearest.slot.labelAr,
-            )
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(MaterialTheme.colorScheme.surface)
-                    .clickable {
-                        onOpenPrayer(PRAYER_KEY.indexOf(nearest.slot.kind).coerceAtLeast(0))
-                    }
-                    .padding(horizontal = Space.md, vertical = Space.sm),
-                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-            ) {
-                Box(
-                    Modifier.size(6.dp).clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.secondary),
-                )
-                Spacer(Modifier.width(Space.sm))
-                Text(
-                    "أقرب موعد: " + nearest.slot.labelAr,
-                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = Plex),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.weight(1f),
-                )
-                Text(
-                    if (nearest.dayLabelAr != null) "${nearest.dayLabelAr} ${fmt.hhmm(nearest.clockMin)}"
-                    else fmt.duration(nearest.signedMin),
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontFamily = Kufi, fontFeatureSettings = TabularFigures,
-                    ),
-                    color = MaterialTheme.colorScheme.secondary,
-                )
-            }
-            Spacer(Modifier.height(Space.sm))
-        }
-
-        // year hop — the month arrows below step one month; these step a
-        // whole year on the SAME spine (no date picker, no new dependency)
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-        ) {
-            IconButton(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "السنة السابقة") {
-                stepYear(-1)
-            }
-            Text(
-                "${fmt.n(window.spineYear)} ${if (axis == app.miqat.core.CalendarContext.HIJRI) "هـ" else "م"}",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = Space.md),
-            )
-            IconButton(Icons.AutoMirrored.Filled.KeyboardArrowRight, "السنة التالية") {
-                stepYear(1)
-            }
-        }
-
         // the header — the SPINE names itself; the other axis is a SPAN, so a
         // month that turns halfway through is never hidden by a half-title
         Row(
@@ -453,6 +381,80 @@ fun CalendarScreen(
                 repeat(7 - week.size) { Box(Modifier.weight(1f)) }
             }
         }
+        }
+
+        // the LEGEND — inside the month card, as in the reference
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = Space.md, vertical = Space.sm),
+            horizontalArrangement = Arrangement.spacedBy(Space.md),
+        ) {
+            listOf(
+                "ص · نفل" to Color(0xFF86C9BE),
+                "ص · سنة" to Color(0xFF5CC4B8),
+                "ع · مناسبة" to Color(0xFFEBD9A8),
+                "ع · كبرى" to Color(0xFFF0C875),
+            ).forEach { (label, c) ->
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Box(Modifier.size(6.dp).clip(CircleShape).background(c))
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        label,
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+        // «أقرب موعد ميقات» — one line, from the ONE proximity model; tapping
+        // it opens that prayer's own detail (no new screen, no second clock)
+        val nearToday = app.miqat.core.Dates.nextDay(
+            cityToday.first, cityToday.second, cityToday.third,
+        )
+        val nearLine = app.miqat.core.DayLine.of(
+            state.times(cityToday.first, cityToday.second, cityToday.third),
+            state.times(nearToday.first, nearToday.second, nearToday.third).fajr,
+            PRAYER_NAMES, ::minutesOf, state.imsakLeadMinutes,
+        )
+        val nearest = app.miqat.core.NearestMoment.find(
+            nearLine, (state.cityHourOfDay(now) * 60).toInt(),
+        )
+        if (nearest != null) {
+            val line = app.miqat.core.Proximity.timerLine(
+                app.miqat.core.TimerKind.PRAYER_REMAINING,
+                nearest.signedMin * 60L, nearest.slot.labelAr,
+            )
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .clickable {
+                        onOpenPrayer(PRAYER_KEY.indexOf(nearest.slot.kind).coerceAtLeast(0))
+                    }
+                    .padding(horizontal = Space.md, vertical = Space.sm),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            ) {
+                Box(
+                    Modifier.size(6.dp).clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.secondary),
+                )
+                Spacer(Modifier.width(Space.sm))
+                Text(
+                    "أقرب موعد: " + nearest.slot.labelAr,
+                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = Plex),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    if (nearest.dayLabelAr != null) "${nearest.dayLabelAr} ${fmt.hhmm(nearest.clockMin)}"
+                    else fmt.duration(nearest.signedMin),
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontFamily = Kufi, fontFeatureSettings = TabularFigures,
+                    ),
+                    color = MaterialTheme.colorScheme.secondary,
+                )
+            }
+            Spacer(Modifier.height(Space.sm))
         }
 
         Spacer(Modifier.height(Space.md))

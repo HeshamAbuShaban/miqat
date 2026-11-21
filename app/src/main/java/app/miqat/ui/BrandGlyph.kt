@@ -14,13 +14,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * ONE ALPHABET — five marks cut from the same object.
- *
- * The council's ruling: the old glyphs were drawn one at a time, each with
- * its own skeleton, and they MUTATED on selection (1.7dp → 2.4dp + a pill).
- * A navigation set must be one family: one 24-unit box, one baseline
- * y=18, one arc P(3,18)→P(12,4.5)→P(21,18), one fixed 2dp stroke.
- * Selection changes COLOUR only — never the silhouette.
+ * DUOTONE ICONS — the approved HTML family: one filled body at 14–22%
+ * opacity plus one 2dp outline, on one 24-unit grid. Five destinations,
+ * five distinct objects, one alphabet. Selection changes COLOUR only.
  */
 enum class Glyph { HORIZON, TICKS, BRACKET, CELL, SPAN, GRID }
 
@@ -36,62 +32,79 @@ fun BrandGlyph(
     Canvas(modifier.size(size)) {
         val s = this.size.width / 24f
         fun p(x: Float, y: Float) = Offset(x * s, y * s)
-        val w = 2f * s // the ONE stroke, fixed in both states
-
-        fun arc(): Path = Path().apply {
-            moveTo(3f * s, 18f * s)
-            quadraticTo(12f * s, 4.5f * s, 21f * s, 18f * s)
-        }
-        fun base() = drawLine(color, p(3f, 18f), p(21f, 18f), w, StrokeCap.Round)
+        val w = 2f * s
+        val fill = color.copy(alpha = 0.18f)
 
         when (kind) {
-            // the horizon itself — nothing added
-            Glyph.HORIZON -> drawPath(arc(), color, style = Stroke(width = w, cap = StrokeCap.Round))
+            // HOME — a house with a roof (the ink-filled silhouette behind it)
+            Glyph.HORIZON -> {
+                val body = Path().apply {
+                    moveTo(3f * s, 11f * s)
+                    lineTo(12f * s, 3f * s)
+                    lineTo(21f * s, 11f * s)
+                    lineTo(21f * s, 20f * s)
+                    lineTo(3f * s, 20f * s)
+                    close()
+                }
+                drawPath(body, fill)
+                drawPath(body, color, style = Stroke(width = w, cap = StrokeCap.Round))
+            }
 
-            // three real prayer dots ON the curve (the quadratic, not floated)
+            // TIMES — a clock: the disc, then the two hands
             Glyph.TICKS -> {
-                drawPath(arc(), color, style = Stroke(width = w, cap = StrokeCap.Round))
-                listOf(0.28f, 0.5f, 0.72f).forEach { t ->
-                    val mt = 1 - t
-                    val x = mt * mt * 3f + 2 * mt * t * 12f + t * t * 21f
-                    val y = mt * mt * 18f + 2 * mt * t * 4.5f + t * t * 18f
-                    drawCircle(color, 1.5f * s, p(x, y))
-                }
+                drawCircle(fill, 9f * s, p(12f, 12f))
+                drawCircle(color, 9f * s, p(12f, 12f), style = Stroke(width = w))
+                drawLine(color, p(12f, 7f), p(12f, 12f), w, StrokeCap.Round)
+                drawLine(color, p(12f, 12f), p(15f, 14f), w, StrokeCap.Round)
             }
 
-            // a fast's window measured on the horizon: two posts
+            // FASTING — a disc with the fast's rule through it
             Glyph.BRACKET -> {
-                base()
-                listOf(6f, 18f).forEach { x ->
-                    drawLine(color, p(x, 18f), p(x, 10f), w, StrokeCap.Round)
+                drawCircle(color, 9f * s, p(12f, 12f), style = Stroke(width = w))
+                drawLine(color, p(12f, 4f), p(12f, 20f), w, StrokeCap.Round)
+            }
+
+            // CALENDAR — the page, its header rule, and two binding rings
+            Glyph.CELL -> {
+                val page = androidx.compose.ui.geometry.Rect(4f * s, 5f * s, 20f * s, 20f * s)
+                drawRoundRect(fill, page.topLeft, page.size,
+                    androidx.compose.ui.geometry.CornerRadius(3f * s, 3f * s))
+                drawRoundRect(color, page.topLeft, page.size,
+                    androidx.compose.ui.geometry.CornerRadius(3f * s, 3f * s),
+                    style = Stroke(width = w))
+                drawLine(color, p(4f, 10f), p(20f, 10f), w)
+                listOf(9f, 15f).forEach { x ->
+                    drawLine(color, p(x, 3f), p(x, 7f), w, StrokeCap.Round)
                 }
             }
 
-            // the calendar page: its bottom edge IS the baseline
-            Glyph.CELL -> {
-                drawRoundRect(
-                    color,
-                    topLeft = p(3f, 6f),
-                    size = androidx.compose.ui.geometry.Size(18f * s, 12f * s),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(3f * s, 3f * s),
-                    style = Stroke(width = w),
-                )
-                drawLine(color, p(7f, 14f), p(13f, 14f), 3f * s, StrokeCap.Round)
-            }
-
-            // the act rail: a window and one now-playhead
+            // ACTS — the star/flower: one filled body, one outline
             Glyph.SPAN -> {
-                base()
-                drawLine(color, p(12f, 18f), p(21f, 18f), 3f * s, StrokeCap.Round)
-                drawLine(color, p(12f, 10f), p(12f, 18f), w, StrokeCap.Round)
+                val star = Path().apply {
+                    moveTo(12f * s, 3f * s)
+                    quadraticTo(14f * s, 8f * s, 14f * s, 11f * s)
+                    quadraticTo(16f * s, 10f * s, 16f * s, 12f * s)
+                    quadraticTo(16f * s, 15f * s, 14f * s, 17f * s)
+                    quadraticTo(14f * s, 20f * s, 12f * s, 21f * s)
+                    quadraticTo(10f * s, 20f * s, 10f * s, 17f * s)
+                    quadraticTo(8f * s, 15f * s, 8f * s, 12f * s)
+                    quadraticTo(8f * s, 10f * s, 10f * s, 11f * s)
+                    quadraticTo(10f * s, 8f * s, 12f * s, 3f * s)
+                    close()
+                }
+                drawPath(star, fill)
+                drawPath(star, color, style = Stroke(width = 1.8f * s))
             }
 
-            // the contextual drawer: three gnomons, three shadow lengths
+            // CONTEXTUAL TOOLS — four squares, as in the HTML header
             Glyph.GRID -> {
-                base()
-                listOf(7f to 13f, 12f to 9f, 17f to 11f).forEach { (x, y) ->
-                    drawLine(color, p(x, 18f), p(x, y), w, StrokeCap.Round)
-                    drawCircle(color, 1.5f * s, p(x, y))
+                listOf(4f, 14f).forEach { x ->
+                    listOf(4f, 14f).forEach { y ->
+                        val r = androidx.compose.ui.geometry.Rect(x * s, y * s, (x + 6) * s, (y + 6) * s)
+                        drawRoundRect(color, r.topLeft, r.size,
+                            androidx.compose.ui.geometry.CornerRadius(1.5f * s, 1.5f * s),
+                            style = Stroke(width = w))
+                    }
                 }
             }
         }

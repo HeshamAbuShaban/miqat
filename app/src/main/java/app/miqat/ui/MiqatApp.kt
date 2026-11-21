@@ -3,6 +3,7 @@ package app.miqat.ui
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -134,7 +135,18 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                     Modifier.fillMaxWidth().height(1.dp)
                         .background(MaterialTheme.colorScheme.outlineVariant),
                 )
-                Row(Modifier.fillMaxWidth().height(56.dp)) {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 12.dp)
+                        .height(66.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant,
+                            RoundedCornerShape(24.dp))
+                        .padding(horizontal = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     TopLevel.entries.forEach { dest ->
                         val selected = top == dest // the parent stays marked on sub-screens
                         Column(
@@ -174,34 +186,21 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                             )
                         }
                     }
-                    // the contextual drawer lives at the EDGE of the ruler,
-                    // not floating over the content and not a sixth slot
-                    Box(
-                        Modifier
-                            .width(1.dp).fillMaxHeight()
-                            .background(MaterialTheme.colorScheme.outlineVariant),
-                    )
-                    Column(
-                        Modifier
-                            .width(48.dp)
-                            .fillMaxHeight()
-                            .clickable { sub = Route.More },
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                    ) {
-                        BrandGlyph(kind = Glyph.GRID, active = false, size = 22.dp)
-                        Text(
-                            "أدوات",
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
                 }
             }
         },
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = Color(0xFF04050A),
     ) { padding ->
-        Box(Modifier.fillMaxSize().padding(padding)) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(Color(0xFF0A0D18), Color(0xFF06070D)),
+                    ),
+                ),
+        ) {
             when (val route = sub) {
                 null -> when (top) {
                     TopLevel.Home -> HomeScreen(
@@ -209,6 +208,7 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                         onOpenTimes = { top = TopLevel.Times },
                         onOpenQibla = { sub = Route.Qibla },
                         onOpenPrayer = { sub = Route.PrayerDetailArgs(it) },
+                        onOpenMore = { sub = Route.More },
                     )
                     TopLevel.Times -> TimesScreen(
                         state, fmt, now,
@@ -351,6 +351,7 @@ fun HomeScreen(
     onOpenTimes: () -> Unit,
     onOpenQibla: () -> Unit = {},
     onOpenPrayer: (Int) -> Unit = {},
+    onOpenMore: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val now = nowState.value
@@ -413,6 +414,18 @@ fun HomeScreen(
                     color = MaterialTheme.colorScheme.outline,
                 )
             }
+            Spacer(Modifier.width(Space.sm))
+            Box(
+                Modifier
+                    .size(30.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surface)
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
+                    .clickable { onOpenMore() },
+                contentAlignment = Alignment.Center,
+            ) {
+                BrandGlyph(kind = Glyph.GRID, active = false, size = 14.dp)
+            }
         }
 
         // 2 — the occasion band (only on a day that has one)
@@ -456,22 +469,6 @@ fun HomeScreen(
         )
 
         Spacer(Modifier.height(Space.xl))
-
-        // 4 — the day-rail: the day's proportions (and the sunrise, a tick)
-        if (state.display.showPrayerStrip) {
-            DayRail(
-                entries = app.miqat.core.DayRailInfo.entries(
-                    times = times,
-                    labels = PRAYER_NAMES,
-                    nowMinute = nowMinutes,
-                    tomorrowFajrMinute = minutesOf(tomorrowHome.fajr),
-                ),
-                fmt = fmt,
-                nowMinute = nowMinutes.toDouble(),
-                onOpenPrayer = onOpenPrayer,
-            )
-            Spacer(Modifier.height(Space.xl))
-        }
 
         // the daylight-saving notice — the clock will change, and that moves
         // every prayer's wall-clock time with it (FULL only: a notice belongs

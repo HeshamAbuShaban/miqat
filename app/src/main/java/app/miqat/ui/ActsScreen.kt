@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.miqat.core.ActsCatalog
@@ -88,14 +90,11 @@ fun ActsScreen(
     ) {
         Spacer(Modifier.height(Space.md))
         Text(
-            "مواقيت العبادات",
-            style = MaterialTheme.typography.headlineSmall,
+            "الطاعات",
+            style = MaterialTheme.typography.headlineSmall.copy(
+                fontFamily = Kufi, fontSize = 22.sp, fontWeight = FontWeight.Bold,
+            ),
             color = MaterialTheme.colorScheme.onBackground,
-        )
-        Text(
-            "كل ما في التطبيق من أوقات الصلاة والعبادات والسنة — مرتّباً على وقت اليوم",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(Modifier.height(Space.md))
 
@@ -142,6 +141,67 @@ fun ActsScreen(
             Spacer(Modifier.height(Space.lg))
         }
 
+        // THE NOW HERO — the act that is open right now, with its real span
+        val running = live.firstOrNull { it.state == ActsCatalog.ActState.RUNNING }
+        if (running != null) {
+            val span = (running.endMinute - running.startMinute).coerceAtLeast(1)
+            val frac = ((nowMinute - running.startMinute).toFloat() / span).coerceIn(0f, 1f)
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(scheme.surface)
+                    .border(1.dp, scheme.outlineVariant, RoundedCornerShape(18.dp))
+                    .padding(Space.md),
+            ) {
+                Text(
+                    "جارٍ الآن",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontFamily = Plex, color = scheme.secondary,
+                    ),
+                )
+                Text(
+                    running.act.name,
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontFamily = Kufi, fontSize = 22.sp, fontWeight = FontWeight.Bold,
+                    ),
+                    color = scheme.onSurface,
+                )
+                Text(
+                    "${fmt.hhmm(running.startMinute)} — ${fmt.hhmm(running.endMinute)}",
+                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = Plex),
+                    color = scheme.onSurfaceVariant,
+                )
+                Box(
+                    Modifier.fillMaxWidth().padding(top = Space.md)
+                        .height(4.dp).clip(RoundedCornerShape(2.dp))
+                        .background(scheme.outlineVariant),
+                ) {
+                    Box(
+                        Modifier.fillMaxWidth(frac).height(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(scheme.secondary),
+                    )
+                }
+                Row(
+                    Modifier.fillMaxWidth().padding(top = Space.xs),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(
+                        "مضى ${fmt.duration((nowMinute - running.startMinute).coerceAtLeast(0))}",
+                        style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
+                        color = scheme.onSurfaceVariant,
+                    )
+                    Text(
+                        "بقي ${fmt.duration(running.minutesAway.coerceAtLeast(0))}",
+                        style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
+                        color = scheme.secondary,
+                    )
+                }
+            }
+            Spacer(Modifier.height(Space.lg))
+        }
+
         // grouped by STATE — «الأقرب فالأقرب»: what is open, then what comes,
         // then what passed (never a fake countdown for a passed act)
         val order = mapOf(
@@ -149,9 +209,18 @@ fun ActsScreen(
             ActsCatalog.ActState.UPCOMING to 1,
             ActsCatalog.ActState.PASSED to 2,
         )
-        live.sortedBy { order[it.state] }.forEach { item ->
-            ActRow(item, fmt) { onOpenAct(item.act.id) }
-            Divider()
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(scheme.surface),
+        ) {
+            live.sortedBy { order[it.state] }.forEachIndexed { i, item ->
+                ActRow(item, fmt) { onOpenAct(item.act.id) }
+                if (i < live.size - 1) {
+                    Divider(Modifier.padding(horizontal = Space.md))
+                }
+            }
         }
         Spacer(Modifier.height(Space.md))
         NavRow("التسبيح", "أذكار اليوم مع مراجعها وعدّاد", onOpenTasbih)
