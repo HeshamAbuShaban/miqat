@@ -815,7 +815,7 @@ private fun HeroCard(
                             color = Teal,
                         )
                         Text(
-                            fmt.tick(timers.iqamaSeconds),
+                            fmt.hms(timers.iqamaSeconds),
                             style = MaterialTheme.typography.displayLarge.copy(
                                 fontFamily = Cairo, fontSize = 52.sp,
                                 fontWeight = FontWeight.Bold,
@@ -825,7 +825,7 @@ private fun HeroCard(
                         )
                         Text(
                             "منذ أذان " + (timers.currentPrayer ?: "الصلاة") + " " +
-                                fmt.tick(timers.sinceSeconds),
+                                fmt.hms(timers.sinceSeconds),
                             style = MaterialTheme.typography.bodyMedium.copy(fontFamily = Plex),
                             color = scheme.onSurface,
                         )
@@ -857,7 +857,7 @@ private fun HeroCard(
                             color = Color(0xFFEBD9A8),
                         )
                         Text(
-                            fmt.tick(timers.sinceIqamaSeconds),
+                            fmt.hms(timers.sinceIqamaSeconds),
                             style = MaterialTheme.typography.displayLarge.copy(
                                 fontFamily = Cairo, fontSize = 52.sp,
                                 fontWeight = FontWeight.Bold,
