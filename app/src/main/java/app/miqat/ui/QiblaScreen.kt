@@ -201,7 +201,7 @@ private fun CompassRose(
         )
         // a horizon arc, like the app's own arc
         drawArc(
-            color = scheme.primary.copy(alpha = .28f),
+            color = Gold.copy(alpha = .35f),
             startAngle = 200f,
             sweepAngle = 140f,
             useCenter = false,
@@ -213,7 +213,7 @@ private fun CompassRose(
         // the rim + the degree ticks (the rose turns with the phone)
         rotate(-heading, center) {
             drawCircle(
-                color = if (aligned) scheme.primary else scheme.outline,
+                color = if (aligned) Gold else OnDarkFaint,
                 radius = radius,
                 center = center,
                 style = Stroke(width = if (aligned) 4f else 2f),

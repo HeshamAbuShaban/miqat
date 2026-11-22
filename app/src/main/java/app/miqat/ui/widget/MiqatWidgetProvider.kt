@@ -167,7 +167,11 @@ class MiqatWidgetProvider : AppWidgetProvider() {
                 .takeIf { it > 0 } ?: 320)
             val density = context.resources.displayMetrics.density
             val widthPx = (widthDp * density).toInt().coerceIn(160, 1200)
-            val heightPx = (96 * density).toInt()
+            // The sky keeps its declared aspect at EVERY panel size; a fixed
+            // 96dp height used to stretch the horizon on a wide widget.
+            val heightPx = (app.miqat.core.WidgetMetrics.skyHeightPx(
+                (widthPx / density).toInt(),
+            ) * density).toInt()
 
             views.setImageViewBitmap(
                 R.id.widget_arc,

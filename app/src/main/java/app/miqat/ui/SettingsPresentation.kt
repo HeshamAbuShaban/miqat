@@ -90,7 +90,7 @@ fun AppearanceSection(state: AppState, fmt: Fmt) {
                         Modifier
                             .size(26.dp)
                             .clip(CircleShape)
-                            .background(Color(accent.dark)),
+                            .background(Color(if (isLightTheme()) accent.light else accent.dark)),
                     )
                     Spacer(Modifier.height(Space.xs))
                     Text(

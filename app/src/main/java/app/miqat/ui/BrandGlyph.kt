@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
  * opacity plus one 2dp outline, on one 24-unit grid. Five destinations,
  * five distinct objects, one alphabet. Selection changes COLOUR only.
  */
-enum class Glyph { HORIZON, TICKS, BRACKET, CELL, SPAN, GRID }
+enum class Glyph { HORIZON, TICKS, BRACKET, CELL, SAJDA, GRID }
 
 @Composable
 fun BrandGlyph(
@@ -78,22 +78,26 @@ fun BrandGlyph(
                 }
             }
 
-            // ACTS — the star/flower: one filled body, one outline
-            Glyph.SPAN -> {
-                val star = Path().apply {
-                    moveTo(12f * s, 3f * s)
-                    quadraticTo(14f * s, 8f * s, 14f * s, 11f * s)
-                    quadraticTo(16f * s, 10f * s, 16f * s, 12f * s)
-                    quadraticTo(16f * s, 15f * s, 14f * s, 17f * s)
-                    quadraticTo(14f * s, 20f * s, 12f * s, 21f * s)
-                    quadraticTo(10f * s, 20f * s, 10f * s, 17f * s)
-                    quadraticTo(8f * s, 15f * s, 8f * s, 12f * s)
-                    quadraticTo(8f * s, 10f * s, 10f * s, 11f * s)
-                    quadraticTo(10f * s, 8f * s, 12f * s, 3f * s)
+            // ACTS — the prostrating figure from the approved icon sheet
+            // (miqat_approved/icon/image_d14467ac.jpg, cell 2): the back is a
+            // dome, the arm an S to the floor, the head a separate circle.
+            // The old abstract star read as a logo, not an act of worship.
+            Glyph.SAJDA -> {
+                val base = 20.3f * s
+                drawLine(color, p(2.5f, 20.3f), p(21.5f, 20.3f), w, StrokeCap.Round)
+                val body = Path().apply {
+                    moveTo(5f * s, base)
+                    cubicTo(4f * s, 10f * s, 8f * s, 3.2f * s, 12f * s, 4.2f * s)
+                    cubicTo(15.2f * s, 5f * s, 15.4f * s, 8f * s, 14f * s, 10.4f * s)
+                    cubicTo(12.8f * s, 12.6f * s, 13.4f * s, 14f * s, 15f * s, 15.2f * s)
+                    cubicTo(16.6f * s, 16.4f * s, 16.4f * s, 18.4f * s, 15f * s, base)
                     close()
                 }
-                drawPath(star, fill)
-                drawPath(star, color, style = Stroke(width = 1.8f * s))
+                drawPath(body, fill)
+                drawPath(body, color, style = Stroke(width = 1.8f * s))
+                // the neck under the head, then the head itself
+                drawLine(color, p(19f, 13f), p(19f, 20.3f), w, StrokeCap.Round)
+                drawCircle(color, 2.6f * s, p(19f, 10f), style = Stroke(width = 1.8f * s))
             }
 
             // CONTEXTUAL TOOLS — four squares, as in the HTML header

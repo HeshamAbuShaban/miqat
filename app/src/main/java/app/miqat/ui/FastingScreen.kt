@@ -139,13 +139,13 @@ fun FastingScreen(
                         style = MaterialTheme.typography.headlineMedium.copy(
                             fontFamily = Kufi, fontSize = 22.sp, fontWeight = FontWeight.Bold,
                         ),
-                        color = scheme.onSurface,
+                        color = OnDark,
                     )
                     Spacer(Modifier.height(Space.md))
                     Text(
                         if (iftarPassed) "انتهى صيام اليوم" else "الإفطار بعد",
                         style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
-                        color = scheme.onSurfaceVariant,
+                        color = OnDarkDim,
                     )
                     if (iftarPassed) {
                         Text(
@@ -154,7 +154,7 @@ fun FastingScreen(
                                 (nowMinute - iftar).coerceAtLeast(0) * 60L, "الإفطار",
                             ).prefixAr + " " + fmt.hms((nowMinute - iftar).coerceAtLeast(0) * 60L),
                             style = MaterialTheme.typography.titleMedium.copy(fontFamily = Kufi),
-                            color = scheme.onSurface,
+                            color = OnDark,
                         )
                     } else {
                         BigCountdown(
@@ -170,7 +170,7 @@ fun FastingScreen(
                                 elapsedMinutes * 60L, "الإمساك",
                             ).prefixAr + " " + fmt.hms(elapsedMinutes * 60L),
                             style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
-                            color = scheme.onSurfaceVariant,
+                            color = OnDarkDim,
                         )
                     }
                 }
@@ -233,7 +233,7 @@ fun FastingScreen(
                 Text(
                     "الإفطار " + fmt.hhmm(iftar),
                     style = MaterialTheme.typography.labelSmall.copy(fontFamily = Kufi),
-                    color = Color(0xFFFF8566),
+                    color = if (isLightTheme()) Color(0xFFB3261E) else Color(0xFFFF8566),
                 )
             }
             Spacer(Modifier.height(Space.md))

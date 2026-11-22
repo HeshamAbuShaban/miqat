@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The appwidget-provider cannot do arithmetic. These dp values are the
+     XML face of app.miqat.core.WidgetMetrics — change both together. Both
+     sizes keep a 2:1 proportion; the full sky band is 2.8:1. -->
+<resources>
+    <dimen name="widget_full_min_width">250dp</dimen>
+    <dimen name="widget_full_min_height">125dp</dimen>
+    <dimen name="widget_compact_min_width">110dp</dimen>
+    <dimen name="widget_compact_min_height">55dp</dimen>
+</resources>

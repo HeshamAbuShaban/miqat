@@ -81,7 +81,7 @@ enum class TopLevel(val label: String, val glyph: Glyph) {
     Times("المواقيت", Glyph.TICKS),
     Fasting("الصيام", Glyph.BRACKET),
     Calendar("التقويم", Glyph.CELL),
-    Acts("الطاعات", Glyph.SPAN),
+    Acts("الطاعات", Glyph.SAJDA),
 }
 
 /** Sub-routes pushed on top of a top-level destination (their own screens). */
@@ -201,17 +201,13 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                 }
             }
         },
-        containerColor = Color(0xFF04050A),
+        containerColor = if (isLightTheme()) PaperBg else Color(0xFF04050A),
     ) { padding ->
         Box(
             Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(
-                    Brush.verticalGradient(
-                        listOf(Color(0xFF0A0D18), Color(0xFF04050A)),
-                    ),
-                ),
+                .background(Brush.verticalGradient(pageWash())),
         ) {
             when (val route = sub) {
                 null -> when (top) {

@@ -10,6 +10,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -72,6 +73,32 @@ val PaperSurfaceHigh = Color(0xFFEFE9DF)
 val PaperOutline = Color(0xFFD9D1C2) // the hairline
 val InkText = Color(0xFF1F1B16)
 val InkTextDim = Color(0xFF5E554A)
+
+/**
+ * Ink for the app's FIXED DARK MOMENTS — the sky, the fast bar, the day-rail
+ * ground. Those surfaces are a fact about the hour (the reference keeps the
+ * night sky dark in every theme), so they do NOT flip with the light scheme.
+ * Their text must therefore stay light too. Before these tokens the hero's
+ * countdown used `scheme.onSurface`: in light mode that is dark ink on a dark
+ * sky — the whole hero went unreadable. A fixed surface gets fixed ink.
+ */
+val OnDark = Color(0xFFEBE8E0)
+val OnDarkDim = Color(0xFFC3CCE2)
+val OnDarkFaint = Color(0xFF7A8096)
+val OnDarkWarm = Color(0xFFEBD9A8)
+val OnDarkTrack = Color(0xFF2A3145)
+
+/** True when the active scheme is paper (light) rather than ink (dark). */
+@Composable
+fun isLightTheme(): Boolean = MaterialTheme.colorScheme.background.luminance() > 0.5f
+
+/** The page's wash — the only surface that legitimately follows the theme. */
+@Composable
+fun pageWash(): List<Color> = if (isLightTheme()) {
+    listOf(PaperBg, Color(0xFFEFE9DF))
+} else {
+    listOf(NightBg, Color(0xFF04050A))
+}
 
 /** The dark scheme for a chosen accent — only the "ours" role moves. */
 private fun darkColors(accent: Accent) = darkColorScheme(

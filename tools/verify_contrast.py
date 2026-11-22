@@ -34,6 +34,14 @@ DARK = {
     "dim": "#AAA398",
     "error": "#F06544",
     "onError": "#0A0D18",
+    # fixed dark moments — identical in BOTH schemes (see Theme.kt OnDark*)
+    "onDark": "#EBE8E0",
+    "onDarkDim": "#C3CCE2",
+    "onDarkWarm": "#EBD9A8",
+    "onDarkFaint": "#7A8096",
+    "skyMid": "#1A1E32",
+    "skyHorizon": "#4A2F28",
+    "ground": "#06070D",
 }
 LIGHT = {
     "bg": "#F7F4EE",
@@ -55,6 +63,14 @@ LIGHT = {
     "dim": "#5E554A",
     "error": "#B3261E",
     "onError": "#FFFFFF",
+    # same fixed dark moments — light mode must NOT put dark ink on them
+    "onDark": "#EBE8E0",
+    "onDarkDim": "#C3CCE2",
+    "onDarkWarm": "#EBD9A8",
+    "onDarkFaint": "#7A8096",
+    "skyMid": "#1A1E32",
+    "skyHorizon": "#4A2F28",
+    "ground": "#06070D",
 }
 
 # (foreground, background, minimum, what it is)
@@ -81,6 +97,15 @@ PAIRS = [
     ("outline", "bg", 1.15, "the divider on the page"),
     ("outlineVariant", "surface", 1.10, "the faint hairline (a non-text UI part)"),
     ("error", "surface", 4.5, "the error colour on a card"),
+    # The sky, the fast bar and the day-rail are FIXED dark surfaces. Their
+    # ink must stay light in the paper scheme too — this is the light-mode
+    # disaster that put scheme.onSurface (dark) on a dark sky.
+    ("onDark", "skyMid", 4.5, "the countdown on the sky"),
+    ("onDarkDim", "skyMid", 4.5, "the captions on the sky"),
+    ("onDarkWarm", "skyMid", 4.5, "the cream iqama line on the sky"),
+    ("onDark", "skyHorizon", 4.5, "text on the sunset horizon"),
+    ("onDark", "ground", 4.5, "the prayer rail on the ground"),
+    ("onDarkFaint", "ground", 3.0, "a passed prayer on the ground"),
 ]
 
 

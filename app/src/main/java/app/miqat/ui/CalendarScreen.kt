@@ -399,12 +399,18 @@ fun CalendarScreen(
             Modifier.fillMaxWidth().padding(horizontal = Space.md, vertical = Space.sm),
             horizontalArrangement = Arrangement.spacedBy(Space.md),
         ) {
-            listOf(
+            val sigils = if (isLightTheme()) listOf(
+                "ص · نفل" to Color(0xFF1F6A62),
+                "ص · سنة" to Color(0xFF14655C),
+                "ع · مناسبة" to Color(0xFF8A6410),
+                "ع · كبرى" to Color(0xFF96500A),
+            ) else listOf(
                 "ص · نفل" to Color(0xFF86C9BE),
                 "ص · سنة" to Color(0xFF5CC4B8),
                 "ع · مناسبة" to Color(0xFFEBD9A8),
                 "ع · كبرى" to Color(0xFFF0C875),
-            ).forEach { (label, c) ->
+            )
+            sigils.forEach { (label, c) ->
                 Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                     Box(Modifier.size(6.dp).clip(CircleShape).background(c))
                     Spacer(Modifier.width(4.dp))

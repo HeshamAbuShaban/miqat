@@ -213,7 +213,7 @@ internal fun HeroCard(
                     style = MaterialTheme.typography.labelMedium.copy(
                         fontFamily = Plex, fontSize = 11.sp,
                     ),
-                    color = scheme.onSurfaceVariant,
+                    color = OnDarkDim,
                 )
                 // THREE PHASES, three distinct readings — each owns the
                 // hero for its time, and each is visibly different from the
@@ -244,14 +244,14 @@ internal fun HeroCard(
                             "منذ أذان " + (timers.currentPrayer ?: "الصلاة") + " " +
                                 fmt.hms(timers.sinceSeconds),
                             style = MaterialTheme.typography.bodyMedium.copy(fontFamily = Plex),
-                            color = scheme.onSurface,
+                            color = OnDark,
                         )
                         // the ADHAN→IQAMA window, filled by what has passed
                         val whole = (timers.sinceSeconds + timers.iqamaSeconds).coerceAtLeast(1L)
                         Box(
                             Modifier.fillMaxWidth().padding(top = Space.sm)
                                 .height(4.dp).clip(RoundedCornerShape(2.dp))
-                                .background(scheme.outlineVariant),
+                                .background(OnDarkTrack),
                         ) {
                             Box(
                                 Modifier.fillMaxWidth(timers.sinceSeconds.toFloat() / whole)
@@ -263,7 +263,7 @@ internal fun HeroCard(
                             "الموعد التالي " + (timers.nextPrayer ?: "—") + " · " +
                                 fmt.duration(timers.nextIn.coerceAtLeast(0)),
                             style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
-                            color = scheme.onSurfaceVariant,
+                            color = OnDarkDim,
                         )
                     }
 
@@ -271,7 +271,7 @@ internal fun HeroCard(
                         Text(
                             "منذ إقامة " + (timers.sinceIqamaPrayer ?: "الصلاة"),
                             style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
-                            color = Color(0xFFEBD9A8),
+                            color = OnDarkWarm,
                         )
                         Text(
                             fmt.hms(timers.sinceIqamaSeconds),
@@ -280,18 +280,18 @@ internal fun HeroCard(
                                 fontWeight = FontWeight.Bold,
                                 fontFeatureSettings = TabularFigures,
                             ),
-                            color = Color(0xFFEBD9A8),
+                            color = OnDarkWarm,
                         )
                         Text(
                             "داخل وقت " + (timers.currentPrayer ?: "الصلاة"),
                             style = MaterialTheme.typography.bodyMedium.copy(fontFamily = Plex),
-                            color = scheme.onSurface,
+                            color = OnDark,
                         )
                         Text(
                             "الموعد التالي " + (timers.nextPrayer ?: "—") + " · " +
                                 fmt.duration(timers.nextIn.coerceAtLeast(0)),
                             style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
-                            color = scheme.onSurfaceVariant,
+                            color = OnDarkDim,
                         )
                     }
 
@@ -342,7 +342,7 @@ internal fun HeroCard(
                             style = MaterialTheme.typography.headlineMedium.copy(
                                 fontFamily = Kufi, fontSize = 28.sp, fontWeight = FontWeight.Bold,
                             ),
-                            color = scheme.onSurface,
+                            color = OnDark,
                         )
                     }
                 }
@@ -378,7 +378,7 @@ internal fun HeroCard(
                                 fontFamily = Plex, fontSize = 10.sp,
                             ),
                             color = if (next) UrgencyImminent else if (passed)
-                                Color(0xFF44485A) else scheme.onSurfaceVariant,
+                                OnDarkFaint else OnDarkDim,
                         )
                         Text(
                             fmt.hhmmShort(minute),
@@ -387,7 +387,7 @@ internal fun HeroCard(
                                 fontFeatureSettings = TabularFigures,
                             ),
                             color = if (next) UrgencyImminent else if (passed)
-                                Color(0xFF44485A) else scheme.onSurface,
+                                OnDarkFaint else OnDark,
                         )
                         if (next) {
                             Spacer(Modifier.height(3.dp))
@@ -404,7 +404,7 @@ internal fun HeroCard(
                 Modifier.fillMaxWidth().padding(horizontal = Space.md)
                     .height(3.dp)
                     .clip(RoundedCornerShape(2.dp))
-                    .background(scheme.outlineVariant),
+                    .background(OnDarkTrack),
             ) {
                 Box(
                     Modifier.fillMaxWidth(progress.coerceIn(0f, 1f))
@@ -420,7 +420,7 @@ internal fun HeroCard(
                 Text(
                     "بعد ذلك",
                     style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
-                    color = scheme.onSurfaceVariant,
+                    color = OnDarkDim,
                     modifier = Modifier.padding(horizontal = Space.md),
                 )
                 upcoming.take(2).forEach { m ->
@@ -429,10 +429,10 @@ internal fun HeroCard(
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Text(m.labelAr, style = MaterialTheme.typography.bodySmall.copy(fontFamily = Plex),
-                            color = scheme.onSurface)
+                            color = OnDark)
                         Text(fmt.hhmmShort(m.minuteOfDay), style = MaterialTheme.typography.bodySmall.copy(
                             fontFamily = Kufi, fontFeatureSettings = TabularFigures,
-                        ), color = scheme.onSurfaceVariant)
+                        ), color = OnDarkDim)
                     }
                 }
             }

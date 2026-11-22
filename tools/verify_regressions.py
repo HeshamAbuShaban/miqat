@@ -171,6 +171,16 @@ for path, text in sources.items():
             short.append(f"{os.path.basename(path)}:{line}")
 note(not short, "all Hijri.at calls pass the offset", ", ".join(short))
 
+# ---------------------------------------------------------------- 7. light mode
+print("7. fixed dark moments keep fixed light ink")
+required = {
+    "app/src/main/java/app/miqat/ui/HeroCard.kt": "OnDark",
+    "app/src/main/java/app/miqat/ui/FastingScreen.kt": "OnDark",
+    "app/src/main/java/app/miqat/ui/MiqatApp.kt": "pageWash()",
+}
+for path, token in required.items():
+    note(token in sources[path], os.path.basename(path) + " keeps " + token)
+
 # ---------------------------------------------------------------- verdict
 print("")
 if fails:
