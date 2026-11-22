@@ -30,6 +30,7 @@ import java.util.TimeZone
 object NotifyChannels {
     const val PREPARATORY = "miqat_preparatory"
     const val DIRECT = "miqat_direct"
+    const val IQAMA = "miqat_iqama"
     const val REMINDER = "miqat_reminder"
     const val COUNTDOWN = "miqat_countdown"
 
@@ -44,6 +45,7 @@ object NotifyChannels {
         }
         channel(PREPARATORY, "تنبيه تمهيدي", NotificationManager.IMPORTANCE_DEFAULT, "قبل الموعد بقليل")
         channel(DIRECT, "الأذان", NotificationManager.IMPORTANCE_HIGH, "عند دخول وقت الصلاة")
+        channel(IQAMA, "الإقامة", NotificationManager.IMPORTANCE_DEFAULT, "النداء الثاني — صوت عادي")
         channel(REMINDER, "تذكير", NotificationManager.IMPORTANCE_DEFAULT, "بعد الموعد")
         channel(COUNTDOWN, "العدّاد", NotificationManager.IMPORTANCE_LOW, "عدّاد دائم للمتبقي")
     }
@@ -126,10 +128,11 @@ object AlarmScheduler {
                 val at2 = epochFor(city, offset, now, tomorrowList[i], isTomorrow = true)
                 if (at2 > now) specs.add(AlarmSpec(NotifyKind.DIRECT, i, prayerNames[i], at2))
                 // the iqama — the second call, if the user asked for it
-                if (prefs.iqamaMinutes > 0) {
-                    val iq1 = at + prefs.iqamaMinutes * 60_000L
+                val delay = prefs.iqamaForIndex(i) // NOT the global default
+                if (delay > 0) {
+                    val iq1 = at + delay * 60_000L
                     if (iq1 > now) specs.add(AlarmSpec(NotifyKind.DIRECT, i, "إقامة ${prayerNames[i]}", iq1, iqama = true))
-                    val iq2 = at2 + prefs.iqamaMinutes * 60_000L
+                    val iq2 = at2 + delay * 60_000L
                     if (iq2 > now) specs.add(AlarmSpec(NotifyKind.DIRECT, i, "إقامة ${prayerNames[i]}", iq2, iqama = true))
                 }
             }
@@ -320,13 +323,13 @@ class AlarmReceiver : BroadcastReceiver() {
             val payload = NotificationPoster.reminderPayload(context, slot)
             if (payload != null) {
                 NotificationPoster.postWithText(
-                    context, kind, label, slot, quiet, payload.first, payload.second,
+                    context, kind, label, slot, quiet, payload.first, payload.second, estimated,
                 )
             } else {
-                NotificationPoster.post(context, kind, label, slot, quiet)
+                NotificationPoster.post(context, kind, label, slot, quiet, estimated)
             }
         } else {
-            NotificationPoster.post(context, kind, label, slot, quiet)
+            NotificationPoster.post(context, kind, label, slot, quiet, estimated, iqama)
         }
         // the widget counts down to the NEXT prayer — at the moment a prayer
         // arrives, that next one changes

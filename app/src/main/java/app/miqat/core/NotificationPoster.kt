@@ -54,6 +54,7 @@ object NotificationPoster {
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle("حان وقت $label")
             .setContentText("اضغط لعرض التفاصيل")
+            .setColor(0xFFD4A857.toInt())
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setOngoing(true)
@@ -74,18 +75,22 @@ object NotificationPoster {
         quiet: Boolean,
         text: String,
         citation: String?,
+        estimated: Boolean = false,
     ) {
         val nm = context.getSystemService(NotificationManager::class.java) ?: return
         NotifyChannels.ensure(context)
         val prefs = NotificationPrefsStore.load(context)
-        val body = if (citation != null) "$text\n$citation" else text
+        val body = (if (citation != null) "$text\n$citation" else text) +
+            (if (estimated) "\n" + ESTIMATED else "")
         val builder = NotificationCompat.Builder(context, channelFor(kind))
+            .setColor(tintFor(kind, false))
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(titleFor(kind, label))
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
             .setPriority(priorityFor(kind))
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
+            .setColor(tintFor(kind, false))
             .setAutoCancel(true)
         val contentIntent = PendingIntent.getActivity(
             context, slot + 1,
@@ -171,9 +176,9 @@ object NotificationPoster {
         // the motivational line rides along at the END of the other payloads
         if (kind != NotifyKind.MOTIVATIONAL && prefs.motivationalAppended && motivational != null) {
             builder.setStyle(
-                NotificationCompat.BigTextStyle().bigText(
-                    bodyFor(kind, label, null, prefs) + "\n" + motivational,
-                ),
+                // append to the FULL body — rebuilding it here used to drop
+                // the «تقديري» qualifier and the iqama line
+                NotificationCompat.BigTextStyle().bigText(body + "\n" + motivational),
             )
         }
 
@@ -190,12 +195,21 @@ object NotificationPoster {
         post(context, kind, if (label.isBlank()) "ذكرى" else label, 9)
     }
 
-    private fun channelFor(kind: NotifyKind) = when (kind) {
+    private fun channelFor(kind: NotifyKind, iqama: Boolean = false): String {
+        if (iqama) return NotifyChannels.IQAMA
+        return when (kind) {
         NotifyKind.PREPARATORY -> NotifyChannels.PREPARATORY
         NotifyKind.DIRECT -> NotifyChannels.DIRECT
         NotifyKind.REMINDER -> NotifyChannels.REMINDER
         // the founder ruled: the motivational nudge rides the reminder
         NotifyKind.MOTIVATIONAL -> NotifyChannels.REMINDER
+        }
+    }
+
+    private fun tintFor(kind: NotifyKind, iqama: Boolean): Int = when {
+        iqama -> 0xFF5CC4B8.toInt()          // teal — the window to the iqama
+        kind == NotifyKind.REMINDER -> 0xFFEBD9A8.toInt()
+        else -> 0xFFD4A857.toInt()           // brass — the appointed time
     }
 
     private fun priorityFor(kind: NotifyKind) = when (kind) {

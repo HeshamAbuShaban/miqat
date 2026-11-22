@@ -63,6 +63,10 @@ data class NotificationPrefs(
 ) {
     fun kindOn(kind: NotifyKind): Boolean = kindEnabled[kind] ?: false
 
+    /** The same effective iqama delay the Home screen and the widget read. */
+    fun iqamaForIndex(index: Int): Int =
+        iqamaByPrayer[app.miqat.ui.PRAYER_KEY.getOrNull(index)] ?: iqamaMinutes
+
     fun directOn(index: Int): Boolean = directPerPrayer.getOrElse(index) { true }
 
     fun quietActive(nowMinuteOfDay: Int): Boolean {

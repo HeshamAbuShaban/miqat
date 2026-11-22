@@ -95,12 +95,19 @@ class CountdownService : android.app.Service() {
             state.notifications.iqamaMinutes,
             iqamaFor = { state.iqamaMinutesFor(it) },
         )
-        val title = if (timers.nextPrayer != null) "المتبقي لميقات ${timers.nextPrayer}" else "المواقيت"
+        val title = if (timers.nextPrayer != null)
+            app.miqat.core.Proximity.timerLine(
+                app.miqat.core.TimerKind.PRAYER_REMAINING,
+                timers.remainingSeconds, timers.nextPrayer!!,
+            ).prefixAr
+        else "المواقيت"
         val body = if (timers.nextPrayer != null) {
             val h = timers.remainingSeconds / 3600
             val m = (timers.remainingSeconds % 3600) / 60
-            val s = timers.remainingSeconds % 60
-            "${app.miqat.core.NumFmt.digits("%d:%02d:%02d".format(h, m, s), state.display.arabicIndicDigits)}"
+            val sec = timers.remainingSeconds % 60
+            app.miqat.core.NumFmt.digits(
+                "%d:%02d:%02d".format(h, m, sec), state.display.arabicIndicDigits,
+            )
         } else ""
 
         val open = PendingIntent.getActivity(
@@ -114,6 +121,7 @@ class CountdownService : android.app.Service() {
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
             .setContentText(body)
+            .setColor(0xFFD4A857.toInt())
             .setOngoing(true)
             .setSilent(true)
             .setShowWhen(false)
