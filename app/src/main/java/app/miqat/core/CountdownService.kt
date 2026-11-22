@@ -89,7 +89,7 @@ class CountdownService : android.app.Service() {
         val timers = app.miqat.core.Timers.of(
             app.miqat.core.prayerPoints(
                 times, tomorrow.fajr,
-                listOf("الفجر", "الشروق", "الظهر", "العصر", "المغرب", "العشاء"),
+                Prayers.NAMES,
             ),
             state.cityHourOfDay(now),
             state.notifications.iqamaMinutes,

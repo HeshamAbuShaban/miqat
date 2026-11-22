@@ -78,7 +78,12 @@ fun CalendarScreen(
     onOpenPrayer: (Int) -> Unit = {},
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val now = nowState.value
+    // These screens show minutes, not seconds: subscribe to a minute bucket
+    // so the 1 Hz tick does not rebuild their trees.
+    val minuteBucket by androidx.compose.runtime.derivedStateOf {
+        nowState.value / 60_000L
+    }
+    val now = minuteBucket * 60_000L
     val (cy, cm, _) = state.cityDate(now)
     var year by remember { mutableIntStateOf(cy) }
     var month by remember { mutableIntStateOf(cm) }

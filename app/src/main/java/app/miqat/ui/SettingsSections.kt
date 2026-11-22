@@ -913,4 +913,4 @@ fun AboutSection() {
     }
 }
 
-internal val PRAYER_NAMES = listOf("الفجر", "الشروق", "الظهر", "العصر", "المغرب", "العشاء")
+internal val PRAYER_NAMES: List<String> get() = app.miqat.core.Prayers.NAMES

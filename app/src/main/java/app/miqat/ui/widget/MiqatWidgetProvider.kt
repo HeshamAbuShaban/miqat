@@ -250,6 +250,6 @@ class MiqatWidgetProvider : AppWidgetProvider() {
         }
 
         private fun minutesOf(hours: Double): Int =
-            (((hours % 24.0) + 24.0) % 24.0 * 60.0).toInt()
+            app.miqat.core.Prayers.minutesOf(hours)
     }
 }

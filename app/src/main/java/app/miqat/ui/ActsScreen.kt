@@ -27,6 +27,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,7 +62,12 @@ fun ActsScreen(
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val scheme = MaterialTheme.colorScheme
-    val now = nowState.value
+    // These screens show minutes, not seconds: subscribe to a minute bucket
+    // so the 1 Hz tick does not rebuild their trees.
+    val minuteBucket by androidx.compose.runtime.derivedStateOf {
+        nowState.value / 60_000L
+    }
+    val now = minuteBucket * 60_000L
     val nowMinute = (state.cityHourOfDay(now) * 60).toInt()
     val (y, m, d) = state.cityDate(now)
     val (ty, tm, td) = state.cityTomorrow(now)

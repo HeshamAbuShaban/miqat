@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,7 +42,12 @@ fun MoreScreen(
     onOpen: (MoreTarget) -> Unit,
 ) {
     val scheme = MaterialTheme.colorScheme
-    val now = nowState.value
+    // These screens show minutes, not seconds: subscribe to a minute bucket
+    // so the 1 Hz tick does not rebuild their trees.
+    val minuteBucket by androidx.compose.runtime.derivedStateOf {
+        nowState.value / 60_000L
+    }
+    val now = minuteBucket * 60_000L
     val (y, m, d) = state.cityDate(now)
     val times = state.times(y, m, d)
     val (ty, tm, td) = state.cityTomorrow(now)

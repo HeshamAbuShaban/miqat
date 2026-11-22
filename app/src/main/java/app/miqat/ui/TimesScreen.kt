@@ -33,11 +33,7 @@ import app.miqat.core.UrgencyRules
 import app.miqat.core.WorshipWindows
 
 /** Minutes-of-day for a fractional hour (same round-half-up as the donor). */
-fun minutesOf(hours: Double): Int {
-    if (hours.isNaN()) return 0
-    val total = (((hours + 0.5 / 60.0) % 24.0) + 24.0) % 24.0
-    return (total * 60).toInt() % (24 * 60)
-}
+fun minutesOf(hours: Double): Int = app.miqat.core.Prayers.minutesOf(hours)
 
 /**
  * TIMES — the day's schedule in one place: the six prayers (each with its own

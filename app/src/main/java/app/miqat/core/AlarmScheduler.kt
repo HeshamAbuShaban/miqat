@@ -107,7 +107,7 @@ object AlarmScheduler {
         }
         val today = timesOf(y, m, d)
         val tomorrow = timesOf(ty, tm, td)
-        val prayerNames = listOf("الفجر", "الشروق", "الظهر", "العصر", "المغرب", "العشاء")
+        val prayerNames = Prayers.NAMES
         val todayList = listOf(
             today.fajr, today.sunrise, today.dhuhr, today.asr, today.maghrib, today.isha,
         )

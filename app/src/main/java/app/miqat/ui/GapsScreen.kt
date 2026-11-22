@@ -43,7 +43,12 @@ import app.miqat.core.Moments
 @Composable
 fun GapsScreen(state: AppState, fmt: Fmt, onBack: () -> Unit) {
     val nowState = rememberNowState()
-    val now = nowState.value
+    // These screens show minutes, not seconds: subscribe to a minute bucket
+    // so the 1 Hz tick does not rebuild their trees.
+    val minuteBucket by androidx.compose.runtime.derivedStateOf {
+        nowState.value / 60_000L
+    }
+    val now = minuteBucket * 60_000L
     val timeline = rememberTimeline(state, now)
     val gaps = Moments.gaps(timeline)
     val longest = gaps.maxOfOrNull { it.minutes } ?: 1
@@ -290,10 +295,13 @@ private fun MomentPickerDialog(
 fun rememberTimeline(state: AppState, now: Long): List<Moment> {
     val (y, m, d) = state.cityDate(now)
     val (ty, tm, td) = state.cityTomorrow(now)
-    return remember(y, m, d, state.city.calcMethod, state.display.methodOverride, state.adjusts) {
+    return remember(
+        y, m, d, state.city.calcMethod, state.display.methodOverride,
+        state.adjusts, state.display.hijriOffsetDays,
+    ) {
         val today = state.times(y, m, d)
         val tomorrow = state.times(ty, tm, td)
-        val hijri = Hijri.at(y, m, d)
+        val hijri = Hijri.at(y, m, d, state.display.hijriOffsetDays)
         Moments.timeline(
             today, tomorrow.fajr, PRAYER_NAMES, ::minutesOf,
             hijriMonth = hijri.hMonth, hijriDay = hijri.hDay,

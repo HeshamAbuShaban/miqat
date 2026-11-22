@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -31,7 +32,12 @@ import app.miqat.core.Moments
 @Composable
 fun SunnahScreen(state: AppState, fmt: Fmt, onBack: () -> Unit) {
     val nowState = rememberNowState()
-    val now = nowState.value
+    // These screens show minutes, not seconds: subscribe to a minute bucket
+    // so the 1 Hz tick does not rebuild their trees.
+    val minuteBucket by androidx.compose.runtime.derivedStateOf {
+        nowState.value / 60_000L
+    }
+    val now = minuteBucket * 60_000L
     val timeline = rememberTimeline(state, now)
 
     fun moment(kind: String): Moment? = timeline.firstOrNull { it.kind == kind }

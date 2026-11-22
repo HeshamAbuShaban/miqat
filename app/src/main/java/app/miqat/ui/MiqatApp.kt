@@ -373,19 +373,18 @@ fun HomeScreen(
     onOpenSunnah: () -> Unit = {},
 ) {
     val context = LocalContext.current
-    val now = nowState.value
+    // The 1 Hz tick only reaches the hero's seconds. Everything else reads a
+    // MINUTE bucket, so a ticking second no longer rebuilds the sky, the
+    // verse card, the rail and the navigation.
+    val minuteBucket by androidx.compose.runtime.derivedStateOf {
+        nowState.value / 60_000L
+    }
+    val now = minuteBucket * 60_000L
     val (y, m, d) = state.cityDate(now)
     val times = state.times(y, m, d)
     val nowHour = state.cityHourOfDay(now)
     val (tyHome, tmHome, tdHome) = state.cityTomorrow(now)
     val tomorrowHome = state.times(tyHome, tmHome, tdHome)
-    // THE timers — one model, one clock, and every feature with its own line
-    val timers = app.miqat.core.Timers.of(
-        app.miqat.core.prayerPoints(times, tomorrowHome.fajr, PRAYER_NAMES),
-        nowHour,
-        state.notifications.iqamaMinutes,
-        iqamaFor = { state.iqamaMinutesFor(it) },
-    )
     val timeline = rememberTimeline(state, now)
     val nowMinutes = (nowHour * 60).toInt()
     // how much the home carries (one choice, not a dozen switches)
@@ -480,8 +479,8 @@ fun HomeScreen(
             state = state,
             fmt = fmt,
             times = times,
-            timers = timers,
-            now = now,
+            nowState = nowState,
+            tomorrowFajr = tomorrowHome.fajr,
             nowHour = nowHour,
             nowMinutes = nowMinutes,
             upcoming = upcomingMoments(timeline, nowMinutes),
@@ -701,15 +700,25 @@ private fun ShelfCard(
 @Composable
 private fun HeroCard(
     state: AppState,
-    now: Long,
+    nowState: androidx.compose.runtime.State<Long>,
     fmt: Fmt,
     times: app.miqat.core.LocalPrayerTimes,
-    timers: app.miqat.core.Timers,
+    tomorrowFajr: Double,
     nowHour: Double,
     nowMinutes: Int,
     upcoming: List<Moment>,
 ) {
     val scheme = MaterialTheme.colorScheme
+    // ONLY this leaf recomposes on the 1 Hz tick; the rest of Home is minute-
+    // granular. The timers use the live second, so the countdown stays true.
+    val now = nowState.value
+    val liveHour = state.cityHourOfDay(now)
+    val timers = app.miqat.core.Timers.of(
+        app.miqat.core.prayerPoints(times, tomorrowFajr, PRAYER_NAMES),
+        liveHour,
+        state.notifications.iqamaMinutes,
+        iqamaFor = { state.iqamaMinutesFor(it) },
+    )
     val skyTop = Color(0xFF070B1C)
     val skyMid = Color(0xFF1A1E32)
     val skyWarm = Color(0xFF33252C)
@@ -1032,7 +1041,7 @@ private fun travelledFraction(times: app.miqat.core.LocalPrayerTimes, nowHour: D
     return (((m - fajr) / (isha - fajr).coerceAtLeast(1.0)).coerceIn(0.0, 1.0)).toFloat()
 }
 
-internal val PRAYER_KEY = listOf("fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha")
+internal val PRAYER_KEY: List<String> get() = app.miqat.core.Prayers.KEYS
 
 /** A worship-window candidate for the "nearest window" line on home. */
 internal data class WindowOption(val label: String, val start: Double, val end: Double)
