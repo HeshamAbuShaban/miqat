@@ -211,7 +211,7 @@ fun ActsScreen(
                     color = scheme.onSurface,
                 )
                 Text(
-                    "${fmt.hhmm(running.startMinute)} — ${fmt.hhmm(running.endMinute)}",
+                    fmt.range(running.startMinute, running.endMinute),
                     style = MaterialTheme.typography.bodySmall.copy(fontFamily = Plex),
                     color = scheme.onSurfaceVariant,
                 )
@@ -413,7 +413,7 @@ private fun ActRow(item: ActsCatalog.Live, fmt: Fmt, onClick: () -> Unit) {
         Column(horizontalAlignment = Alignment.End) {
             Text(
                 if (item.act.isWindow || item.act.isBoundary)
-                    "${fmt.hhmm(item.startMinute)} — ${fmt.hhmm(item.endMinute)}"
+                    fmt.range(item.startMinute, item.endMinute)
                 else fmt.hhmm(item.startMinute),
                 style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = TabularFigures),
                 color = if (running) scheme.secondary else scheme.onSurface,

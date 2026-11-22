@@ -86,6 +86,20 @@ object NumFmt {
         }
     }
 
+    /**
+     * A compact ticking DURATION: "12:34" (m:ss) inside the hour,
+     * "1:17" (h:mm) beyond it — no fake precision with seconds you
+     * cannot keep on a slow surface. No ص/م: a duration is not a clock.
+     */
+    fun tick(totalSeconds: Long, arabicIndic: Boolean): String {
+        val sec = kotlin.math.abs(totalSeconds)
+        return if (sec >= 3600) {
+            ltr(digits("%d:%02d".format(sec / 3600, sec % 3600 / 60), arabicIndic))
+        } else {
+            ltr(digits("%d:%02d".format(sec / 60, sec % 60), arabicIndic))
+        }
+    }
+
     /** Plain integer (counts, offsets). */
     fun n(value: Int, arabicIndic: Boolean): String = ltr(digits("$value", arabicIndic))
 

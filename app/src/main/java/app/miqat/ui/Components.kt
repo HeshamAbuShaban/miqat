@@ -106,6 +106,10 @@ class Fmt(val prefs: DisplayPrefs) {
     fun hhmmShort(minutes: Int) = NumFmt.hhmmShort(minutes, ar, prefs.use12h)
     /** A DURATION (the ticking countdown) — never carries a ص/م suffix. */
     fun hms(seconds: Long) = NumFmt.hms(seconds, ar)
+    /** A secondary ticking duration: m:ss under an hour, h:mm above it. */
+    fun tick(seconds: Long) = NumFmt.tick(seconds, ar)
+    /** A window as two CLOCK times: «٤:٣٣ ص — ٦:٠٢ م», never two bare numbers. */
+    fun range(fromMinute: Int, toMinute: Int) = "${hhmm(fromMinute)} — ${hhmm(toMinute)}"
 
     /** A CLOCK time given in fractional local hours (the engine's unit). */
     fun hmsOf(hours: Double) = NumFmt.clockHMS(

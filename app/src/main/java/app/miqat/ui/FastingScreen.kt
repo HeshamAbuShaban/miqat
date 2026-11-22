@@ -226,8 +226,8 @@ fun FastingScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    "الإمساك " + fmt.hhmm(imsak),
-                    style = MaterialTheme.typography.labelSmall.copy(fontFamily = Kufi),
+                    "نافذة الصيام " + fmt.range(imsak, iftar),
+                    style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
                     color = scheme.onSurfaceVariant,
                 )
                 Text(

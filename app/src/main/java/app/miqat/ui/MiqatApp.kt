@@ -843,16 +843,29 @@ private fun HeroCard(
                     ),
                     color = scheme.onSurface,
                 )
-                if (state.display.showTimerIqama && timers.iqamaIn != null &&
-                timers.sinceIqamaPrayer == null
-            ) {
-                    Text(
-                        "الإقامة " + fmt.hhmm(minutesOf(times.list[
-                            PRAYER_NAMES.indexOf(timers.iqamaPrayer).coerceAtLeast(0)
-                        ]) + (state.notifications.iqamaMinutes)),
-                        style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
-                        color = scheme.onSurfaceVariant,
-                    )
+                // أذان ← إقامة ← منذ الإقامة: ONE line that changes with the
+                // actual state, not a static clock time that means nothing.
+                if (state.display.showTimerIqama) {
+                    val iqamaLine = when (timers.iqamaPhase) {
+                        app.miqat.core.IqamaPhase.PENDING ->
+                            app.miqat.core.Proximity.timerLine(
+                                app.miqat.core.TimerKind.IQAMA_REMAINING,
+                                timers.iqamaSeconds, timers.iqamaPrayer ?: "الصلاة",
+                            ).prefixAr + " " + fmt.tick(timers.iqamaSeconds)
+                        app.miqat.core.IqamaPhase.SINCE ->
+                            app.miqat.core.Proximity.timerLine(
+                                app.miqat.core.TimerKind.SINCE_IQAMA,
+                                timers.sinceIqamaSeconds, timers.sinceIqamaPrayer ?: "الصلاة",
+                            ).prefixAr + " " + fmt.tick(timers.sinceIqamaSeconds)
+                        app.miqat.core.IqamaPhase.BEFORE_ADHAN -> null
+                    }
+                    if (iqamaLine != null) {
+                        Text(
+                            iqamaLine,
+                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
+                            color = scheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
         }
