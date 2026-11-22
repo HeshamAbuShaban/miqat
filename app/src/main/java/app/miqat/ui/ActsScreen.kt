@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -56,6 +57,7 @@ fun ActsScreen(
     nowState: androidx.compose.runtime.State<Long>,
     onOpenAct: (String) -> Unit,
     onOpenTasbih: () -> Unit = {},
+    onOpenDistance: () -> Unit = {},
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val scheme = MaterialTheme.colorScheme
@@ -143,7 +145,7 @@ fun ActsScreen(
         }
         Spacer(Modifier.height(Space.lg))
 
-        if (closings.isNotEmpty()) {
+        if (state.display.showClosingEvents && closings.isNotEmpty()) {
             Text(
                 "الأحداث المتقاربة",
                 style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex, fontSize = 11.sp),
@@ -245,32 +247,100 @@ fun ActsScreen(
             Spacer(Modifier.height(Space.lg))
         }
 
+        if (state.display.showQuickLog) {
+        // QUICK LOG — the HTML's three chips, writing to the SAME day log
+        // the calendar uses (no second store, no fake score).
+        val dayKey = "%04d-%02d-%02d".format(y, m, d)
+        Row(
+            Modifier.fillMaxWidth().horizontalScroll(androidx.compose.foundation.rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(Space.sm),
+        ) {
+            listOf("prayer" to "سجّل صلاة", "dhikr" to "سجّل ذكر", "fast" to "سجّل صيام")
+                .forEach { (kind, label) ->
+                    val key = "$dayKey:$kind"
+                    val on = key in state.display.dayActLog
+                    Row(
+                        Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(scheme.surface)
+                            .clickable {
+                                state.updateDisplay(
+                                    state.display.copy(
+                                        dayActLog = if (on) state.display.dayActLog - key
+                                        else state.display.dayActLog + key,
+                                    ),
+                                )
+                            }
+                            .padding(horizontal = Space.md, vertical = Space.sm),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            if (on) "✓" else "+",
+                            style = MaterialTheme.typography.bodyMedium.copy(fontFamily = Kufi),
+                            color = scheme.secondary,
+                        )
+                        Spacer(Modifier.width(Space.xs))
+                        Text(label, style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
+                            color = scheme.onSurface)
+                    }
+                }
+        }
+        }
+        Spacer(Modifier.height(Space.md))
+
         // grouped by STATE — «الأقرب فالأقرب»: what is open, then what comes,
         // then what passed (never a fake countdown for a passed act)
-        val order = mapOf(
-            ActsCatalog.ActState.RUNNING to 0,
-            ActsCatalog.ActState.UPCOMING to 1,
-            ActsCatalog.ActState.PASSED to 2,
-        )
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(scheme.surface),
-        ) {
-            live.sortedBy { order[it.state] }.forEachIndexed { i, item ->
-                ActRow(item, fmt) { onOpenAct(item.act.id) }
-                if (i < live.size - 1) {
-                    Divider(Modifier.padding(horizontal = Space.md))
+        val upcoming = live.filter { it.state != ActsCatalog.ActState.PASSED }
+        val passed = live.filter { it.state == ActsCatalog.ActState.PASSED }
+        if (upcoming.isNotEmpty()) {
+            SectionLabel("قادم · الأقرب أولاً")
+            Column(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
+                    .background(scheme.surface),
+            ) {
+                upcoming.sortedBy { it.startMinute }.forEachIndexed { i, item ->
+                    ActRow(item, fmt) { onOpenAct(item.act.id) }
+                    if (i < upcoming.size - 1) Divider(Modifier.padding(horizontal = Space.md))
                 }
             }
+            Spacer(Modifier.height(Space.md))
+        }
+        if (state.display.showPassedActs && passed.isNotEmpty()) {
+            SectionLabel("مضى اليوم")
+            Column(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
+                    .background(scheme.surface),
+            ) {
+                passed.sortedByDescending { it.startMinute }.forEachIndexed { i, item ->
+                    ActRow(item, fmt) { onOpenAct(item.act.id) }
+                    if (i < passed.size - 1) Divider(Modifier.padding(horizontal = Space.md))
+                }
+            }
+            Spacer(Modifier.height(Space.md))
         }
         Spacer(Modifier.height(Space.md))
         NavRow("التسبيح", "أذكار اليوم مع مراجعها وعدّاد", onOpenTasbih)
+        NavRow("كم بعدت عن هذا الوقت؟", "المسافة بين أي لحظتين", onOpenDistance)
         Spacer(Modifier.height(Space.xxl))
     }
 }
 
+
+@Composable
+private fun SectionLabel(text: String) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = Space.sm, vertical = Space.sm),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text,
+            style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Spacer(Modifier.width(Space.sm))
+        Box(Modifier.weight(1f).height(1.dp).background(MaterialTheme.colorScheme.outlineVariant))
+    }
+}
 
 /**
  * The day as a rail: RTL, 00:00 at the right, 24:00 at the left. A window is

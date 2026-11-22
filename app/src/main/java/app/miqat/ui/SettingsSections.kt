@@ -706,6 +706,27 @@ fun IndicatorsSection(state: AppState, fmt: Fmt) {
                 }
             }
         }
+        SectionLabel("في الطاعات والودجت", Modifier.padding(horizontal = Space.lg))
+        ToggleRow(
+            "الأحداث المتقاربة",
+            "ما يدخل نافذة الموعد الحالي ويخرج معها",
+            d.showClosingEvents,
+        ) { v -> state.updateDisplay(d.copy(showClosingEvents = v)) }
+        ToggleRow(
+            "سجلات سريعة",
+            "سجّل صلاة أو ذكرًا أو صيامًا بضغطة",
+            d.showQuickLog,
+        ) { v -> state.updateDisplay(d.copy(showQuickLog = v)) }
+        ToggleRow(
+            "ما مضى اليوم",
+            "قائمة الطاعات التي انتهت",
+            d.showPassedActs,
+        ) { v -> state.updateDisplay(d.copy(showPassedActs = v)) }
+        ToggleRow(
+            "الإقامة في الودجت",
+            "أذان ← إقامة ← منذ الإقامة، بصيغة مختصرة",
+            d.widgetIqamaLine,
+        ) { v -> state.updateDisplay(d.copy(widgetIqamaLine = v)) }
         Spacer(Modifier.height(Space.xl))
     }
 }

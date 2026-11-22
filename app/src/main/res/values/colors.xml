@@ -10,6 +10,8 @@
     <color name="miqat_sun_core">#FFF2C8</color>
     <color name="miqat_hairline">#93A3CC</color>
     <color name="miqat_tick">#C3CCE2</color>
+    <color name="miqat_teal">#5CC4B8</color>
+    <color name="miqat_cream">#EBD9A8</color>
     <color name="miqat_text">#EBE8E0</color>
     <color name="miqat_text_dim">#7A7F95</color>
     <color name="miqat_urgency_soon">#F06544</color>

@@ -51,6 +51,20 @@
         android:includeFontPadding="false" />
 
     <TextView
+        android:id="@+id/widget_iqama"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:gravity="center"
+        android:fontFamily="@font/ibmplexsansarabic_regular"
+        android:fontFeatureSettings="tnum"
+        android:textColor="@color/miqat_teal"
+        android:textSize="12sp"
+        android:text="@string/widget_sample_iqama"
+        android:maxLines="1"
+        android:includeFontPadding="false" />
+
+    <TextView
         android:id="@+id/widget_meta"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

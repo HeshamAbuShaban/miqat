@@ -240,6 +240,7 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
                         state, fmt, now,
                         onOpenAct = { sub = Route.ActDetail(it) },
                         onOpenTasbih = { sub = Route.Tasbih },
+                        onOpenDistance = { sub = Route.Distance },
                     )
                 }
                 is Route.PrayerDetailArgs -> PrayerDetailScreen(state, fmt, route.index) { sub = null }

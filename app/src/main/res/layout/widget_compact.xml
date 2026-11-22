@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- THE COMPACT WIDGET (2×1): the two facts that fit — which prayer, and how
+     long is left. One RTL row, no horizon (a day arc cannot be honest at
+     110dp wide), no city, no clock. The full widget owns the sky. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_compact_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:background="@drawable/widget_bg"
+    android:gravity="center_vertical"
+    android:paddingStart="10dp"
+    android:paddingEnd="10dp"
+    android:layoutDirection="rtl">
+
+    <TextView
+        android:id="@+id/compact_prayer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:fontFamily="@font/cairo_regular"
+        android:textColor="@color/miqat_gold"
+        android:textSize="15sp"
+        android:text="@string/widget_sample_prayer"
+        android:maxLines="1"
+        android:includeFontPadding="false" />
+
+    <TextView
+        android:id="@+id/compact_countdown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/cairo_regular"
+        android:fontFeatureSettings="tnum"
+        android:textColor="@color/miqat_text"
+        android:textSize="20sp"
+        android:text="@string/widget_sample_countdown"
+        android:maxLines="1"
+        android:includeFontPadding="false" />
+</LinearLayout>

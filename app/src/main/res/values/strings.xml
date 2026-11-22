@@ -14,5 +14,8 @@
          renders reversed inside the RTL panel. -->
     <string name="widget_sample_prayer">العصر</string>
     <string name="widget_sample_countdown">⁦٤٥⁩ د</string>
+    <string name="widget_compact_label">الميقات — مختصر</string>
+    <string name="widget_compact_description">الصلاة التالية والمدة المتبقية، في مساحة صغيرة.</string>
+    <string name="widget_sample_iqama">منذ الإقامة ١٢ د</string>
     <string name="widget_sample_meta">⁦٣:١٨⁩ م</string>
 </resources>

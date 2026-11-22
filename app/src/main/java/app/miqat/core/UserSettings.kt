@@ -86,6 +86,14 @@ data class DisplayPrefs(
     val calendarShowGregorian: Boolean = true,
     /** The calendar's day cells carry the event dot. */
     val calendarShowEvents: Boolean = true,
+    /** Acts: the smart "events closing toward now" list. */
+    val showClosingEvents: Boolean = true,
+    /** Acts: the three one-tap log chips. */
+    val showQuickLog: Boolean = true,
+    /** Acts: the "passed today" section. */
+    val showPassedActs: Boolean = true,
+    /** The widget's adhan → iqama → since-iqama line. */
+    val widgetIqamaLine: Boolean = true,
     /** The widget names the city — ONLY when the user opted in and the
      *  times actually come from that city (never under a GPS fix). */
     val widgetShowCity: Boolean = false,
@@ -137,6 +145,10 @@ object UserSettings {
     private const val K_CAL_HIJRI = "cal_hijri"
     private const val K_CAL_GREG = "cal_greg"
     private const val K_CAL_EVENTS = "cal_events"
+    private const val K_CLOSING = "show_closing_events"
+    private const val K_QUICK_LOG = "show_quick_log"
+    private const val K_PASSED_ACTS = "show_passed_acts"
+    private const val K_WIDGET_IQAMA = "widget_iqama_line"
     private const val K_WIDGET_CITY = "widget_show_city"
     private const val K_CAL_PRAYER = "cal_prayer"
     private const val K_CAL_TABLE = "cal_table"
@@ -244,6 +256,10 @@ object UserSettings {
             calendarShowHijri = p.getBoolean(K_CAL_HIJRI, true),
             calendarShowGregorian = p.getBoolean(K_CAL_GREG, true),
             calendarShowEvents = p.getBoolean(K_CAL_EVENTS, true),
+            showClosingEvents = p.getBoolean(K_CLOSING, true),
+            showQuickLog = p.getBoolean(K_QUICK_LOG, true),
+            showPassedActs = p.getBoolean(K_PASSED_ACTS, true),
+            widgetIqamaLine = p.getBoolean(K_WIDGET_IQAMA, true),
             widgetShowCity = p.getBoolean(K_WIDGET_CITY, false),
             calendarPrayer = p.getInt(K_CAL_PRAYER, 0),
             calendarShowTable = p.getBoolean(K_CAL_TABLE, true),
@@ -307,6 +323,10 @@ object UserSettings {
             .putBoolean(K_CAL_HIJRI, d.calendarShowHijri)
             .putBoolean(K_CAL_GREG, d.calendarShowGregorian)
             .putBoolean(K_CAL_EVENTS, d.calendarShowEvents)
+            .putBoolean(K_CLOSING, d.showClosingEvents)
+            .putBoolean(K_QUICK_LOG, d.showQuickLog)
+            .putBoolean(K_PASSED_ACTS, d.showPassedActs)
+            .putBoolean(K_WIDGET_IQAMA, d.widgetIqamaLine)
             .putBoolean(K_WIDGET_CITY, d.widgetShowCity)
             .putInt(K_CAL_PRAYER, d.calendarPrayer)
             .putBoolean(K_CAL_TABLE, d.calendarShowTable)

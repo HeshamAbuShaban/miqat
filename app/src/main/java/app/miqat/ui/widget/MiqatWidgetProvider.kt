@@ -99,6 +99,7 @@ class MiqatWidgetProvider : AppWidgetProvider() {
             val manager = AppWidgetManager.getInstance(context) ?: return
             val ids = manager.getAppWidgetIds(ComponentName(context, MiqatWidgetProvider::class.java))
             ids.forEach { push(context, manager, it) }
+            MiqatCompactWidgetProvider.refresh(context)
         }
 
         /** A minute tick, so the countdown stays honest. */
@@ -182,9 +183,9 @@ class MiqatWidgetProvider : AppWidgetProvider() {
             views.setTextColor(
                 R.id.widget_countdown,
                 when {
-                    remainingMinutes <= 5 -> 0xFFFF7A59.toInt()
-                    remainingMinutes <= 15 -> 0xFFFFB25C.toInt()
-                    else -> 0xFFEDEBE3.toInt()
+                    remainingMinutes <= 5 -> 0xFFFF8566.toInt()
+                    remainingMinutes <= 15 -> 0xFFF06544.toInt()
+                    else -> 0xFFEBE8E0.toInt()
                 },
             )
             // the caption: the clock time of the prayer that is coming —
@@ -201,6 +202,39 @@ class MiqatWidgetProvider : AppWidgetProvider() {
                 if (city.isNotBlank()) meta = "$city · $meta"
             }
             views.setTextViewText(R.id.widget_meta, meta)
+
+            // THE THREE PHASES, on the widget too — the founder asked for
+            // adhan → iqama → since-iqama to be addressed in the main widget.
+            val iqamaText: String?
+            val iqamaColour: Int
+            when (if (state.display.widgetIqamaLine) timers.iqamaPhase
+            else app.miqat.core.IqamaPhase.BEFORE_ADHAN) {
+                app.miqat.core.IqamaPhase.PENDING -> {
+                    iqamaText = app.miqat.core.Proximity.timerLine(
+                        app.miqat.core.TimerKind.IQAMA_REMAINING,
+                        timers.iqamaSeconds.toLong(), timers.iqamaPrayer ?: "الصلاة",
+                    ).prefixAr + " " + fmt.duration(((timers.iqamaSeconds + 59L) / 60L).toInt())
+                    iqamaColour = 0xFF5CC4B8.toInt() // teal = the window
+                }
+                app.miqat.core.IqamaPhase.SINCE -> {
+                    iqamaText = app.miqat.core.Proximity.timerLine(
+                        app.miqat.core.TimerKind.SINCE_IQAMA,
+                        timers.sinceIqamaSeconds, timers.sinceIqamaPrayer ?: "الصلاة",
+                    ).prefixAr + " " + fmt.duration(((timers.sinceIqamaSeconds + 59L) / 60L).toInt())
+                    iqamaColour = 0xFFEBD9A8.toInt() // cream = an elapsed fact
+                }
+                app.miqat.core.IqamaPhase.BEFORE_ADHAN -> {
+                    iqamaText = null
+                    iqamaColour = 0xFF7A7F95.toInt()
+                }
+            }
+            if (iqamaText == null) {
+                views.setViewVisibility(R.id.widget_iqama, android.view.View.GONE)
+            } else {
+                views.setViewVisibility(R.id.widget_iqama, android.view.View.VISIBLE)
+                views.setTextViewText(R.id.widget_iqama, iqamaText)
+                views.setTextColor(R.id.widget_iqama, iqamaColour)
+            }
 
             // tapping it opens the app
             val open = PendingIntent.getActivity(
