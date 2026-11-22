@@ -50,8 +50,10 @@ class AppState(
     /** How much before Fajr the fast begins (the imsak lead) — a setting.
      *  It is OUR convention (a prudence margin), never a ruling — and it
      *  persists: a user's decision must not evaporate (the advisory council). */
-    var imsakLeadMinutes: Int = 15
-        private set
+    private var _imsakLeadMinutes by mutableStateOf(15)
+    /** The imsak lead — observable, but writable only through the setter
+     *  so the preference is always persisted with the value. */
+    val imsakLeadMinutes: Int get() = _imsakLeadMinutes
 
     /** The effective iqama delay: a per-prayer override, else the default. */
     fun iqamaMinutesFor(key: String): Int =
@@ -72,7 +74,7 @@ class AppState(
         display = UserSettings.display(appContext)
         notifications = NotificationPrefsStore.load(appContext)
         gpsFix = UserSettings.gpsFix(appContext)
-        imsakLeadMinutes = UserSettings.imsakLeadMinutes(appContext)
+        _imsakLeadMinutes = UserSettings.imsakLeadMinutes(appContext)
         officialAdopted = UserSettings.officialAdopted(appContext)
         loaded = true
         // arm the alarms for the appointed times (S3)
@@ -210,8 +212,8 @@ class AppState(
 
     /** The imsak lead — our convention, persisted. */
     fun setImsakLeadMinutes(minutes: Int) {
-        imsakLeadMinutes = minutes.coerceIn(0, 60)
-        UserSettings.saveImsakLeadMinutes(appContext, imsakLeadMinutes)
+        _imsakLeadMinutes = minutes.coerceIn(0, 60)
+        UserSettings.saveImsakLeadMinutes(appContext, _imsakLeadMinutes)
     }
 
     /** Is daylight saving in force right now for the picked city? */

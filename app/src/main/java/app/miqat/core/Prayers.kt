@@ -4,10 +4,11 @@ package app.miqat.core
  * THE PRAYER VOCABULARY — one source for the six names, their keys and the
  * conversion from a fractional hour to minutes of day.
  *
- * Before this file the same list was written by hand in five places (the
- * widget, the alarm scheduler, the countdown service, the UI and the
- * settings) and `minutesOf` had three copies — so a change in one silently
- * disagreed with the others. The donor's round-half-up is preserved.
+ * Before this file the names were written by hand in the widget, the alarm
+ * scheduler, the countdown service, the UI and the settings, and `minutesOf`
+ * had two COPIES THAT DISAGREED: the Times screen rounded half up (the donor's
+ * rule) while the widget truncated — so the widget could show a minute that
+ * the app itself did not. Both now use the donor's round-half-up.
  */
 object Prayers {
 

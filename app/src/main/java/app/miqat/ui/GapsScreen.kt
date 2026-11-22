@@ -296,8 +296,12 @@ fun rememberTimeline(state: AppState, now: Long): List<Moment> {
     val (y, m, d) = state.cityDate(now)
     val (ty, tm, td) = state.cityTomorrow(now)
     return remember(
-        y, m, d, state.city.calcMethod, state.display.methodOverride,
-        state.adjusts, state.display.hijriOffsetDays,
+        y, m, d, ty, tm, td,
+        state.city.en, state.city.ar, state.city.lat, state.city.lon, state.city.zone,
+        state.city.calcMethod, state.display.methodOverride,
+        state.display.hijriOffsetDays, state.display.manualUtcOffsetMinutes,
+        state.adjusts, state.imsakLeadMinutes, state.officialAdopted,
+        state.gpsFix, state.offsetLedger,
     ) {
         val today = state.times(y, m, d)
         val tomorrow = state.times(ty, tm, td)

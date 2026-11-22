@@ -166,7 +166,7 @@ object AlarmScheduler {
         if (prefs.motivationalAppended && prefs.fastingReminderEnabled) {
             for (dayAhead in 1..7) {
                 val (dy, dm, dd) = cityDateOf(city, offset, now + dayAhead * 86_400_000L)
-                val hijri = Hijri.at(dy, dm, dd)
+                val hijri = Hijri.at(dy, dm, dd, display.hijriOffsetDays)
                 if (!fastingDayMatches(prefs, hijri)) continue
                 val card = IslamicDays.todayCard(hijri) ?: continue
                 val times = PrayerTimes.compute(dy, dm, dd, loc, method)

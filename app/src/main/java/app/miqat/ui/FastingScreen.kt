@@ -110,7 +110,7 @@ fun FastingScreen(
                 color = scheme.onBackground,
             )
             Text(
-                Hijri.label(Hijri.at(y, m, d), fmt.ar),
+                Hijri.label(Hijri.at(y, m, d, state.display.hijriOffsetDays), fmt.ar),
                 style = MaterialTheme.typography.bodySmall,
                 color = scheme.onSurfaceVariant,
             )

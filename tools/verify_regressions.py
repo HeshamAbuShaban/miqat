@@ -67,6 +67,11 @@ for path in (
     unused = [f for f in fields if not re.search(r"\." + re.escape(f) + r"\b", consumers)]
     note(not unused, cls + " fields", ", ".join(unused))
 
+    # Inline string keys (NotificationPrefs) must be written as well as read.
+    gets = set(re.findall(r'p\.get(?:Boolean|Int|String|StringSet)\(\s*"([^"$]+)"', text))
+    puts = set(re.findall(r'e\.put(?:Boolean|Int|String|StringSet)\(\s*"([^"$]+)"', text))
+    note(not gets - puts, cls + " inline keys", ", ".join(sorted(gets - puts)))
+
 # ---------------------------------------------------------------- 2. seconds
 print("2. live clocks keep their seconds")
 # Fmt.tick / NumFmt.tick deliberately drop seconds; they must never be called
@@ -87,6 +92,11 @@ for path in (
 ):
     note("hms(" in sources[path], os.path.basename(path) + " prints H:MM:SS")
 
+# The ongoing notification is a ticking place too — the count must carry
+# seconds, not fall back to the minute-only formatter.
+countdown = sources.get("app/src/main/java/app/miqat/core/CountdownService.kt", "")
+note("%02d:%02d" in countdown, "ongoing notification prints H:MM:SS")
+
 # ---------------------------------------------------------------- 3. palette
 print("3. no new hardcoded colour")
 baseline_path = "tools/palette-baseline.txt"
@@ -96,7 +106,7 @@ if not os.path.exists(baseline_path):
     ))) + "\n")
     print("  (baseline created — review it into git before the next run)")
 approved = set(io.open(baseline_path, encoding="utf-8").read().split())
-found = set(re.findall(r"Color\(0x([0-9A-Fa-f]{8})\)", all_code))
+found = set(re.findall(r"Color\(0x([0-9A-Fa-f]{6,8})\)", all_code))
 new = sorted(c for c in found if c not in approved)
 note(not new, "colours stay within the baseline", ", ".join("0x" + c for c in new))
 
@@ -104,11 +114,17 @@ note(not new, "colours stay within the baseline", ", ".join("0x" + c for c in ne
 print("4. religious text carries its source")
 table = read("docs/sourcing-table.md")
 note(len(re.findall(r"^\|\s*\d+\s*\|", table, re.M)) >= 8, "sourcing table has >= 8 verified rows")
-sunnah = sources.get("app/src/main/java/app/miqat/ui/SunnahScreen.kt", "")
-src_lines = [l for l in sunnah.split("\n") if "source =" in l]
-markers = ("البخاري", "مسلم", "الترمذي", "النسائي", "أبو داود", "ابن ماجه", "سورة", "قيد التحقق")
-uncited = [l.strip()[:60] for l in src_lines if not any(m in l for m in markers)]
-note(not uncited, "every Sunnah source line names a verified collection", "; ".join(uncited))
+src_lines = []
+for path, text in sources.items():
+    if not path.startswith("app/src/main/java/app/miqat/ui/"):
+        continue
+    src_lines += [(path, l.strip()) for l in text.split("\n") if "source =" in l]
+markers = ("البخاري", "مسلم", "الترمذي", "النسائي", "أبو داود", "ابن ماجه", "سورة")
+uncited = [
+    f"{os.path.basename(p)}: {l[:60]}"
+    for p, l in src_lines if not any(m in l for m in markers)
+]
+note(not uncited, "every UI source line names a verified collection", "; ".join(uncited))
 
 # ---------------------------------------------------------------- 5. file size
 print("5. no monolith regression")
@@ -122,14 +138,38 @@ sizes = {}
 for line in io.open(size_path, encoding="utf-8"):
     n, path = line.rstrip("\n").split(" ", 1)
     sizes[path] = int(n)
-grown = []
+grown, unlisted = [], []
 for path in kt_files():
     if path not in sizes:
+        unlisted.append(os.path.basename(path))
         continue
     now = len(read(path).splitlines())
     if now > sizes[path] * 1.15 + 10:
         grown.append(f"{os.path.basename(path)} {sizes[path]}->{now}")
 note(not grown, "no source file grew >15% past baseline", ", ".join(grown))
+note(not unlisted, "new files are recorded in the baseline", ", ".join(unlisted))
+
+# ---------------------------------------------------------------- 6. hijri offset
+print("6. every Hijri date honours the user's sighting offset")
+# A 3-argument Hijri.at() silently uses offset 0 — which made the fasting
+# header and the fasting nudge disagree with Home when the user set an offset.
+short = []
+for path, text in sources.items():
+    for m in re.finditer(r"Hijri\.at\s*\(", text):
+        depth, i, commas = 1, m.end(), 0
+        while i < len(text) and depth:
+            c = text[i]
+            if c == "(":
+                depth += 1
+            elif c == ")":
+                depth -= 1
+            elif c == "," and depth == 1:
+                commas += 1
+            i += 1
+        if commas < 3:
+            line = text.count("\n", 0, m.start()) + 1
+            short.append(f"{os.path.basename(path)}:{line}")
+note(not short, "all Hijri.at calls pass the offset", ", ".join(short))
 
 # ---------------------------------------------------------------- verdict
 print("")
