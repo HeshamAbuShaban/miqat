@@ -797,73 +797,134 @@ private fun HeroCard(
                     ),
                     color = scheme.onSurfaceVariant,
                 )
-                val urgency = if (state.display.urgencyEnabled) {
-                    app.miqat.core.UrgencyRules.of(
-                        timers.remainingSeconds, state.display.urgencySoonMinutes,
-                        state.display.urgencyImminentMinutes,
-                    )
-                } else app.miqat.core.Urgency.CALM
-                val numberColor = when (urgency) {
-                    app.miqat.core.Urgency.CALM -> Gold
-                    app.miqat.core.Urgency.SOON -> UrgencySoon
-                    else -> UrgencyImminent
+                // THREE PHASES, three distinct readings — each owns the
+                // hero for its time, and each is visibly different from the
+                // next-prayer countdown.
+                val phase = when {
+                    timers.sinceIqamaPrayer != null -> app.miqat.core.IqamaPhase.SINCE
+                    state.display.showTimerIqama && timers.currentPrayer != null &&
+                        timers.iqamaIn != null -> app.miqat.core.IqamaPhase.PENDING
+                    else -> app.miqat.core.IqamaPhase.BEFORE_ADHAN
                 }
-                val totalMin = timers.remainingSeconds / 60L
-                val big = app.miqat.core.NumFmt.digits(
-                    "%02d:%02d".format(totalMin / 60, totalMin % 60), fmt.ar,
-                )
-                val sec = app.miqat.core.NumFmt.digits(
-                    ":%02d".format(timers.remainingSeconds % 60), fmt.ar,
-                )
-                Row(verticalAlignment = Alignment.Bottom) {
-                    Text(
-                        big,
-                        style = MaterialTheme.typography.displayLarge.copy(
-                            fontFamily = Cairo, fontSize = 52.sp, fontWeight = FontWeight.Bold,
-                            fontFeatureSettings = TabularFigures,
-                            textDirection = androidx.compose.ui.text.style.TextDirection.Ltr,
-                        ),
-                        color = numberColor,
-                    )
-                    Text(
-                        sec,
-                        style = MaterialTheme.typography.displaySmall.copy(
-                            fontFamily = Cairo, fontSize = 24.sp, fontWeight = FontWeight.Medium,
-                            fontFeatureSettings = TabularFigures,
-                            textDirection = androidx.compose.ui.text.style.TextDirection.Ltr,
-                        ),
-                        color = numberColor.copy(alpha = 0.78f),
-                        modifier = Modifier.padding(bottom = 6.dp),
-                    )
-                }
-                Text(
-                    timers.nextPrayer ?: "—",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontFamily = Kufi, fontSize = 28.sp, fontWeight = FontWeight.Bold,
-                    ),
-                    color = scheme.onSurface,
-                )
-                // أذان ← إقامة ← منذ الإقامة: ONE line that changes with the
-                // actual state, not a static clock time that means nothing.
-                if (state.display.showTimerIqama) {
-                    val iqamaLine = when (timers.iqamaPhase) {
-                        app.miqat.core.IqamaPhase.PENDING ->
-                            app.miqat.core.Proximity.timerLine(
-                                app.miqat.core.TimerKind.IQAMA_REMAINING,
-                                timers.iqamaSeconds, timers.iqamaPrayer ?: "الصلاة",
-                            ).prefixAr + " " + fmt.tick(timers.iqamaSeconds)
-                        app.miqat.core.IqamaPhase.SINCE ->
-                            app.miqat.core.Proximity.timerLine(
-                                app.miqat.core.TimerKind.SINCE_IQAMA,
-                                timers.sinceIqamaSeconds, timers.sinceIqamaPrayer ?: "الصلاة",
-                            ).prefixAr + " " + fmt.tick(timers.sinceIqamaSeconds)
-                        app.miqat.core.IqamaPhase.BEFORE_ADHAN -> null
-                    }
-                    if (iqamaLine != null) {
+                when (phase) {
+                    app.miqat.core.IqamaPhase.PENDING -> {
                         Text(
-                            iqamaLine,
+                            "بقي إلى إقامة " + (timers.iqamaPrayer ?: "الصلاة"),
+                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
+                            color = Teal,
+                        )
+                        Text(
+                            fmt.tick(timers.iqamaSeconds),
+                            style = MaterialTheme.typography.displayLarge.copy(
+                                fontFamily = Cairo, fontSize = 52.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFeatureSettings = TabularFigures,
+                            ),
+                            color = Teal,
+                        )
+                        Text(
+                            "منذ أذان " + (timers.currentPrayer ?: "الصلاة") + " " +
+                                fmt.tick(timers.sinceSeconds),
+                            style = MaterialTheme.typography.bodyMedium.copy(fontFamily = Plex),
+                            color = scheme.onSurface,
+                        )
+                        // the ADHAN→IQAMA window, filled by what has passed
+                        val whole = (timers.sinceSeconds + timers.iqamaSeconds).coerceAtLeast(1L)
+                        Box(
+                            Modifier.fillMaxWidth().padding(top = Space.sm)
+                                .height(4.dp).clip(RoundedCornerShape(2.dp))
+                                .background(scheme.outlineVariant),
+                        ) {
+                            Box(
+                                Modifier.fillMaxWidth(timers.sinceSeconds.toFloat() / whole)
+                                    .height(4.dp).clip(RoundedCornerShape(2.dp))
+                                    .background(Teal),
+                            )
+                        }
+                        Text(
+                            "الموعد التالي " + (timers.nextPrayer ?: "—") + " · " +
+                                fmt.duration(timers.nextIn.coerceAtLeast(0)),
                             style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
                             color = scheme.onSurfaceVariant,
+                        )
+                    }
+
+                    app.miqat.core.IqamaPhase.SINCE -> {
+                        Text(
+                            "منذ إقامة " + (timers.sinceIqamaPrayer ?: "الصلاة"),
+                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
+                            color = Color(0xFFEBD9A8),
+                        )
+                        Text(
+                            fmt.tick(timers.sinceIqamaSeconds),
+                            style = MaterialTheme.typography.displayLarge.copy(
+                                fontFamily = Cairo, fontSize = 52.sp,
+                                fontWeight = FontWeight.Bold,
+                                fontFeatureSettings = TabularFigures,
+                            ),
+                            color = Color(0xFFEBD9A8),
+                        )
+                        Text(
+                            "داخل وقت " + (timers.currentPrayer ?: "الصلاة"),
+                            style = MaterialTheme.typography.bodyMedium.copy(fontFamily = Plex),
+                            color = scheme.onSurface,
+                        )
+                        Text(
+                            "الموعد التالي " + (timers.nextPrayer ?: "—") + " · " +
+                                fmt.duration(timers.nextIn.coerceAtLeast(0)),
+                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
+                            color = scheme.onSurfaceVariant,
+                        )
+                    }
+
+                    else -> {
+                        val urgency = if (state.display.urgencyEnabled) {
+                            app.miqat.core.UrgencyRules.of(
+                                timers.remainingSeconds, state.display.urgencySoonMinutes,
+                                state.display.urgencyImminentMinutes,
+                            )
+                        } else app.miqat.core.Urgency.CALM
+                        val numberColor = when (urgency) {
+                            app.miqat.core.Urgency.CALM -> Gold
+                            app.miqat.core.Urgency.SOON -> UrgencySoon
+                            else -> UrgencyImminent
+                        }
+                        val totalMin = timers.remainingSeconds / 60L
+                        val big = app.miqat.core.NumFmt.digits(
+                            "%02d:%02d".format(totalMin / 60, totalMin % 60), fmt.ar,
+                        )
+                        val sec = app.miqat.core.NumFmt.digits(
+                            ":%02d".format(timers.remainingSeconds % 60), fmt.ar,
+                        )
+                        // Row children are REVERSED: in RTL the first child
+                        // lands on the right, so seconds-first puts them
+                        // AFTER the minutes in the visual reading order.
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text(
+                                sec,
+                                style = MaterialTheme.typography.displaySmall.copy(
+                                    fontFamily = Cairo, fontSize = 24.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    fontFeatureSettings = TabularFigures,
+                                ),
+                                color = numberColor.copy(alpha = 0.78f),
+                            )
+                            Text(
+                                big,
+                                style = MaterialTheme.typography.displayLarge.copy(
+                                    fontFamily = Cairo, fontSize = 52.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFeatureSettings = TabularFigures,
+                                ),
+                                color = numberColor,
+                            )
+                        }
+                        Text(
+                            timers.nextPrayer ?: "—",
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                fontFamily = Kufi, fontSize = 28.sp, fontWeight = FontWeight.Bold,
+                            ),
+                            color = scheme.onSurface,
                         )
                     }
                 }
