@@ -61,7 +61,7 @@ object Radius {
 // cast was the app's worst tell.
 val NightBg = Color(0xFF0A0D18)      // the page — MERIDIAN night
 val NightSurface = Color(0xFF161A28) // the card, one quiet step up
-val NightSurfaceHigh = Color(0xFF1E2438) // raised: chips, the active tab
+val NightSurfaceHigh = Color(0xFF1D2537) // raised: chips, the active tab
 val NightOutline = Color(0xFF262F48) // the hairline — onSurface at ~10%
 val NightOutlineVariant = Color(0xFF2A2724) // the faint hairline inside a card
 val NightText = Color(0xFFEDEBE3)    // the ink ramp, cold-off-white
