@@ -133,7 +133,7 @@ internal fun HeroCard(
     val light = isLightTheme()
     val skyPhase = Sky.phaseOf(liveHour, times.sunrise, times.maghrib)
     val skyBands = if (light) Sky.lightBands(skyPhase) else Sky.bands(skyPhase)
-    val ground = if (light) PaperGround else Color(0xFF06070D)
+    val ground = if (light) PaperGround else NightSurface
     val inkMain = if (light) InkText else OnDark
     val inkDim = if (light) InkTextDim else OnDarkDim
     val inkFaint = if (light) PaperFaint else OnDarkFaint

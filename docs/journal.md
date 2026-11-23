@@ -1,8 +1,7 @@
-## 2026-11-23 — окончательное уточнение тины: разгром черным — тонирование воздухом
+## 2026-11-23 — Night ink: warmer dims, smoother page
 
-Пользователь хотел, чтобы ночь была помедленнее и красивее — не просто была черная. Сделал дополнительный проход по ночному фону:
+User: “night mode feels dead”. Fixes on the dark ramp:
 
-- Ночной `textDim` — на `#9AA0B8` (более контрастная для мелкого и неактивного текста).
-- Старый `NightSurfaceHigh #1E2438` отброшен на `#1D2537` — меньше отличие от `surface`, чтобы чипы/текстуры не мутились.
-- Проверено измерением: `textDim` на `surface` 6.68, на `surfaceHigh` 5.9 (старый `#7A7F95` был на `surface` 4.37).
-- При этом главный `text` на `surface` 14.5 — ночной текст всё ещё безопасно читается на фоне картинки.
+- `NightTextDim` → `#9AA0B8` (was `#7A7F95`); measured 6.68 on `surface`, 5.9 on `surfaceHigh` (old 4.37).
+- `NightSurfaceHigh` → `#1D2537` (was `#1E2438`) so chips/dividers read smoother against `surface`.
+- FastingScreen track uses standard night track colors instead of ad-hoc blues.
