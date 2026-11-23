@@ -101,7 +101,8 @@ fun ActsScreen(
         Text(
             "الطاعات",
             style = MaterialTheme.typography.headlineSmall.copy(
-                fontFamily = Kufi, fontSize = 22.sp, fontWeight = FontWeight.Bold,
+                fontFamily = Kufi, fontSize = 27.sp, fontWeight = FontWeight.Bold,
+                lineHeight = 32.sp,
             ),
             color = MaterialTheme.colorScheme.onBackground,
         )
@@ -134,7 +135,7 @@ fun ActsScreen(
                 .clickable { panelAct?.let { onOpenAct(it.act.id) } },
         ) {
             Box(Modifier.width(4.dp).fillMaxHeight().background(scheme.secondary))
-            Column(Modifier.weight(1f).padding(Space.md)) {
+            Column(Modifier.weight(1f).padding(16.dp)) {
                 if (running != null) {
                     Row(
                         Modifier.fillMaxWidth(),

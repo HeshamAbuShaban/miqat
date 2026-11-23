@@ -127,8 +127,8 @@ object Sky {
         SkyPhase.DAY -> listOf(
             Color(0xFFF9F6EF),
             Color(0xFFF4EEE2),
-            Color(0xFFEEE7D8),
-            Color(0xFFE7DDCB),
+            Color(0xFFEFE9DB),
+            Color(0xFFD9CAA0),
         )
         SkyPhase.SUNSET -> listOf(
             Color(0xFFFCF0E4),

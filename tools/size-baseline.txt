@@ -40,7 +40,7 @@
 43 app/src/main/java/app/miqat/ui/Accent.kt
 198 app/src/main/java/app/miqat/ui/ActsParts.kt
 198 app/src/main/java/app/miqat/ui/ActsRibbon.kt
-507 app/src/main/java/app/miqat/ui/ActsScreen.kt
+508 app/src/main/java/app/miqat/ui/ActsScreen.kt
 185 app/src/main/java/app/miqat/ui/AlarmActivity.kt
 314 app/src/main/java/app/miqat/ui/AppState.kt
 116 app/src/main/java/app/miqat/ui/BrandGlyph.kt

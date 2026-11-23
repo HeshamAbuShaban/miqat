@@ -62,7 +62,7 @@ internal fun ActRow(item: ActsCatalog.Live, fmt: Fmt, onClick: () -> Unit) {
         Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(horizontal = Space.md, vertical = 13.dp),
+            .padding(horizontal = Space.lg, vertical = 16.dp),
         verticalAlignment = Alignment.Top,
     ) {
         Box(

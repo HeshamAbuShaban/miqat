@@ -175,7 +175,7 @@ internal fun HeroCard(
                     size = androidx.compose.ui.geometry.Size(w, h),
                 )
                 // the ember lies on the horizon (light comes from the sun)
-                val ember = if (light) PaperEmber else Sunset
+                val ember = if (light) PaperWarm else Sunset
                 drawCircle(
                     brush = Brush.radialGradient(
                         listOf(ember.copy(alpha = if (light) 0.10f else 0.20f),
