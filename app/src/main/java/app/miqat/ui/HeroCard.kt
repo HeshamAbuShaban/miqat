@@ -127,11 +127,24 @@ internal fun HeroCard(
         state.notifications.iqamaMinutes,
         iqamaFor = { state.iqamaMinutesFor(it) },
     )
-    val skyTop = Color(0xFF070B1C)
-    val skyMid = Color(0xFF1A1E32)
-    val skyWarm = Color(0xFF33252C)
-    val skyHorizon = Color(0xFF4A2F28)
-    val ground = Color(0xFF06070D)
+    // The hero is the app's one rich moment. In the dark scheme it is the
+    // hour's real sky; in the paper scheme it is the same hour ENGRAVED —
+    // cream bands and deep-gold marks, not a dark postcard on a light page.
+    val light = isLightTheme()
+    val skyPhase = Sky.phaseOf(liveHour, times.sunrise, times.maghrib)
+    val skyBands = if (light) Sky.lightBands(skyPhase) else Sky.bands(skyPhase)
+    val ground = if (light) PaperGround else Color(0xFF06070D)
+    val inkMain = if (light) InkText else OnDark
+    val inkDim = if (light) InkTextDim else OnDarkDim
+    val inkFaint = if (light) PaperFaint else OnDarkFaint
+    val warmInk = if (light) PaperWarm else OnDarkWarm
+    val track = if (light) PaperTrack else OnDarkTrack
+    val calmInk = if (light) PaperGold else Gold
+    val soonInk = if (light) PaperSaffron else UrgencySoon
+    val imminentInk = if (light) PaperEmber else UrgencyImminent
+    val tealInk = if (light) PaperTeal else Teal
+    val horizonInk = if (light) PaperGold else Gold
+    val horizonWarm = if (light) PaperEmber else Sunset
 
     // the sun's REAL altitude from the same declination the engine uses
     val (sy, sm, sd) = state.cityDate(now)
@@ -157,28 +170,32 @@ internal fun HeroCard(
                 val h = size.height
                 drawRect(
                     brush = Brush.verticalGradient(
-                        listOf(skyTop, Color(0xFF0E1528), skyMid, skyWarm, skyHorizon),
-                        startY = 0f, endY = h,
+                        skyBands, startY = 0f, endY = h,
                     ),
                     size = androidx.compose.ui.geometry.Size(w, h),
                 )
                 // the ember lies on the horizon (light comes from the sun)
+                val ember = if (light) PaperEmber else Sunset
                 drawCircle(
                     brush = Brush.radialGradient(
-                        listOf(Sunset.copy(alpha = 0.20f), Sunset.copy(alpha = 0f)),
+                        listOf(ember.copy(alpha = if (light) 0.10f else 0.20f),
+                            ember.copy(alpha = 0f)),
                         center = Offset(w * (1f - progress), h),
                         radius = h * 0.75f,
                     ),
                     radius = h * 0.75f,
                     center = Offset(w * (1f - progress), h),
                 )
-                // the stars are small, quiet, and only in the dark upper sky
-                listOf(0.12f to 0.12f, 0.27f to 0.22f, 0.44f to 0.10f, 0.61f to 0.18f,
-                    0.78f to 0.09f, 0.90f to 0.24f, 0.35f to 0.31f).forEachIndexed { i, (fx, fy) ->
-                    drawCircle(
-                        Color(0xFFEBE8E0).copy(alpha = 0.20f + (i % 3) * 0.08f),
-                        1.4f, Offset(w * fx, h * fy),
-                    )
+                // the stars are small, quiet, and only in the dark upper sky:
+                // a paper sky does not pretend to be a night photograph.
+                if (!light) {
+                    listOf(0.12f to 0.12f, 0.27f to 0.22f, 0.44f to 0.10f, 0.61f to 0.18f,
+                        0.78f to 0.09f, 0.90f to 0.24f, 0.35f to 0.31f).forEachIndexed { i, (fx, fy) ->
+                        drawCircle(
+                            Color(0xFFEBE8E0).copy(alpha = 0.20f + (i % 3) * 0.08f),
+                            1.4f, Offset(w * fx, h * fy),
+                        )
+                    }
                 }
                 // the sun: bloom, limb and a bright core — an object, not a bead
                 val sx = (w * (1f - progress)).coerceIn(24f, w - 24f)
@@ -189,18 +206,35 @@ internal fun HeroCard(
                 val sy2 = (h * 0.62f - elevationNorm.coerceIn(-0.45f, 1f) * h * 0.40f)
                     .coerceAtMost(h * 0.95f)
                 val a = if (below) 0.28f else 1f
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        listOf(Color(0xFFFFF2C8).copy(alpha = 0.75f * a),
-                            Gold.copy(alpha = 0.42f * a), Sunset.copy(alpha = 0f)),
-                        center = Offset(sx, sy2), radius = 96f,
-                    ),
-                    radius = 96f, center = Offset(sx, sy2),
-                )
-                drawCircle(Gold.copy(alpha = a), 21f, Offset(sx, sy2))
-                drawCircle(Color(0xFFF0C875).copy(alpha = a), 17f, Offset(sx, sy2))
-                drawCircle(Color(0xFFFFF2C8).copy(alpha = 0.55f * a), 7f,
-                    Offset(sx - 3f, sy2 - 3f))
+                if (light) {
+                    // a printed sun: a deep-gold limb, a saffron core, and a
+                    // quiet halo — no photograph glow on paper.
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            listOf(PaperSaffron.copy(alpha = 0.16f * a),
+                                PaperSaffron.copy(alpha = 0f)),
+                            center = Offset(sx, sy2), radius = 78f,
+                        ),
+                        radius = 78f, center = Offset(sx, sy2),
+                    )
+                    drawCircle(PaperWarm.copy(alpha = a), 21f, Offset(sx, sy2))
+                    drawCircle(PaperSunCore.copy(alpha = a), 15f, Offset(sx, sy2))
+                    drawCircle(PaperSunHighlight.copy(alpha = 0.70f * a), 6f,
+                        Offset(sx - 3f, sy2 - 3f))
+                } else {
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            listOf(Color(0xFFFFF2C8).copy(alpha = 0.75f * a),
+                                Gold.copy(alpha = 0.42f * a), Sunset.copy(alpha = 0f)),
+                            center = Offset(sx, sy2), radius = 96f,
+                        ),
+                        radius = 96f, center = Offset(sx, sy2),
+                    )
+                    drawCircle(Gold.copy(alpha = a), 21f, Offset(sx, sy2))
+                    drawCircle(Color(0xFFF0C875).copy(alpha = a), 17f, Offset(sx, sy2))
+                    drawCircle(Color(0xFFFFF2C8).copy(alpha = 0.55f * a), 7f,
+                        Offset(sx - 3f, sy2 - 3f))
+                }
             }
             // the answer, printed on the sky
             Column(
@@ -213,7 +247,7 @@ internal fun HeroCard(
                     style = MaterialTheme.typography.labelMedium.copy(
                         fontFamily = Plex, fontSize = 11.sp,
                     ),
-                    color = OnDarkDim,
+                    color = inkDim,
                 )
                 // THREE PHASES, three distinct readings — each owns the
                 // hero for its time, and each is visibly different from the
@@ -229,7 +263,7 @@ internal fun HeroCard(
                         Text(
                             "بقي إلى إقامة " + (timers.iqamaPrayer ?: "الصلاة"),
                             style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
-                            color = Teal,
+                            color = tealInk,
                         )
                         Text(
                             fmt.hms(timers.iqamaSeconds),
@@ -238,32 +272,32 @@ internal fun HeroCard(
                                 fontWeight = FontWeight.Bold,
                                 fontFeatureSettings = TabularFigures,
                             ),
-                            color = Teal,
+                            color = tealInk,
                         )
                         Text(
                             "منذ أذان " + (timers.currentPrayer ?: "الصلاة") + " " +
                                 fmt.hms(timers.sinceSeconds),
                             style = MaterialTheme.typography.bodyMedium.copy(fontFamily = Plex),
-                            color = OnDark,
+                            color = inkMain,
                         )
                         // the ADHAN→IQAMA window, filled by what has passed
                         val whole = (timers.sinceSeconds + timers.iqamaSeconds).coerceAtLeast(1L)
                         Box(
                             Modifier.fillMaxWidth().padding(top = Space.sm)
                                 .height(4.dp).clip(RoundedCornerShape(2.dp))
-                                .background(OnDarkTrack),
+                                .background(track),
                         ) {
                             Box(
                                 Modifier.fillMaxWidth(timers.sinceSeconds.toFloat() / whole)
                                     .height(4.dp).clip(RoundedCornerShape(2.dp))
-                                    .background(Teal),
+                                    .background(tealInk),
                             )
                         }
                         Text(
                             "الموعد التالي " + (timers.nextPrayer ?: "—") + " · " +
                                 fmt.duration(timers.nextIn.coerceAtLeast(0)),
                             style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
-                            color = OnDarkDim,
+                            color = inkDim,
                         )
                     }
 
@@ -271,7 +305,7 @@ internal fun HeroCard(
                         Text(
                             "منذ إقامة " + (timers.sinceIqamaPrayer ?: "الصلاة"),
                             style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
-                            color = OnDarkWarm,
+                            color = warmInk,
                         )
                         Text(
                             fmt.hms(timers.sinceIqamaSeconds),
@@ -280,18 +314,18 @@ internal fun HeroCard(
                                 fontWeight = FontWeight.Bold,
                                 fontFeatureSettings = TabularFigures,
                             ),
-                            color = OnDarkWarm,
+                            color = warmInk,
                         )
                         Text(
                             "داخل وقت " + (timers.currentPrayer ?: "الصلاة"),
                             style = MaterialTheme.typography.bodyMedium.copy(fontFamily = Plex),
-                            color = OnDark,
+                            color = inkMain,
                         )
                         Text(
                             "الموعد التالي " + (timers.nextPrayer ?: "—") + " · " +
                                 fmt.duration(timers.nextIn.coerceAtLeast(0)),
                             style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
-                            color = OnDarkDim,
+                            color = inkDim,
                         )
                     }
 
@@ -303,9 +337,9 @@ internal fun HeroCard(
                             )
                         } else app.miqat.core.Urgency.CALM
                         val numberColor = when (urgency) {
-                            app.miqat.core.Urgency.CALM -> Gold
-                            app.miqat.core.Urgency.SOON -> UrgencySoon
-                            else -> UrgencyImminent
+                            app.miqat.core.Urgency.CALM -> calmInk
+                            app.miqat.core.Urgency.SOON -> soonInk
+                            else -> imminentInk
                         }
                         val totalMin = timers.remainingSeconds / 60L
                         val big = app.miqat.core.NumFmt.digits(
@@ -342,7 +376,7 @@ internal fun HeroCard(
                             style = MaterialTheme.typography.headlineMedium.copy(
                                 fontFamily = Kufi, fontSize = 28.sp, fontWeight = FontWeight.Bold,
                             ),
-                            color = OnDark,
+                            color = inkMain,
                         )
                     }
                 }
@@ -353,8 +387,8 @@ internal fun HeroCard(
         Box(
             Modifier.fillMaxWidth().height(1.dp).background(
                 Brush.horizontalGradient(
-                    listOf(Color.Transparent, Gold.copy(alpha = .35f),
-                        Sunset.copy(alpha = .7f), Gold.copy(alpha = .35f), Color.Transparent),
+                    listOf(Color.Transparent, horizonInk.copy(alpha = .35f),
+                        horizonWarm.copy(alpha = .7f), horizonInk.copy(alpha = .35f), Color.Transparent),
                 ),
             ),
         )
@@ -377,8 +411,8 @@ internal fun HeroCard(
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontFamily = Plex, fontSize = 10.sp,
                             ),
-                            color = if (next) UrgencyImminent else if (passed)
-                                OnDarkFaint else OnDarkDim,
+                            color = if (next) imminentInk else if (passed)
+                                inkFaint else inkDim,
                         )
                         Text(
                             fmt.hhmmShort(minute),
@@ -386,14 +420,14 @@ internal fun HeroCard(
                                 fontFamily = Kufi, fontSize = 12.sp,
                                 fontFeatureSettings = TabularFigures,
                             ),
-                            color = if (next) UrgencyImminent else if (passed)
-                                OnDarkFaint else OnDark,
+                            color = if (next) imminentInk else if (passed)
+                                inkFaint else inkMain,
                         )
                         if (next) {
                             Spacer(Modifier.height(3.dp))
                             Box(
                                 Modifier.size(4.dp).clip(CircleShape)
-                                    .background(UrgencyImminent),
+                                    .background(imminentInk),
                             )
                         }
                     }
@@ -404,13 +438,13 @@ internal fun HeroCard(
                 Modifier.fillMaxWidth().padding(horizontal = Space.md)
                     .height(3.dp)
                     .clip(RoundedCornerShape(2.dp))
-                    .background(OnDarkTrack),
+                    .background(track),
             ) {
                 Box(
                     Modifier.fillMaxWidth(progress.coerceIn(0f, 1f))
                         .height(3.dp)
                         .background(
-                            Brush.horizontalGradient(listOf(Gold, Sunset)),
+                            Brush.horizontalGradient(listOf(horizonInk, horizonWarm)),
                         ),
                 )
             }
@@ -420,7 +454,7 @@ internal fun HeroCard(
                 Text(
                     "بعد ذلك",
                     style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
-                    color = OnDarkDim,
+                    color = inkDim,
                     modifier = Modifier.padding(horizontal = Space.md),
                 )
                 upcoming.take(2).forEach { m ->
@@ -429,10 +463,10 @@ internal fun HeroCard(
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Text(m.labelAr, style = MaterialTheme.typography.bodySmall.copy(fontFamily = Plex),
-                            color = OnDark)
+                            color = inkMain)
                         Text(fmt.hhmmShort(m.minuteOfDay), style = MaterialTheme.typography.bodySmall.copy(
                             fontFamily = Kufi, fontFeatureSettings = TabularFigures,
-                        ), color = OnDarkDim)
+                        ), color = inkDim)
                     }
                 }
             }

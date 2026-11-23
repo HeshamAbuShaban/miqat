@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The appwidget-provider cannot do arithmetic. These dp values are the
      XML face of app.miqat.core.WidgetMetrics — change both together. Both
-     sizes keep a 2:1 proportion; the full sky band is 2.8:1. -->
+     sizes keep a 2:1 proportion; the hero's arc and ground are fractions
+     of the whole panel (see core/WidgetMetrics.kt), not a sky band. -->
 <resources>
     <dimen name="widget_full_min_width">250dp</dimen>
     <dimen name="widget_full_min_height">125dp</dimen>

@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import androidx.compose.ui.graphics.toArgb
 import app.miqat.MainActivity
 import app.miqat.R
 import app.miqat.core.AppStateHolder
@@ -63,17 +64,22 @@ class MiqatCompactWidgetProvider : AppWidgetProvider() {
                 iqamaFor = { state.iqamaMinutesFor(it) },
             )
 
+            val palette = WidgetPalette.of(state.display.darkTheme)
             val views = android.widget.RemoteViews(context.packageName, R.layout.widget_compact)
+            views.setInt(
+                R.id.widget_compact_root, "setBackgroundResource", palette.backgroundRes,
+            )
             views.setTextViewText(R.id.compact_prayer, timers.nextPrayer ?: "—")
+            views.setTextColor(R.id.compact_prayer, palette.gold.toArgb())
             val minutes = ((timers.remainingSeconds + 59) / 60).toInt()
             views.setTextViewText(R.id.compact_countdown, fmt.duration(minutes))
             views.setTextColor(
                 R.id.compact_countdown,
                 when {
-                    minutes <= 5 -> 0xFFFF8566.toInt()
-                    minutes <= 15 -> 0xFFF06544.toInt()
-                    else -> 0xFFEBE8E0.toInt()
-                },
+                    minutes <= 5 -> palette.urgencyImminent
+                    minutes <= 15 -> palette.urgencySoon
+                    else -> palette.text
+                }.toArgb(),
             )
             val open = PendingIntent.getActivity(
                 context, 0,

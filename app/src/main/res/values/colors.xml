@@ -2,9 +2,11 @@
     <color name="ic_launcher_background">#0A0D18</color>
 
     <!-- THE WIDGET'S TOKENS — one source (the widget council, 2026-11-11:
-         no hex literals in layouts, no drift between the three files that
-         used to each carry a copy). These are the app's own night tokens:
-         the widget is always the night object on the home screen. -->
+         no hex literals in layouts, no drift between the files that used to
+         each carry a copy). The widget follows state.display.darkTheme:
+         ink tokens for the dark card, paper tokens for the light card. -->
+    <color name="miqat_widget_background">#161A28</color>
+    <color name="miqat_widget_outline">#262F48</color>
     <color name="miqat_gold">#D4A857</color>
     <color name="miqat_saffron">#F0C875</color>
     <color name="miqat_sun_core">#FFF2C8</color>
@@ -19,4 +21,18 @@
     <color name="miqat_sky_night_top">#0A0B12</color>
     <color name="miqat_sky_night_bottom">#262C42</color>
     <color name="miqat_ground">#06070D</color>
+
+    <!-- LIGHT WIDGET — a paper engraving: cream/paper ground, ink hairline,
+         deep-gold travelled path and next tick, no stars, a small sun ring.
+         The Kotlin face is ui/widget/WidgetPalette.kt; the four phase bands
+         live in ui/Sky.kt's lightBands(), not in a second copy here. -->
+    <color name="miqat_widget_light_background">#FDFBF7</color>
+    <color name="miqat_widget_light_outline">#D9D1C2</color>
+    <color name="miqat_widget_light_text">#1F1B16</color>
+    <color name="miqat_widget_light_dim">#5E554A</color>
+    <color name="miqat_widget_light_gold">#6F5610</color>
+    <color name="miqat_widget_light_teal">#1F6A62</color>
+    <color name="miqat_widget_light_urgency_soon">#96500A</color>
+    <color name="miqat_widget_light_urgency_imminent">#B3261E</color>
+    <color name="miqat_widget_light_ground">#EFE9DF</color>
 </resources>

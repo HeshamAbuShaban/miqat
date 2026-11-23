@@ -181,6 +181,30 @@ required = {
 for path, token in required.items():
     note(token in sources[path], os.path.basename(path) + " keeps " + token)
 
+# ---------------------------------------------------------------- 8. widget theme
+print("8. the widget follows the app theme, and the pill floats")
+widget_files = (
+    "app/src/main/java/app/miqat/ui/widget/MiqatWidgetProvider.kt",
+    "app/src/main/java/app/miqat/ui/widget/MiqatCompactWidgetProvider.kt",
+)
+note(all("darkTheme" in sources[p] and "WidgetPalette" in sources[p] for p in widget_files),
+     "both widgets read darkTheme and pick a palette")
+renderer = sources["app/src/main/java/app/miqat/ui/widget/ArcRenderer.kt"]
+note("palette: WidgetPalette" in renderer and "WidgetMetrics." in renderer,
+     "the renderer is themed and uses the real arc fractions")
+note(os.path.exists("app/src/main/res/drawable/widget_bg_light.xml"),
+     "the paper widget card exists")
+note("1C1A18" not in "".join(
+    read(p) for p in glob.glob("app/src/main/res/**/*widget*", recursive=True)
+    + glob.glob("app/src/main/java/app/miqat/ui/widget/*.kt")
+), "the brown widget slab is gone")
+note("lightBands" in sources["app/src/main/java/app/miqat/ui/Sky.kt"]
+     and "lightBands" in sources["app/src/main/java/app/miqat/ui/HeroCard.kt"],
+     "the hero's paper sky comes from the one Sky model")
+shell = sources["app/src/main/java/app/miqat/ui/MiqatApp.kt"]
+note("navigationBarsPadding()" in shell and "bottomBar = {" in shell,
+     "the bottom bar is an inset floating pill")
+
 # ---------------------------------------------------------------- verdict
 print("")
 if fails:

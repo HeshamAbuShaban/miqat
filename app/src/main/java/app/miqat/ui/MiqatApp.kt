@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -136,15 +137,15 @@ fun MiqatApp(state: AppState, fmt: Fmt) {
             // ONE drawn ruler — no Material NavigationBar, no pill, no
             // elevation, no container. Five equal slots, fixed silhouettes;
             // selection is a colour + one 16x2dp printed-index rule.
-            Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface)) {
-                Box(
-                    Modifier.fillMaxWidth().height(1.dp)
-                        .background(MaterialTheme.colorScheme.outlineVariant),
-                )
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+            ) {
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 20.dp)
                         .height(66.dp)
                         .shadow(
                             elevation = 18.dp,

@@ -33,7 +33,8 @@ never needed for its core job.
 | **Ministry-grade accuracy** | the time engine is a faithful, fully-decoded rebuild of a proven production prayer app's engine, then verified against its own official-timetable corpus — **87.8% @ ±1 min across 21 calculation methods** (100% on some), with the donor's seasonal-correction layer decoded and re-implemented ([engine-parity.md](docs/engine-parity.md)) |
 | **Own time-zone database** | historical tz table shipped in-app — correct times on old devices, no ICU surprises |
 | **Beyond prayer times** | Islamic-day engine: Eid, Arafah, Ashura, white days, Ramadan boundaries, night thirds (أثلاث الليل), voluntary-fasting reminders — all computed offline |
-| **Modern, kind UI** | Jetpack Compose + Material 3, dark-first "Day-Arc" design, RTL-first (Arabic typography first-class), full accessibility — where the donor app stopped short |
+| **Modern, kind UI** | Jetpack Compose + Material 3, RTL-first (Arabic typography first-class). Dark ink and cream paper are two deliberate translations of the same "Day-Arc" design; the sky, fast bar and compass follow the hour in both themes. Full accessibility — where the donor app stopped short |
+| **Widgets that tell the truth** | a full 4×2 widget and a compact 2×1 widget, both following the app theme, drawing the real prayer arc at the real times; minute-only by design (RemoteViews cannot keep seconds true) |
 | **Battery-kind scheduling** | exact alarms + re-arm receivers, no always-on foreground service, opt-in countdown notification |
 
 ## Status & roadmap
@@ -41,12 +42,14 @@ never needed for its core job.
 | stage | scope | status |
 |---|---|---|
 | **S0** | donor teardown & evidence | ✅ done |
-| **S1** | prayer engine: decoded, ported, corpus-certified | ✅ done |
-| **S2** | data layer: cities DB (218k), own tz table, corrections | next |
-| **S3** | adhan/alarm machinery | — |
-| **S4** | qibla compass | — |
-| **S5** | Compose UI — Day-Arc design | mockups in review |
-| **S6-S9** | athkar, exports, Wear, Islamic-calendar expansion | — |
+| **S1** | prayer engine: decoded, ported, corpus-certified | ✅ done (87.8% @ ±1 min) |
+| **S2** | data layer: cities DB (218k), own tz table, corrections | partial (tz table live) |
+| **S3** | adhan/alarm machinery | ✅ built (exact alarms, opt-in countdown) |
+| **S4** | qibla compass | ✅ built (sensor + drawn rose) |
+| **S5** | Compose UI — Day-Arc design | ✅ built, RTL-first, dark + cream paper |
+| **S6-S9** | athkar, exports, calendar expansion, quality/release | partly shipped |
+| **S10-S11** | standing council + six-phase audit | ✅ done |
+| **S12-S13** | light-mode craft, themed widgets, Acts redesign, floating pill | ✅ done |
 
 The full ladder lives in [ROADMAP.md](ROADMAP.md); decisions in
 [docs/decisions.md](docs/decisions.md); the reverse-engineering teardown in
@@ -62,8 +65,22 @@ must read in [DESIGN.md](DESIGN.md); what changed in
 ```bash
 git clone https://github.com/HeshamAbuShaban/miqat.git
 cd miqat
-./gradlew :app:assembleDebug      # JDK 17, Android SDK 35
-./gradlew :app:testDebugUnitTest  # parity fixtures (138 donor-corpus rows)
+$HOME/gradle-8.10.2/bin/gradle :app:assembleDebug :app:testDebugUnitTest
+# JDK 17, Android SDK 35. There is no gradlew wrapper in this repo.
+```
+
+### Verification gates
+
+Every UI change must leave these green (126 unit tests at last run):
+
+```bash
+python3 -I tools/verify_engine.py        # donor-engine parity, 87.78% @ ±1m
+python3 -I tools/verify_tz.py            # timezone convention
+python3 -I tools/verify_contrast.py      # WCAG AA, dark AND paper schemes
+python3 -I tools/verify_regressions.py   # 8 gates: dead settings, seconds,
+                                         # palette, citations, monoliths,
+                                         # Hijri offset, light ink, widget theme
+bash tools/check_docs.sh                 # ladder + journal are current
 ```
 
 ## Principles

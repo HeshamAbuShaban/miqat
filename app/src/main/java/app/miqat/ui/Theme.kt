@@ -75,6 +75,28 @@ val InkText = Color(0xFF1F1B16)
 val InkTextDim = Color(0xFF5E554A)
 
 /**
+ * THE PAPER INK RAMP — the light scheme's equivalents of the fixed dark
+ * tokens. They are the design-direction's cream/deep-gold translated to the
+ * hero's sky, the fast bar and the compass: deep gold reads where the dark
+ * scheme uses bright gold, ember replaces sunset, and the faint grey is warm
+ * enough to sit on cream without disappearing.
+ */
+val PaperGold = Color(0xFF6F5610)
+val PaperWarm = Color(0xFF8A6410)
+val PaperSaffron = Color(0xFF96500A)
+val PaperEmber = Color(0xFFB3261E)
+val PaperTeal = Color(0xFF1F6A62)
+val PaperFaint = Color(0xFF645C4F)
+val PaperGround = Color(0xFFEFE9DF)
+val PaperTrack = Color(0xFFD9D1C2)
+val PaperTrackHigh = Color(0xFFE7E0D3)
+val PaperFastMid = Color(0xFFF7F1E6)
+val PaperFastEnd = Color(0xFFF1E8DA)
+val PaperMint = Color(0xFF86C9BE)
+val PaperSunCore = Color(0xFFF0C875)
+val PaperSunHighlight = Color(0xFFFFF2C8)
+
+/**
  * Ink for the app's FIXED DARK MOMENTS — the sky, the fast bar, the day-rail
  * ground. Those surfaces are a fact about the hour (the reference keeps the
  * night sky dark in every theme), so they do NOT flip with the light scheme.

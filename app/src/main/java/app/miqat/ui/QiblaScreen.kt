@@ -180,6 +180,7 @@ private fun CompassRose(
     modifier: Modifier = Modifier,
 ) {
     val scheme = MaterialTheme.colorScheme
+    val light = isLightTheme()
     val needleAngle = CompassSensor.needleAngle(qiblaBearing, heading)
 
     Canvas(modifier.aspectRatio(1f)) {
@@ -192,7 +193,8 @@ private fun CompassRose(
             brush = Brush.verticalGradient(
                 // the app's own night sky — the compass had a violet/plum
                 // gradient, the family the palette bans (it muddies)
-                Sky.bands(SkyPhase.NIGHT),
+                if (light) Sky.lightBands(SkyPhase.NIGHT)
+                else Sky.bands(SkyPhase.NIGHT),
                 startY = center.y - radius,
                 endY = center.y + radius,
             ),
@@ -201,7 +203,7 @@ private fun CompassRose(
         )
         // a horizon arc, like the app's own arc
         drawArc(
-            color = Gold.copy(alpha = .35f),
+            color = (if (light) PaperGold else Gold).copy(alpha = .35f),
             startAngle = 200f,
             sweepAngle = 140f,
             useCenter = false,
@@ -213,7 +215,8 @@ private fun CompassRose(
         // the rim + the degree ticks (the rose turns with the phone)
         rotate(-heading, center) {
             drawCircle(
-                color = if (aligned) Gold else OnDarkFaint,
+                color = if (aligned) (if (light) PaperGold else Gold)
+                    else (if (light) PaperFaint else OnDarkFaint),
                 radius = radius,
                 center = center,
                 style = Stroke(width = if (aligned) 4f else 2f),
@@ -223,7 +226,8 @@ private fun CompassRose(
                 val a = Math.toRadians((deg - 90).toDouble())
                 val outer = radius
                 val inner = radius - if (major) 16f else 7f
-                val c = if (major) Color(0xFFEBE8E0) else Sky.tick
+                val c = if (major) (if (light) InkText else Color(0xFFEBE8E0))
+                    else (if (light) PaperFaint else Sky.tick)
                 drawLine(
                     color = c,
                     start = Offset(
@@ -250,7 +254,8 @@ private fun CompassRose(
                 drawIntoCanvas { canvas ->
                     val paint = android.graphics.Paint().apply {
                         isAntiAlias = true
-                        color = android.graphics.Color.argb(230, 230, 226, 214)
+                        color = if (light) android.graphics.Color.argb(230, 31, 27, 22)
+                            else android.graphics.Color.argb(230, 230, 226, 214)
                         textSize = 26f
                         textAlign = android.graphics.Paint.Align.CENTER
                     }
@@ -268,7 +273,7 @@ private fun CompassRose(
                 lineTo(top.x + 9f, top.y - 15f)
                 close()
             },
-            color = Color(0xFFFF8566), // the phone's "now", not a window
+            color = if (light) PaperEmber else Color(0xFFFF8566), // the phone's "now"
         )
 
         // the Kaaba's needle — the gold that means something

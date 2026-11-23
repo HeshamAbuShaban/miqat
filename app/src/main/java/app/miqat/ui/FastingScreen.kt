@@ -64,6 +64,7 @@ fun FastingScreen(
     nowState: androidx.compose.runtime.State<Long>,
 ) {
     val scheme = MaterialTheme.colorScheme
+    val light = isLightTheme()
     var fastsOpen by androidx.compose.runtime.remember { mutableStateOf(false) }
     val now = nowState.value
     val (y, m, d) = state.cityDate(now)
@@ -126,7 +127,9 @@ fun FastingScreen(
                     .fillMaxWidth()
                     .background(
                         Brush.verticalGradient(
-                            listOf(
+                            if (light) listOf(
+                                PaperSurface, PaperFastMid, PaperFastEnd,
+                            ) else listOf(
                                 Color(0xFF0A0D18), Color(0xFF0E1424), Color(0xFF121E22),
                             ),
                         ),
@@ -139,13 +142,13 @@ fun FastingScreen(
                         style = MaterialTheme.typography.headlineMedium.copy(
                             fontFamily = Kufi, fontSize = 22.sp, fontWeight = FontWeight.Bold,
                         ),
-                        color = OnDark,
+                        color = if (light) InkText else OnDark,
                     )
                     Spacer(Modifier.height(Space.md))
                     Text(
                         if (iftarPassed) "انتهى صيام اليوم" else "الإفطار بعد",
                         style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
-                        color = OnDarkDim,
+                        color = if (light) InkTextDim else OnDarkDim,
                     )
                     if (iftarPassed) {
                         Text(
@@ -154,12 +157,12 @@ fun FastingScreen(
                                 (nowMinute - iftar).coerceAtLeast(0) * 60L, "الإفطار",
                             ).prefixAr + " " + fmt.hms((nowMinute - iftar).coerceAtLeast(0) * 60L),
                             style = MaterialTheme.typography.titleMedium.copy(fontFamily = Kufi),
-                            color = OnDark,
+                            color = if (light) InkText else OnDark,
                         )
                     } else {
                         BigCountdown(
                             text = fmt.hms(remainingMinutes * 60L),
-                            color = Color(0xFFF0C875),
+                            color = if (light) PaperSaffron else Color(0xFFF0C875),
                             sizeSp = 48f,
                         )
                     }
@@ -170,7 +173,7 @@ fun FastingScreen(
                                 elapsedMinutes * 60L, "الإمساك",
                             ).prefixAr + " " + fmt.hms(elapsedMinutes * 60L),
                             style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
-                            color = OnDarkDim,
+                            color = if (light) InkTextDim else OnDarkDim,
                         )
                     }
                 }
@@ -190,7 +193,8 @@ fun FastingScreen(
                 val radius = androidx.compose.ui.geometry.CornerRadius(trackH / 2f, trackH / 2f)
                 drawRoundRect(
                     Brush.horizontalGradient(
-                        listOf(Color(0xFF132430), Color(0xFF20181A)),
+                        listOf(if (light) PaperTrack else Color(0xFF132430),
+                            if (light) PaperTrackHigh else Color(0xFF20181A)),
                         startX = w, endX = 0f,
                     ),
                     topLeft = Offset(0f, y - trackH / 2f),
@@ -200,7 +204,9 @@ fun FastingScreen(
                 if (progress > 0f) {
                     drawRoundRect(
                         Brush.horizontalGradient(
-                            listOf(Color(0xFF3E9C90), Color(0xFF5CC4B8), Color(0xFFC8F0E8)),
+                            listOf(if (light) PaperTeal else Color(0xFF3E9C90),
+                            if (light) Teal else Color(0xFF5CC4B8),
+                            if (light) PaperMint else Color(0xFFC8F0E8)),
                             startX = w, endX = w * (1f - progress),
                         ),
                         topLeft = Offset(w * (1f - progress.coerceIn(0f, 1f)), y - trackH / 2f),
@@ -209,17 +215,17 @@ fun FastingScreen(
                     )
                 }
                 listOf(0f, 0.5f, 1f).forEach { t ->
-                    drawCircle(Color(0xFF3A9B8E), 1.8f * dp,
+                    drawCircle(if (light) PaperTeal else Color(0xFF3A9B8E), 1.8f * dp,
                         Offset(w * (1f - t), y))
                 }
-                drawCircle(Color(0xFFC8F0E8), 2.5f * dp, Offset(w, y)) // imsak
-                drawCircle(Color(0xFFF06544), 3.5f * dp, Offset(0f, y)) // iftar
-                drawCircle(Color(0xFFF06544).copy(alpha = 0.45f), 7f * dp,
+                drawCircle(if (light) PaperTeal else Color(0xFFC8F0E8), 2.5f * dp, Offset(w, y)) // imsak
+                drawCircle(if (light) PaperEmber else Color(0xFFF06544), 3.5f * dp, Offset(0f, y)) // iftar
+                drawCircle((if (light) PaperEmber else Color(0xFFF06544)).copy(alpha = 0.45f), 7f * dp,
                     Offset(0f, y), style = Stroke(width = 0.8f * dp))
                 val nx = w * (1f - progress.coerceIn(0f, 1f))
-                drawLine(Color(0xFFFF8566), Offset(nx, y - 20f * dp),
+                drawLine(if (light) PaperEmber else Color(0xFFFF8566), Offset(nx, y - 20f * dp),
                     Offset(nx, y + 20f * dp), 6f * dp, StrokeCap.Round)
-                drawCircle(Color(0xFFFFE9B5), 3.2f * dp, Offset(nx, y))
+                drawCircle(if (light) PaperGold else Color(0xFFFFE9B5), 3.2f * dp, Offset(nx, y))
             }
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = Space.md),
@@ -233,7 +239,7 @@ fun FastingScreen(
                 Text(
                     "الإفطار " + fmt.hhmm(iftar),
                     style = MaterialTheme.typography.labelSmall.copy(fontFamily = Kufi),
-                    color = if (isLightTheme()) Color(0xFFB3261E) else Color(0xFFFF8566),
+                    color = if (light) PaperEmber else Color(0xFFFF8566),
                 )
             }
             Spacer(Modifier.height(Space.md))

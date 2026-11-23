@@ -10,16 +10,19 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
+import androidx.compose.ui.graphics.toArgb
 import app.miqat.MainActivity
 import app.miqat.R
 import app.miqat.core.AppStateHolder
 import app.miqat.core.Timers
+import app.miqat.core.WidgetMetrics
 import app.miqat.core.prayerPoints
 import app.miqat.ui.DayArc
 import app.miqat.ui.Fmt
 import app.miqat.ui.PRAYER_NAMES
 import app.miqat.ui.Sky
 import app.miqat.ui.list
+import kotlin.math.roundToInt
 
 /**
  * THE WIDGET — the app's hero at a smaller size.
@@ -143,7 +146,11 @@ class MiqatWidgetProvider : AppWidgetProvider() {
                 iqamaFor = { state.iqamaMinutesFor(it) },
             )
 
+            // the app's theme decides the card, not the hour (the sky itself
+            // is still a fact about the hour — see ArcRenderer)
+            val palette = WidgetPalette.of(state.display.darkTheme)
             val views = android.widget.RemoteViews(context.packageName, R.layout.widget_miqat)
+            views.setInt(R.id.widget_root, "setBackgroundResource", palette.backgroundRes)
 
             // the sky — the hour's phase, from the real sunrise and sunset
             val sunriseHour = times.list.getOrNull(1) ?: 6.0
@@ -160,37 +167,46 @@ class MiqatWidgetProvider : AppWidgetProvider() {
             val nextIndex = DayArc.prayerIndex(timers.nextPrayer)
             val minutesOfDay = times.list.map { minutesOf(it).toDouble() }
 
-            // the panel's real width (the bitmap must fill the row, not
-            // letterbox into a third of it)
+            // the WHOLE panel is the bitmap. Use all four size options so a
+            // resize does not stretch a fiction aspect into the card.
             val opts = manager.getAppWidgetOptions(id)
-            val widthDp = (opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
-                .takeIf { it > 0 } ?: 320)
             val density = context.resources.displayMetrics.density
-            val widthPx = (widthDp * density).toInt().coerceIn(160, 1200)
-            // The sky keeps its declared aspect at EVERY panel size; a fixed
-            // 96dp height used to stretch the horizon on a wide widget.
-            val heightPx = (app.miqat.core.WidgetMetrics.skyHeightPx(
-                (widthPx / density).toInt(),
-            ) * density).toInt()
-
+            val (widthDp, heightDp) = WidgetMetrics.panelSizeDp(
+                opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH),
+                opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH),
+                opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT),
+                opts.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT),
+            )
+            val padPx = (WidgetMetrics.PAD_DP * density).roundToInt()
+            views.setViewPadding(R.id.widget_text, padPx, 0, padPx, padPx)
             views.setImageViewBitmap(
                 R.id.widget_arc,
-                ArcRenderer.render(widthPx, heightPx, travelled, DayArc.tickParams(minutesOfDay, fajrMinute, ishaMinute), nextIndex, skyPhase),
+                ArcRenderer.render(
+                    WidgetMetrics.bitmapWidthPx(widthDp, density),
+                    WidgetMetrics.bitmapHeightPx(heightDp, density),
+                    travelled,
+                    DayArc.tickParams(minutesOfDay, fajrMinute, ishaMinute),
+                    nextIndex,
+                    skyPhase,
+                    palette,
+                    WidgetMetrics.CORNER_DP * density,
+                ),
             )
 
             // the next prayer — the one thing a widget must say
             val remainingMinutes = ((timers.remainingSeconds + 59) / 60).toInt()
             views.setTextViewText(R.id.widget_prayer, timers.nextPrayer ?: "—")
+            views.setTextColor(R.id.widget_prayer, palette.gold.toArgb())
             views.setTextViewText(R.id.widget_countdown, fmt.duration(remainingMinutes))
             // the countdown reacts as the appointed time approaches — the
-            // app's own urgency tokens (≤15 min saffron, ≤5 min sunset)
+            // app's own urgency tokens, in the active theme's ink
             views.setTextColor(
                 R.id.widget_countdown,
                 when {
-                    remainingMinutes <= 5 -> 0xFFFF8566.toInt()
-                    remainingMinutes <= 15 -> 0xFFF06544.toInt()
-                    else -> 0xFFEBE8E0.toInt()
-                },
+                    remainingMinutes <= 5 -> palette.urgencyImminent
+                    remainingMinutes <= 15 -> palette.urgencySoon
+                    else -> palette.text
+                }.toArgb(),
             )
             // the caption: the clock time of the prayer that is coming —
             // tomorrow's Fajr when it is tomorrow's (the old bug: it printed
@@ -206,6 +222,7 @@ class MiqatWidgetProvider : AppWidgetProvider() {
                 if (city.isNotBlank()) meta = "$city · $meta"
             }
             views.setTextViewText(R.id.widget_meta, meta)
+            views.setTextColor(R.id.widget_meta, palette.dim.toArgb())
 
             // THE THREE PHASES, on the widget too — the founder asked for
             // adhan → iqama → since-iqama to be addressed in the main widget.
@@ -218,18 +235,18 @@ class MiqatWidgetProvider : AppWidgetProvider() {
                         app.miqat.core.TimerKind.IQAMA_REMAINING,
                         timers.iqamaSeconds.toLong(), timers.iqamaPrayer ?: "الصلاة",
                     ).prefixAr + " " + fmt.duration(((timers.iqamaSeconds + 59L) / 60L).toInt())
-                    iqamaColour = 0xFF5CC4B8.toInt() // teal = the window
+                    iqamaColour = palette.teal.toArgb() // teal = the window
                 }
                 app.miqat.core.IqamaPhase.SINCE -> {
                     iqamaText = app.miqat.core.Proximity.timerLine(
                         app.miqat.core.TimerKind.SINCE_IQAMA,
                         timers.sinceIqamaSeconds, timers.sinceIqamaPrayer ?: "الصلاة",
                     ).prefixAr + " " + fmt.duration(((timers.sinceIqamaSeconds + 59L) / 60L).toInt())
-                    iqamaColour = 0xFFEBD9A8.toInt() // cream = an elapsed fact
+                    iqamaColour = palette.gold.toArgb() // gold = an elapsed fact
                 }
                 app.miqat.core.IqamaPhase.BEFORE_ADHAN -> {
                     iqamaText = null
-                    iqamaColour = 0xFF7A7F95.toInt()
+                    iqamaColour = palette.dim.toArgb()
                 }
             }
             if (iqamaText == null) {

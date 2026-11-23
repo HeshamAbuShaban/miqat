@@ -11,10 +11,12 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -24,6 +26,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,7 +37,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.miqat.core.ActsCatalog
@@ -41,15 +48,13 @@ import app.miqat.core.CloseRole
 import app.miqat.core.DayLine
 import app.miqat.core.Hijri
 import app.miqat.core.Moments
+import app.miqat.core.Moment
 import app.miqat.core.Proximity
 import app.miqat.core.TimerKind
 
 /**
  * THE ACTS — «مواقيت السنة والعبادات»: a flat, time-ordered INDEX of every
- * act of worship today (the council's routing: the list is the index, not the
- * teaching). Each row: the time, the name, and the hook — what it is, in
- * three words. Tapping a row opens the act's own screen, where the depth
- * lives (what it is, why it matters, the rule, the source, the state).
+ * act of worship today. One rich ribbon + one live panel + quiet rows.
  */
 @Composable
 fun ActsScreen(
@@ -62,8 +67,6 @@ fun ActsScreen(
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val scheme = MaterialTheme.colorScheme
-    // These screens show minutes, not seconds: subscribe to a minute bucket
-    // so the 1 Hz tick does not rebuild their trees.
     val minuteBucket by androidx.compose.runtime.derivedStateOf {
         nowState.value / 60_000L
     }
@@ -79,8 +82,6 @@ fun ActsScreen(
             imsakLeadMinutes = state.imsakLeadMinutes,
         )
     }
-    // THE DYNAMIC CLOSING LIST — events inside the window open now, ordered
-    // in it and expiring with it (no wrapped countdown).
     val closeLine = DayLine.of(
         state.times(y, m, d), state.times(ty, tm, td).fajr,
         PRAYER_NAMES, ::minutesOf, state.imsakLeadMinutes,
@@ -104,199 +105,265 @@ fun ActsScreen(
             ),
             color = MaterialTheme.colorScheme.onBackground,
         )
+        Text(
+            Hijri.label(Hijri.at(y, m, d, state.display.hijriOffsetDays), fmt.ar),
+            style = MaterialTheme.typography.bodySmall,
+            color = scheme.onSurfaceVariant,
+        )
         Spacer(Modifier.height(Space.md))
 
-        // THE ACT RAIL — the day as a SHAPE: every act at its real geometry,
-        // not a list of labels with a time stapled on (the founder: «الطاعات
-        // توضح بغير هذا الشكل .. أصلا الشكل الحالي لا ينم عن أي طاعة»).
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = Space.sm),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                "مسار اليوم",
-                style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
-                color = scheme.onSurfaceVariant,
-            )
-            Text(
-                "${
-                    fmt.n(
-                        live.sortedWith(
-                            compareBy<ActsCatalog.Live> {
-                                when (it.state) {
-                                    ActsCatalog.ActState.RUNNING -> 0
-                                    ActsCatalog.ActState.UPCOMING -> 1
-                                    ActsCatalog.ActState.PASSED -> 2
-                                }
-                            },
-                        ).indexOfFirst { it.state == ActsCatalog.ActState.RUNNING } + 1,
-                    )
-                } من ${fmt.n(live.size)} طاعات",
-                style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
-                color = scheme.onSurfaceVariant,
-            )
-        }
-        ActRail(state, year = y, month = m, dayOfMonth = d, live, nowMinute)
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = Space.sm),
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            listOf("الإمساك", "الفجر", "الضحى", "العشاء", "الأسحار").forEach { label ->
-                Text(
-                    label,
-                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                    color = scheme.onSurfaceVariant,
-                )
-            }
-        }
+        // DAY RIBBON
+        DayRibbon(state, y, m, d, timeline, live, nowMinute, fmt, scheme)
+
         Spacer(Modifier.height(Space.lg))
 
-        if (state.display.showClosingEvents && closings.isNotEmpty()) {
-            Text(
-                "الأحداث المتقاربة",
-                style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex, fontSize = 11.sp),
-                color = scheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = Space.sm),
-            )
-            Column(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
-                    .background(scheme.surface).padding(Space.md),
-            ) {
-                closings.take(4).forEach { c ->
+        // NOW / NEXT PANEL
+        val running = live.firstOrNull { it.state == ActsCatalog.ActState.RUNNING }
+        val next = live.firstOrNull { it.state == ActsCatalog.ActState.UPCOMING }
+        val lastPassed = live.filter { it.state == ActsCatalog.ActState.PASSED }.maxByOrNull { it.startMinute }
+        // The panel is a live act too: it must open the same detail (with the
+        // citation and the computation) as any row. The old running row did.
+        val panelAct = running ?: next ?: lastPassed
+
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(Radius.panel))
+                .background(scheme.surface)
+                .border(1.dp, scheme.outline, RoundedCornerShape(Radius.panel))
+                .clickable { panelAct?.let { onOpenAct(it.act.id) } },
+        ) {
+            Box(Modifier.width(4.dp).fillMaxHeight().background(scheme.secondary))
+            Column(Modifier.weight(1f).padding(Space.md)) {
+                if (running != null) {
                     Row(
-                        Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            c.slot.labelAr + " · " + when (c.role) {
-                                CloseRole.ANCHOR -> "جارٍ"
-                                CloseRole.CLOSES_AT -> "ينتهي"
-                                CloseRole.INSIDE -> "قادم"
-                            },
-                            style = MaterialTheme.typography.bodySmall.copy(fontFamily = Plex),
-                            color = if (c.role == CloseRole.ANCHOR) scheme.secondary else scheme.onSurface,
-                            modifier = Modifier.weight(1f),
+                            "جارٍ الآن",
+                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
+                            color = scheme.secondary,
+                        )
+                        val pos = live.sortedBy { it.startMinute }.indexOfFirst { it == running } + 1
+                        Text(
+                            "${fmt.n(pos)} من ${fmt.n(live.size)}",
+                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
+                            color = scheme.onSurfaceVariant,
+                        )
+                    }
+                    Text(
+                        running.act.name,
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontFamily = Kufi, fontSize = 22.sp, fontWeight = FontWeight.Bold,
+                        ),
+                        color = scheme.onSurface,
+                    )
+                    Text(
+                        fmt.range(running.startMinute, running.endMinute),
+                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = Plex),
+                        color = scheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(Space.md))
+                    val span = (running.endMinute - running.startMinute).coerceAtLeast(1)
+                    val frac = ((nowMinute - running.startMinute).toFloat() / span).coerceIn(0f, 1f)
+                    Box(
+                        Modifier.fillMaxWidth().height(4.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(scheme.outlineVariant),
+                    ) {
+                        Box(
+                            Modifier.fillMaxWidth(frac).height(4.dp)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(scheme.secondary),
+                        )
+                    }
+                    Row(
+                        Modifier.fillMaxWidth().padding(top = Space.xs),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text(
+                            "مضى ${fmt.duration((nowMinute - running.startMinute).coerceAtLeast(0))}",
+                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
+                            color = scheme.onSurfaceVariant,
                         )
                         Text(
-                            if (c.role == CloseRole.ANCHOR) "جارٍ"
-                            else fmt.duration(c.startIn.coerceAtLeast(0)),
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontFamily = Kufi, fontFeatureSettings = TabularFigures,
-                            ),
+                            "بقي ${fmt.duration(running.minutesAway.coerceAtLeast(0))}",
+                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
                             color = scheme.secondary,
                         )
                     }
-                }
-            }
-            Spacer(Modifier.height(Space.lg))
-        }
-
-        // THE NOW HERO — the act that is open right now, with its real span
-        val running = live.firstOrNull { it.state == ActsCatalog.ActState.RUNNING }
-        if (running != null) {
-            val span = (running.endMinute - running.startMinute).coerceAtLeast(1)
-            val frac = ((nowMinute - running.startMinute).toFloat() / span).coerceIn(0f, 1f)
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(scheme.surface)
-                    .border(1.dp, scheme.outlineVariant, RoundedCornerShape(18.dp))
-                    .padding(Space.md),
-            ) {
-                Text(
-                    "جارٍ الآن",
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontFamily = Plex, color = scheme.secondary,
-                    ),
-                )
-                Text(
-                    running.act.name,
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontFamily = Kufi, fontSize = 22.sp, fontWeight = FontWeight.Bold,
-                    ),
-                    color = scheme.onSurface,
-                )
-                Text(
-                    fmt.range(running.startMinute, running.endMinute),
-                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = Plex),
-                    color = scheme.onSurfaceVariant,
-                )
-                Box(
-                    Modifier.fillMaxWidth().padding(top = Space.md)
-                        .height(4.dp).clip(RoundedCornerShape(2.dp))
-                        .background(scheme.outlineVariant),
-                ) {
-                    Box(
-                        Modifier.fillMaxWidth(frac).height(4.dp)
-                            .clip(RoundedCornerShape(2.dp))
-                            .background(scheme.secondary),
-                    )
-                }
-                Row(
-                    Modifier.fillMaxWidth().padding(top = Space.xs),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
+                    if (state.display.showClosingEvents && closings.isNotEmpty()) {
+                        Spacer(Modifier.height(Space.xs))
+                        closings.take(2).forEach { c ->
+                            Row(
+                                Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    c.slot.labelAr + " · " + closeRoleText(c.role),
+                                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = Plex),
+                                    color = scheme.onSurfaceVariant,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                Text(
+                                    if (c.role == CloseRole.ANCHOR) "جارٍ"
+                                    else fmt.duration(c.startIn.coerceAtLeast(0)),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontFamily = Kufi, fontFeatureSettings = TabularFigures,
+                                    ),
+                                    color = scheme.secondary,
+                                )
+                            }
+                        }
+                    } else if (running.act.source != null) {
+                        Spacer(Modifier.height(Space.xs))
+                        Text(
+                            running.act.source,
+                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
+                            color = scheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                } else if (next != null) {
                     Text(
-                        "مضى ${fmt.duration((nowMinute - running.startMinute).coerceAtLeast(0))}",
+                        "التالي",
+                        style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
+                        color = scheme.secondary,
+                    )
+                    Text(
+                        next.act.name,
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontFamily = Kufi, fontSize = 22.sp, fontWeight = FontWeight.Bold,
+                        ),
+                        color = scheme.onSurface,
+                    )
+                    Text(
+                        if (next.act.isWindow || next.act.isBoundary)
+                            fmt.range(next.startMinute, next.endMinute)
+                        else fmt.hhmm(next.startMinute),
+                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = Plex),
+                        color = scheme.onSurfaceVariant,
+                    )
+                    // The closing rows already carry this countdown. Print
+                    // it once, not twice under two different labels.
+                    val showClosings = state.display.showClosingEvents && closings.isNotEmpty()
+                    if (!showClosings) {
+                        Text(
+                            "بعد ${fmt.duration(next.minutesAway)}",
+                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
+                            color = scheme.secondary,
+                        )
+                    }
+                    if (showClosings) {
+                        Spacer(Modifier.height(Space.xs))
+                        closings.take(2).forEach { c ->
+                            Row(
+                                Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    c.slot.labelAr + " · " + closeRoleText(c.role),
+                                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = Plex),
+                                    color = scheme.onSurfaceVariant,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                Text(
+                                    if (c.role == CloseRole.ANCHOR) "جارٍ"
+                                    else fmt.duration(c.startIn.coerceAtLeast(0)),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontFamily = Kufi, fontFeatureSettings = TabularFigures,
+                                    ),
+                                    color = scheme.secondary,
+                                )
+                            }
+                        }
+                    } else if (next.act.source != null) {
+                        Spacer(Modifier.height(Space.xs))
+                        Text(
+                            next.act.source,
+                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
+                            color = scheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                } else if (lastPassed != null) {
+                    Text(
+                        "مضى اليوم",
                         style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
                         color = scheme.onSurfaceVariant,
                     )
                     Text(
-                        "بقي ${fmt.duration(running.minutesAway.coerceAtLeast(0))}",
-                        style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
-                        color = scheme.secondary,
+                        lastPassed.act.name,
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontFamily = Kufi, fontSize = 22.sp, fontWeight = FontWeight.Bold,
+                        ),
+                        color = scheme.onSurface,
+                    )
+                    Text(
+                        if (lastPassed.act.isWindow || lastPassed.act.isBoundary)
+                            fmt.range(lastPassed.startMinute, lastPassed.endMinute)
+                        else fmt.hhmm(lastPassed.startMinute),
+                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = Plex),
+                        color = scheme.onSurfaceVariant,
                     )
                 }
             }
-            Spacer(Modifier.height(Space.lg))
         }
 
+        Spacer(Modifier.height(Space.lg))
+
+        // QUICK LOG
         if (state.display.showQuickLog) {
-        // QUICK LOG — the HTML's three chips, writing to the SAME day log
-        // the calendar uses (no second store, no fake score).
-        val dayKey = "%04d-%02d-%02d".format(y, m, d)
-        Row(
-            Modifier.fillMaxWidth().horizontalScroll(androidx.compose.foundation.rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(Space.sm),
-        ) {
-            listOf("prayer" to "سجّل صلاة", "dhikr" to "سجّل ذكر", "fast" to "سجّل صيام")
-                .forEach { (kind, label) ->
-                    val key = "$dayKey:$kind"
-                    val on = key in state.display.dayActLog
-                    Row(
-                        Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(scheme.surface)
-                            .clickable {
-                                state.updateDisplay(
-                                    state.display.copy(
-                                        dayActLog = if (on) state.display.dayActLog - key
-                                        else state.display.dayActLog + key,
-                                    ),
-                                )
-                            }
-                            .padding(horizontal = Space.md, vertical = Space.sm),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            if (on) "✓" else "+",
-                            style = MaterialTheme.typography.bodyMedium.copy(fontFamily = Kufi),
-                            color = scheme.secondary,
-                        )
-                        Spacer(Modifier.width(Space.xs))
-                        Text(label, style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
-                            color = scheme.onSurface)
+            val dayKey = "%04d-%02d-%02d".format(y, m, d)
+            Row(
+                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(Space.sm),
+            ) {
+                listOf("prayer" to "سجّل صلاة", "dhikr" to "سجّل ذكر", "fast" to "سجّل صيام")
+                    .forEach { (kind, label) ->
+                        val key = "$dayKey:$kind"
+                        val on = key in state.display.dayActLog
+                        Row(
+                            Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (on) scheme.secondary.copy(alpha = 0.12f) else scheme.surface)
+                                .border(1.dp, scheme.outline, RoundedCornerShape(12.dp))
+                                .clickable {
+                                    state.updateDisplay(
+                                        state.display.copy(
+                                            dayActLog = if (on) state.display.dayActLog - key
+                                            else state.display.dayActLog + key,
+                                        ),
+                                    )
+                                }
+                                .padding(horizontal = Space.md, vertical = Space.sm),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                if (on) "✓" else "+",
+                                style = MaterialTheme.typography.bodyMedium.copy(fontFamily = Kufi),
+                                color = if (on) scheme.secondary else scheme.onSurfaceVariant,
+                            )
+                            Spacer(Modifier.width(Space.xs))
+                            Text(
+                                label,
+                                style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
+                                color = scheme.onSurface,
+                            )
+                        }
                     }
-                }
+            }
+            Spacer(Modifier.height(Space.md))
         }
-        }
-        Spacer(Modifier.height(Space.md))
 
-        // grouped by STATE — «الأقرب فالأقرب»: what is open, then what comes,
-        // then what passed (never a fake countdown for a passed act)
-        val upcoming = live.filter { it.state != ActsCatalog.ActState.PASSED }
+        // ROWS
+        val upcoming = live.filter { it.state == ActsCatalog.ActState.UPCOMING }
         val passed = live.filter { it.state == ActsCatalog.ActState.PASSED }
         if (upcoming.isNotEmpty()) {
             SectionLabel("قادم · الأقرب أولاً")
@@ -324,192 +391,12 @@ fun ActsScreen(
             }
             Spacer(Modifier.height(Space.md))
         }
+
         Spacer(Modifier.height(Space.md))
-        NavRow("التسبيح", "أذكار اليوم مع مراجعها وعدّاد", onOpenTasbih)
-        NavRow("كم بعدت عن هذا الوقت؟", "المسافة بين أي لحظتين", onOpenDistance)
+        CtaTile("التسبيح", "أذكار اليوم مع مراجعها وعدّاد", Glyph.SAJDA, onOpenTasbih, scheme)
+        Spacer(Modifier.height(Space.sm))
+        CtaTile("كم بعدت عن هذا الوقت؟", "المسافة بين أي لحظتين", Glyph.TICKS, onOpenDistance, scheme)
         Spacer(Modifier.height(Space.xxl))
-    }
-}
-
-
-@Composable
-private fun SectionLabel(text: String) {
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = Space.sm, vertical = Space.sm),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text,
-            style = MaterialTheme.typography.labelSmall.copy(fontFamily = Plex),
-            color = MaterialTheme.colorScheme.primary,
-        )
-        Spacer(Modifier.width(Space.sm))
-        Box(Modifier.weight(1f).height(1.dp).background(MaterialTheme.colorScheme.outlineVariant))
-    }
-}
-
-/**
- * The day as a rail: RTL, 00:00 at the right, 24:00 at the left. A window is
- * a teal bar, a point is a gold dot, the fast is a bracket between two gold
- * pins, and NOW is one saffron tick — the legend the app already teaches.
- */
-@Composable
-private fun ActRail(
-    state: AppState, year: Int, month: Int, dayOfMonth: Int,
-    items: List<ActsCatalog.Live>, nowMinute: Int,
-) {
-    val scheme = MaterialTheme.colorScheme
-    Canvas(
-        Modifier
-            .fillMaxWidth()
-            .height(52.dp),
-    ) {
-        val w = size.width
-        val h = size.height
-        val y = h * 0.55f
-        val xOf: (Int) -> Float = { m -> w * (0.92f - 0.84f * (m.coerceIn(0, 1440) / 1440f)) }
-        // the day's REAL light: night before Fajr / after Maghrib, daylight
-        // between sunrise and Maghrib — the rail finally has a scale
-        val times = state.times(year, month, dayOfMonth)
-        val sunrise = minutesOf(times.sunrise)
-        val maghrib = minutesOf(times.maghrib)
-        drawLine(
-            scheme.surfaceVariant,
-            Offset(xOf(0), y), Offset(xOf(sunrise), y),
-            strokeWidth = 7f, cap = StrokeCap.Round,
-        )
-        drawLine(
-            Sky.sunMark.copy(alpha = 0.12f),
-            Offset(xOf(sunrise), y), Offset(xOf(maghrib), y),
-            strokeWidth = 7f,
-        )
-        drawLine(
-            scheme.surfaceVariant,
-            Offset(xOf(maghrib), y), Offset(xOf(1440), y),
-            strokeWidth = 7f, cap = StrokeCap.Round,
-        )
-        // the spine
-        drawLine(
-            scheme.outlineVariant,
-            Offset(xOf(0), y), Offset(xOf(1440), y),
-            strokeWidth = 1f,
-        )
-        items.forEach { item ->
-            when {
-                item.act.isWindow -> {
-                    val a = if (item.state == ActsCatalog.ActState.PASSED) 0.3f else 0.9f
-                    // a SPAN is held between two posts — not an ambiguous line
-                    drawLine(
-                        scheme.secondary.copy(alpha = a),
-                        Offset(xOf(item.startMinute), y), Offset(xOf(item.endMinute), y),
-                        strokeWidth = 8f, cap = StrokeCap.Round,
-                    )
-                    listOf(item.startMinute, item.endMinute).forEach { m ->
-                        drawLine(
-                            scheme.secondary.copy(alpha = a * 0.7f),
-                            Offset(xOf(m), y - 6f), Offset(xOf(m), y + 6f),
-                            strokeWidth = 2.5f,
-                        )
-                    }
-                }
-                item.act.isBoundary -> {
-                    drawLine(
-                        scheme.secondary.copy(alpha = 0.7f),
-                        Offset(xOf(item.startMinute), y - 6f), Offset(xOf(item.endMinute), y - 6f),
-                        strokeWidth = 2f,
-                    )
-                    listOf(item.startMinute, item.endMinute).forEach { minute ->
-                        drawLine(
-                            scheme.secondary.copy(alpha = 0.7f),
-                            Offset(xOf(minute), y - 6f), Offset(xOf(minute), y),
-                            strokeWidth = 2f,
-                        )
-                        drawCircle(scheme.primary, 3f, Offset(xOf(minute), y))
-                    }
-                }
-                else -> drawCircle(
-                    scheme.primary, 3.5f, Offset(xOf(item.startMinute), y),
-                )
-            }
-        }
-        // now — the only saffron mark on the rail
-        val nx = xOf(nowMinute)
-        drawLine(
-            app.miqat.ui.Sky.sunMark,
-            Offset(nx, y - 16f), Offset(nx, y + 16f),
-            strokeWidth = 3f,
-        )
-        drawCircle(app.miqat.ui.Sky.sunMark, 4f, Offset(nx, y - 16f))
-    }
-}
-@Composable
-private fun ActRow(item: ActsCatalog.Live, fmt: Fmt, onClick: () -> Unit) {
-    val scheme = MaterialTheme.colorScheme
-    val running = item.state == ActsCatalog.ActState.RUNNING
-    val passed = item.state == ActsCatalog.ActState.PASSED
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(vertical = Space.md),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        // the state: a dot, the moment, and what it is
-        Box(
-            Modifier
-                .size(8.dp)
-                .clip(CircleShape)
-                .background(
-                    when {
-                        running -> scheme.secondary
-                        passed -> scheme.outline
-                        else -> scheme.primary
-                    },
-                ),
-        )
-        Spacer(Modifier.width(Space.md))
-        Column(Modifier.weight(1f)) {
-            Text(
-                item.act.name,
-                style = MaterialTheme.typography.bodyLarge,
-                color = if (passed) scheme.onSurfaceVariant else scheme.onSurface,
-            )
-            Text(
-                item.act.what,
-                style = MaterialTheme.typography.bodySmall,
-                color = scheme.onSurfaceVariant,
-            )
-            Text(
-                item.act.source ?: "تقديري بحسب الاصطلاح",
-                style = MaterialTheme.typography.labelSmall,
-                color = scheme.onSurfaceVariant,
-            )
-        }
-        Spacer(Modifier.width(Space.md))
-        Column(horizontalAlignment = Alignment.End) {
-            Text(
-                if (item.act.isWindow || item.act.isBoundary)
-                    fmt.range(item.startMinute, item.endMinute)
-                else fmt.hhmm(item.startMinute),
-                style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = TabularFigures),
-                color = if (running) scheme.secondary else scheme.onSurface,
-            )
-            Text(
-                when (item.state) {
-                    ActsCatalog.ActState.UPCOMING -> Proximity.timerLine(
-                        TimerKind.ACT_REMAINING, item.minutesAway * 60L,
-                        item.act.name.removePrefix("وقت "),
-                    ).prefixAr + " " + fmt.duration(item.minutesAway)
-                    ActsCatalog.ActState.RUNNING -> Proximity.timerLine(
-                        TimerKind.AVAILABLE, item.minutesAway * 60L,
-                        item.act.name.removePrefix("وقت "),
-                    ).prefixAr + " " + fmt.duration(item.minutesAway)
-                    ActsCatalog.ActState.PASSED -> "مضى"
-                },
-                style = MaterialTheme.typography.labelSmall,
-                color = scheme.onSurfaceVariant,
-            )
-        }
     }
 }
 

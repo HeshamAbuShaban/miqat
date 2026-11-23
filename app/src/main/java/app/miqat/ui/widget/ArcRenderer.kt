@@ -2,43 +2,27 @@ package app.miqat.ui.widget
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Color
 import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
 import android.graphics.Shader
 import androidx.compose.ui.graphics.toArgb
+import app.miqat.core.WidgetMetrics
 import app.miqat.ui.DayArc
 import app.miqat.ui.Sky
 import app.miqat.ui.SkyPhase
 
 /**
- * THE HERO, MINIATURISED — the widget draws the app's own horizon.
- *
- * The widget cannot host a Compose canvas, so the SAME sky, the SAME
- * geometry ([DayArc]) and the SAME marks are drawn into a bitmap with the
- * platform's own Canvas. One renderer's facts: the sky follows the hour,
- * the ticks sit at the prayers' REAL times, the next prayer is the only
- * loud tick, and the sun hides when it is night (the widget council,
- * 2026-11-11 — the widget used to letterbox a fixed bitmap into a third of
- * its width, with a tick template that meant nothing).
+ * THE HERO, MINIATURISED — the whole card is the app's horizon, not a sky band
+ * letterboxed above a block of text. The hour's sky fills the bitmap, the arc
+ * and its real prayer ticks sit at the metrics' fractions, the ground starts
+ * at 52% so the four lines below stay readable, and the corners are rounded.
+ * Text is never drawn here: RemoteViews owns the type.
  */
 object ArcRenderer {
 
-    // the widget's palette — the app's night tokens (the widget is always
-    // the night object on the home screen, even in light mode)
-    private const val HAIRLINE = 0xFF93A3CC.toInt()
-    private const val SAFFRON = 0xFFFFB25C.toInt()
-    private const val TICK = 0xFFC3CCE2.toInt()
-    private const val GROUND = 0xFF010206.toInt()
-
-    /**
-     * @param travelled the day's progress (0..1 along the arc)
-     * @param ticks the six prayer ticks at their real times (0..1), from
-     *   [DayArc.tickParams] — the same numbers the hero reads
-     * @param nextIndex which tick is the next prayer
-     * @param skyPhase the hour's phase — the sky is a fact about the hour
-     */
     fun render(
         width: Int,
         height: Int,
@@ -46,97 +30,117 @@ object ArcRenderer {
         ticks: List<Float>,
         nextIndex: Int,
         skyPhase: SkyPhase,
+        palette: WidgetPalette,
+        cornerRadiusPx: Float,
     ): Bitmap {
         val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
         val w = width.toFloat()
         val h = height.toFloat()
-        val scale = (h / 96f).coerceIn(0.6f, 3f)
-        val baseY = h * 0.82f
-        val apexY = h * 0.18f
+        val scale = (w / 320f).coerceIn(0.6f, 3f)
+        val baseY = h * WidgetMetrics.ARC_BASELINE_FRACTION
+        val apexY = h * WidgetMetrics.ARC_APEX_FRACTION
+        val groundY = h * WidgetMetrics.GROUND_START_FRACTION
 
-        // the sky: the hour's four bands, top → horizon
-        val bands = Sky.bands(skyPhase).map { it.toArgb() }
-        val sky = Paint().apply {
+        // the phase sky, top → bottom, over the WHOLE card
+        val bands = palette.skyBands(skyPhase).map { it.toArgb() }
+        canvas.drawRect(0f, 0f, w, h, Paint().apply {
             shader = LinearGradient(
-                0f, 0f, 0f, h,
-                bands.toIntArray(), floatArrayOf(0f, 0.34f, 0.68f, 1f),
-                Shader.TileMode.CLAMP,
+                0f, 0f, 0f, h, bands.toIntArray(),
+                floatArrayOf(0f, 0.34f, 0.68f, 1f), Shader.TileMode.CLAMP,
             )
-        }
-        canvas.drawRect(0f, 0f, w, h, sky)
+        })
 
-        // the stars, out only when it is dark
-        if (skyPhase.stars) {
-            val star = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = TICK }
-            listOf(
-                0.09f to 0.20f, 0.24f to 0.44f, 0.38f to 0.12f, 0.55f to 0.30f,
-                0.68f to 0.16f, 0.83f to 0.38f, 0.93f to 0.24f,
-            ).forEach { (fx, fy) ->
-                canvas.drawCircle(w * fx, h * fy, 1.4f * scale, star)
+        // stars belong to the dark sky only (paper gets no decoration)
+        if (palette.dark && skyPhase.stars) {
+            val star = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = palette.tick.copy(alpha = 0.7f * Sky.starAlpha(skyPhase)).toArgb()
             }
+            listOf(
+                0.09f to 0.16f, 0.24f to 0.36f, 0.38f to 0.09f, 0.55f to 0.25f,
+                0.68f to 0.13f, 0.83f to 0.32f, 0.93f to 0.19f,
+            ).forEach { (fx, fy) -> canvas.drawCircle(w * fx, h * fy, 1.4f * scale, star) }
         }
 
-        // the ground under the sky (the hero's ground band)
-        val ground = Paint().apply { color = GROUND }
-        canvas.drawRect(0f, baseY + 1f, w, h, ground)
+        // the ground/scrim, with one hairline where the sky ends
+        canvas.drawRect(0f, groundY, w, h, Paint().apply { color = palette.ground.toArgb() })
+        canvas.drawLine(0f, groundY, w, groundY, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = palette.outline.toArgb()
+            strokeWidth = scale
+        })
 
-        // the horizon: the whole line, thin
         val rim = Path().apply {
             val (x0, y0) = DayArc.point(0f, w, h, baseY, apexY)
             val (x1, y1) = DayArc.point(1f, w, h, baseY, apexY)
             moveTo(x0, y0)
             quadTo(w * 0.5f, apexY, x1, y1)
         }
-        val rimPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        canvas.drawPath(rim, Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
             strokeCap = Paint.Cap.ROUND
-            color = HAIRLINE
+            color = palette.arc.toArgb()
             strokeWidth = 2f * scale
-        }
-        canvas.drawPath(rim, rimPaint)
+        })
 
-        // the travelled part: gold → saffron, the day's walked path
-        val gold = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        // deep gold on paper; gold → sun on the night sky (the walked path)
+        val walked = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
             strokeCap = Paint.Cap.ROUND
             strokeWidth = 4.5f * scale
-            shader = LinearGradient(
+            color = palette.gold.toArgb()
+            if (palette.dark) shader = LinearGradient(
                 w * DayArc.RIGHT, 0f, w * DayArc.LEFT, 0f,
-                0xFFE8C46A.toInt(), SAFFRON, Shader.TileMode.CLAMP,
+                palette.gold.toArgb(), palette.sun.toArgb(), Shader.TileMode.CLAMP,
             )
         }
-        val steps = 40
-        val travelledPath = Path()
-        for (i in 0..steps) {
-            val t = DayArc.travelled(travelled) * i / steps
-            val (x, y) = DayArc.point(t, w, h, baseY, apexY)
-            if (i == 0) travelledPath.moveTo(x, y) else travelledPath.lineTo(x, y)
+        val path = Path()
+        for (i in 0..40) {
+            val (x, y) = DayArc.point(DayArc.travelled(travelled) * i / 40f, w, h, baseY, apexY)
+            if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
         }
-        canvas.drawPath(travelledPath, gold)
+        canvas.drawPath(path, walked)
 
-        // the prayer ticks — at their REAL times; ONE loud tick (the next
-        // prayer), the sunrise in saffron, the rest pale
-        val dot = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
+        val dot = Paint(Paint.ANTI_ALIAS_FLAG)
         ticks.forEachIndexed { index, t ->
             val (x, y) = DayArc.point(DayArc.travelled(t), w, h, baseY, apexY)
-            val isNext = index == nextIndex
-            dot.color = if (isNext || index == 1) SAFFRON else TICK
-            canvas.drawCircle(x, y, (if (isNext) 5f else 3.2f) * scale, dot)
+            dot.style = Paint.Style.FILL
+            dot.color = when {
+                index == nextIndex -> (if (palette.dark) palette.sun else palette.gold).toArgb()
+                index == 1 -> (if (palette.dark) palette.sun else palette.gold.copy(alpha = 0.7f)).toArgb()
+                else -> palette.tick.toArgb()
+            }
+            canvas.drawCircle(x, y, (if (index == nextIndex) 5f else 3.2f) * scale, dot)
         }
 
-        // the sun, where the day actually is — hidden at night (the stars
-        // take the sky's turn)
         if (skyPhase != SkyPhase.NIGHT) {
             val (sx, sy) = DayArc.point(DayArc.travelled(travelled), w, h, baseY, apexY)
-            dot.color = Color.argb(60, 0xFF, 0xB2, 0x5C)
-            canvas.drawCircle(sx, sy, 13f * scale, dot)
-            dot.color = Color.argb(110, 0xFF, 0xB2, 0x5C)
-            canvas.drawCircle(sx, sy, 7.5f * scale, dot)
-            dot.color = 0xFFFFE0A8.toInt()
-            canvas.drawCircle(sx, sy, 4.2f * scale, dot)
+            if (palette.dark) {
+                dot.style = Paint.Style.FILL
+                dot.color = palette.sun.copy(alpha = 0.24f).toArgb()
+                canvas.drawCircle(sx, sy, 13f * scale, dot)
+                dot.color = palette.sun.copy(alpha = 0.43f).toArgb()
+                canvas.drawCircle(sx, sy, 7.5f * scale, dot)
+                dot.color = palette.text.toArgb()
+                canvas.drawCircle(sx, sy, 4.2f * scale, dot)
+            } else {
+                dot.style = Paint.Style.STROKE
+                dot.strokeWidth = 1.6f * scale
+                dot.color = palette.sun.toArgb()
+                canvas.drawCircle(sx, sy, 6.5f * scale, dot)
+            }
         }
 
+        // round the bitmap itself — the card has no square corners to leak
+        val radius = cornerRadiusPx.coerceAtMost(minOf(w, h) / 2f)
+        val mask = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        Canvas(mask).drawRoundRect(
+            0f, 0f, w, h, radius, radius,
+            Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFFFFFFF.toInt() },
+        )
+        Canvas(bmp).drawBitmap(mask, 0f, 0f, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_IN)
+        })
+        mask.recycle()
         return bmp
     }
 }

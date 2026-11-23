@@ -42,6 +42,19 @@ DARK = {
     "skyMid": "#1A1E32",
     "skyHorizon": "#4A2F28",
     "ground": "#06070D",
+    # the paper sky/ground translation (Theme.kt Paper*, Sky.lightBands)
+    "paperSurface": "#FDFBF7",
+    "paperInk": "#1F1B16",
+    "paperDim": "#5E554A",
+    "paperGold": "#6F5610",
+    "paperFaint": "#645C4F",
+    "paperTeal": "#1F6A62",
+    "paperEmber": "#B3261E",
+    "paperGround": "#EFE9DF",
+    "paperDayTop": "#F9F6EF",
+    "paperDayHorizon": "#E7DDCB",
+    "paperNightHorizon": "#D3D8E8",
+    "paperSunsetHorizon": "#EBB18F",
 }
 LIGHT = {
     "bg": "#F7F4EE",
@@ -71,6 +84,19 @@ LIGHT = {
     "skyMid": "#1A1E32",
     "skyHorizon": "#4A2F28",
     "ground": "#06070D",
+    # the paper sky/ground translation (Theme.kt Paper*, Sky.lightBands)
+    "paperSurface": "#FDFBF7",
+    "paperInk": "#1F1B16",
+    "paperDim": "#5E554A",
+    "paperGold": "#6F5610",
+    "paperFaint": "#645C4F",
+    "paperTeal": "#1F6A62",
+    "paperEmber": "#B3261E",
+    "paperGround": "#EFE9DF",
+    "paperDayTop": "#F9F6EF",
+    "paperDayHorizon": "#E7DDCB",
+    "paperNightHorizon": "#D3D8E8",
+    "paperSunsetHorizon": "#EBB18F",
 }
 
 # (foreground, background, minimum, what it is)
@@ -106,6 +132,19 @@ PAIRS = [
     ("onDark", "skyHorizon", 4.5, "text on the sunset horizon"),
     ("onDark", "ground", 4.5, "the prayer rail on the ground"),
     ("onDarkFaint", "ground", 3.0, "a passed prayer on the ground"),
+    # The paper sky is NOT a dark postcard: its ink must still pass on every
+    # phase's horizon and on the ground where the widget's type sits.
+    ("paperInk", "paperDayHorizon", 4.5, "ink on the paper day horizon"),
+    ("paperDim", "paperDayHorizon", 4.5, "dim ink on the paper day horizon"),
+    ("paperFaint", "paperDayHorizon", 4.5, "a passed prayer on paper"),
+    ("paperGold", "paperDayHorizon", 4.5, "the gold rail on paper"),
+    ("paperGold", "paperNightHorizon", 4.5, "the gold mark on moonlit paper"),
+    ("paperGold", "paperSunsetHorizon", 3.0, "the large countdown on sunset paper"),
+    ("paperInk", "paperGround", 4.5, "ink on the paper ground"),
+    ("paperFaint", "paperGround", 4.5, "the faint meta on the paper ground"),
+    ("paperGold", "paperSurface", 4.5, "the paper widget's gold on its card"),
+    ("paperTeal", "paperSurface", 4.5, "the paper widget's teal on its card"),
+    ("paperEmber", "paperSurface", 4.5, "the paper widget's urgency on its card"),
 ]
 
 

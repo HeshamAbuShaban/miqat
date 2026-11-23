@@ -99,4 +99,42 @@ object Sky {
         SkyPhase.DAY -> 0f
         SkyPhase.SUNSET -> 0.2f
     }
+
+    /**
+     * THE PAPER SKY — the light scheme's translation of the same hour.
+     *
+     * The dark sky is a photograph of the hour; the light sky is an engraving
+     * of it. Same four phases, same geometry, but the bands are cream paper
+     * with a phase tint instead of ink, and the marks turn to deep gold. This
+     * is what the design brief calls light mode «cream/deep-gold»: the page
+     * and its one rich moment belong to the same material.
+     *
+     * The last band is the horizon, exactly like [bands].
+     */
+    fun lightBands(phase: SkyPhase): List<Color> = when (phase) {
+        SkyPhase.NIGHT -> listOf(
+            Color(0xFFEDEFF6),
+            Color(0xFFE6E9F2),
+            Color(0xFFDEE2EE),
+            Color(0xFFD3D8E8),
+        )
+        SkyPhase.DAWN -> listOf(
+            Color(0xFFFDF4E7),
+            Color(0xFFFBE8D2),
+            Color(0xFFF7DAC0),
+            Color(0xFFEFC7A9),
+        )
+        SkyPhase.DAY -> listOf(
+            Color(0xFFF9F6EF),
+            Color(0xFFF4EEE2),
+            Color(0xFFEEE7D8),
+            Color(0xFFE7DDCB),
+        )
+        SkyPhase.SUNSET -> listOf(
+            Color(0xFFFCF0E4),
+            Color(0xFFF9DFC8),
+            Color(0xFFF3C9AC),
+            Color(0xFFEBB18F),
+        )
+    }
 }
