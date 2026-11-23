@@ -59,12 +59,13 @@ object Radius {
 // black graphite with a warm bias, so the surface never reads as a colour.
 // The blue lives ONLY in the sky (the hero's moment) — a dashboard-wide blue
 // cast was the app's worst tell.
-val NightBg = Color(0xFF0A0D18)      // warm ink — the page
+val NightBg = Color(0xFF0A0D18)      // the page — MERIDIAN night
 val NightSurface = Color(0xFF161A28) // the card, one quiet step up
 val NightSurfaceHigh = Color(0xFF1E2438) // raised: chips, the active tab
 val NightOutline = Color(0xFF262F48) // the hairline — onSurface at ~10%
-val NightText = Color(0xFFEBE8E0)    // warm off-white
-val NightTextDim = Color(0xFF7A7F95) // warm grey
+val NightOutlineVariant = Color(0xFF2A2724) // the faint hairline inside a card
+val NightText = Color(0xFFEDEBE3)    // the ink ramp, cold-off-white
+val NightTextDim = Color(0xFF7A7F95) // dim text, inactive nav, citations
 
 // light scheme (paper, not white — the brand reads as ink on warm paper)
 val PaperBg = Color(0xFFF7F4EE)      // dawn paper
@@ -119,7 +120,7 @@ fun isLightTheme(): Boolean = MaterialTheme.colorScheme.background.luminance() >
 fun pageWash(): List<Color> = if (isLightTheme()) {
     listOf(PaperBg, Color(0xFFEFE9DF))
 } else {
-    listOf(NightBg, Color(0xFF04050A))
+    listOf(NightBg, NightBg)
 }
 
 /** The dark scheme for a chosen accent — only the "ours" role moves. */
@@ -144,7 +145,7 @@ private fun darkColors(accent: Accent) = darkColorScheme(
     // the card edge is a HAIRLINE (onSurface at ~10%), not a coloured stroke:
     // the old #33426B drew a blue wireframe around every card
     outline = Color(0xFF262F48),
-    outlineVariant = Color(0xFF1E2438),
+    outlineVariant = NightOutlineVariant,
     // no red in this palette: doubt is dim + a chip (DESIGN.md §2)
     error = Color(0xFFF06544),
     onError = Color(0xFF0A0D18),

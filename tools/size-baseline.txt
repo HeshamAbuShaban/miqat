@@ -73,7 +73,7 @@
 140 app/src/main/java/app/miqat/ui/Sky.kt
 166 app/src/main/java/app/miqat/ui/SunnahScreen.kt
 127 app/src/main/java/app/miqat/ui/TasbihScreen.kt
-250 app/src/main/java/app/miqat/ui/Theme.kt
+251 app/src/main/java/app/miqat/ui/Theme.kt
 219 app/src/main/java/app/miqat/ui/TimesScreen.kt
 192 app/src/main/java/app/miqat/ui/VerifyScreen.kt
 152 app/src/main/java/app/miqat/ui/YearDriftSheet.kt
