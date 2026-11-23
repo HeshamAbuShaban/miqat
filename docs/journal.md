@@ -14,6 +14,7 @@ Fixes on the night ramp after two rounds of polish:
 - Night `textDim` → `#9AA0B8` (was `#7A7F95`); measured 6.68 on `surface`, 5.9 on `surfaceHigh` (old 4.37).
 - Night `outlineVariant` → `#2A2724` (was `#1E2438`); night Fasting bar uses standard night track colors.
 - Night `surfaceHigh` → `#1D2537` (was `#1E2438`).
+- Night hero ground → `NightSurface` (was `#06070D`) so the hero blends into the night page.
 ## 2026-11-23 — الودجت يتبع الثيم، والطاعات تعود إلى مرجعها، والشريط يطفو
 
 المؤسس: «hi deepseek… the main widget has to correspond to the theme change,
