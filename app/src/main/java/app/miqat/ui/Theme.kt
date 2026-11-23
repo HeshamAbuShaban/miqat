@@ -65,7 +65,7 @@ val NightSurfaceHigh = Color(0xFF1E2438) // raised: chips, the active tab
 val NightOutline = Color(0xFF262F48) // the hairline — onSurface at ~10%
 val NightOutlineVariant = Color(0xFF2A2724) // the faint hairline inside a card
 val NightText = Color(0xFFEDEBE3)    // the ink ramp, cold-off-white
-val NightTextDim = Color(0xFF7A7F95) // dim text, inactive nav, citations
+val NightTextDim = Color(0xFF9AA0B8) // dim text, inactive nav, citations (design-direction)
 
 // light scheme (paper, not white — the brand reads as ink on warm paper)
 val PaperBg = Color(0xFFF7F4EE)      // dawn paper
