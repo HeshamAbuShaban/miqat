@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -181,36 +182,48 @@ fun CalendarScreen(
         )
         Spacer(Modifier.height(Space.sm))
 
-        // THE SPINE — the calendar is organized around ONE axis, not three
-        // competing tabs (the founder: «التقسيم للتبويب غبي»).
+        // THE SPINE — the calendar is organized around ONE axis (a true
+        // segmented control: the two segments share one visual container).
         Row(
             Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(Space.xs),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            listOf(
-                app.miqat.core.CalendarContext.HIJRI,
-                app.miqat.core.CalendarContext.GREGORIAN,
-            ).forEach { c ->
-                val selected = c == axis
-                Text(
-                    c.labelAr,
-                    style = MaterialTheme.typography.labelMedium.copy(fontFamily = Plex),
-                    color = if (selected) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(9.dp))
-                        .background(
-                            if (selected) MaterialTheme.colorScheme.surfaceVariant
-                            else MaterialTheme.colorScheme.surface,
-                        )
-                        .clickable {
-                            axis = c
-                            state.updateDisplay(d.copy(calendarContext = c.name))
+            Box(Modifier.weight(1f)) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(Space.xs),
+                ) {
+                    listOf(
+                        app.miqat.core.CalendarContext.HIJRI,
+                        app.miqat.core.CalendarContext.GREGORIAN,
+                    ).forEach { c ->
+                        val selected = c == axis
+                        Box(
+                            Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(Radius.chip))
+                                .background(
+                                    if (selected) MaterialTheme.colorScheme.surfaceVariant
+                                    else MaterialTheme.colorScheme.surface,
+                                )
+                                .clickable {
+                                    axis = c
+                                    state.updateDisplay(d.copy(calendarContext = c.name))
+                                }
+                                .padding(Space.md),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                c.labelAr,
+                                style = MaterialTheme.typography.labelMedium.copy(fontFamily = Plex),
+                                color = if (selected) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                            )
                         }
-                        .padding(horizontal = Space.md, vertical = 7.dp),
-                )
+                    }
+                }
             }
-            Spacer(Modifier.weight(1f))
             // «اليوم» — always visible; the way back is one tap
             val todayHijri = app.miqat.core.Hijri.at(
                 cityToday.first, cityToday.second, cityToday.third, d.hijriOffsetDays,

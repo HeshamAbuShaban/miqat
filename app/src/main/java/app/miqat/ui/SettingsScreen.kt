@@ -52,13 +52,13 @@ fun SettingsScreen(
             "${state.city.ar.ifBlank { state.city.en }}، ${state.city.countryCode}، UTC+${fmt.n(state.utcOffset.toInt())}",
             onClick = { onOpen(SettingsRoute.Location) },
         )
-        Divider(Modifier.padding(horizontal = Space.lg))
+        Divider(Modifier.padding(horizontal = Space.lg + 12.dp))
         NavRow(
             "تحقّق من المواعيد",
             "أدخل جدول مدينتك الرسمي وقارنه بالحساب",
             onClick = { onOpen(SettingsRoute.Verify) },
         )
-        Divider(Modifier.padding(horizontal = Space.lg))
+        Divider(Modifier.padding(horizontal = Space.lg + 12.dp))
 
         SectionLabel("الحساب", Modifier.padding(horizontal = Space.lg, vertical = Space.sm))
         NavRow(
@@ -66,7 +66,7 @@ fun SettingsScreen(
             "${methodNameAr(method.id)}، زاوية الفجر ${fmt.decimalUnit(method.fajrAngle, 1, "°")}",
             onClick = { onOpen(SettingsRoute.Calculation) },
         )
-        Divider(Modifier.padding(horizontal = Space.lg))
+        Divider(Modifier.padding(horizontal = Space.lg + 12.dp))
 
         SectionLabel("الإشعارات", Modifier.padding(horizontal = Space.lg, vertical = Space.sm))
         NavRow(
@@ -74,13 +74,13 @@ fun SettingsScreen(
             "تمهيدية · مباشرة · تذكيرية · تحفيزية",
             onClick = { onOpen(SettingsRoute.Notifications) },
         )
-        Divider(Modifier.padding(horizontal = Space.lg))
+        Divider(Modifier.padding(horizontal = Space.lg + 12.dp))
         NavRow(
             "صوت الأذان",
             app.miqat.core.AdhanPlayer.PACKS.firstOrNull { it.first == n.adhanPack }?.second ?: "معياري",
             onClick = { onOpen(SettingsRoute.Adhan) },
         )
-        Divider(Modifier.padding(horizontal = Space.lg))
+        Divider(Modifier.padding(horizontal = Space.lg + 12.dp))
 
         SectionLabel("المؤشرات", Modifier.padding(horizontal = Space.lg, vertical = Space.sm))
         NavRow(
@@ -88,7 +88,7 @@ fun SettingsScreen(
             "ما يظهر، وكم، وبأي صلاة",
             onClick = { onOpen(SettingsRoute.Indicators) },
         )
-        Divider(Modifier.padding(horizontal = Space.lg))
+        Divider(Modifier.padding(horizontal = Space.lg + 12.dp))
 
         SectionLabel("الاستعداد", Modifier.padding(horizontal = Space.lg, vertical = Space.sm))
         NavRow(
@@ -96,7 +96,7 @@ fun SettingsScreen(
             "تنبيه مبكر ${fmt.n(state.display.urgencySoonMinutes)} د، والمدد المعروضة",
             onClick = { onOpen(SettingsRoute.Awareness) },
         )
-        Divider(Modifier.padding(horizontal = Space.lg))
+        Divider(Modifier.padding(horizontal = Space.lg + 12.dp))
 
         SectionLabel("التقويم", Modifier.padding(horizontal = Space.lg, vertical = Space.sm))
         NavRow(
@@ -104,7 +104,7 @@ fun SettingsScreen(
             "تعديل ${fmt.n(state.display.hijriOffsetDays)} يوم، على تقويم أم القرى",
             onClick = { onOpen(SettingsRoute.Calendar) },
         )
-        Divider(Modifier.padding(horizontal = Space.lg))
+        Divider(Modifier.padding(horizontal = Space.lg + 12.dp))
 
         SectionLabel("المظهر", Modifier.padding(horizontal = Space.lg, vertical = Space.sm))
         NavRow(
@@ -112,7 +112,7 @@ fun SettingsScreen(
             if (d.arabicIndicDigits) "أرقام عربية-هندية" else "أرقام لاتينية",
             onClick = { onOpen(SettingsRoute.Appearance) },
         )
-        Divider(Modifier.padding(horizontal = Space.lg))
+        Divider(Modifier.padding(horizontal = Space.lg + 12.dp))
 
         SectionLabel("حول التطبيق", Modifier.padding(horizontal = Space.lg, vertical = Space.sm))
         NavRow("عن الميقات", "الإصدار · المحرك · الرخص", onClick = { onOpen(SettingsRoute.About) })

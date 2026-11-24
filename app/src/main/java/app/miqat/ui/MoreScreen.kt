@@ -73,7 +73,7 @@ fun MoreScreen(
             color = scheme.onBackground,
         )
         Text(
-            "كل ما في التطبيق — كل بطاقة تحمل حالتها الآن",
+            "أدوات اليوم — مع حالتها الآن",
             style = MaterialTheme.typography.bodySmall,
             color = scheme.onSurfaceVariant,
         )
@@ -153,20 +153,21 @@ fun MoreScreen(
 
         Spacer(Modifier.height(Space.sm))
 
-        // the settings — honestly labelled as a tree
+        // the settings — honestly labelled as a tree; styled like the other
+        // tiles so the whole screen reads as one rhythm.
         Row(
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(Radius.row))
-                .background(scheme.surfaceVariant.copy(alpha = .45f))
+                .weight(1f)
+                .cardSurface(RoundedCornerShape(Radius.card))
                 .clickable { onOpen(MoreTarget.SETTINGS) }
-                .padding(Space.lg),
+                .padding(Space.md),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
                 Modifier
                     .size(7.dp)
-                    .background(scheme.outline, CircleShape),
+                    .background(scheme.outlineVariant, CircleShape),
             )
             Spacer(Modifier.width(Space.md))
             Column(Modifier.weight(1f)) {
